@@ -17,17 +17,18 @@
     button:disabled { opacity:.4; }
     .canvasWrap { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; }
     canvas { background:#000; border-radius:14px; border:1px solid rgba(255,255,255,.12); touch-action:none; }
-    .panel { min-width: 240px; flex: 1; }
+    .panel { min-width: 260px; flex: 1; }
     .big { font-size: 54px; font-weight: 900; margin: 6px 0; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; opacity:.9; }
     details { margin-top:10px; opacity:.9; }
     summary { cursor: pointer; }
+    .warn { opacity: .85; }
   </style>
 </head>
 <body>
   <main class="wrap">
     <h1>Нейросеть: распознавание рукописных цифр</h1>
-    <p class="sub">Рисуй пальцем цифру (0–9) → «Угадать». Нажми «Обучить», чтобы стало точнее. Модель можно сохранить в браузере.</p>
+    <p class="sub">Рисуй цифру (0–9) → «Угадать». Нажми «Обучить», чтобы стало точнее. Встроена диагностика ошибок (покажет причину прямо в статусе).</p>
 
     <section class="card">
       <div class="canvasWrap">
@@ -51,11 +52,15 @@
             <button id="btnLoad" class="ghost">📦 Загрузить</button>
           </div>
 
+          <p class="mono warn" id="hint">
+            Подсказка: если «Угадать» не работает, статус покажет ошибку (это нормально — просто скажи мне текст ошибки).
+          </p>
+
           <details>
-            <summary>Подсказки</summary>
+            <summary>Подсказки по рисованию</summary>
             <ul>
               <li>Рисуй ближе к центру, одним штрихом, потолще.</li>
-              <li>Если путает 1/7 или 3/8 — сделай цифры понятнее.</li>
+              <li>Если путает 1/7 или 3/8 — рисуй различимее.</li>
               <li>«Сохранить» кладёт модель в память браузера на iPhone (IndexedDB).</li>
             </ul>
           </details>
@@ -67,7 +72,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
 
   <script>
+    // ================== UI helpers ==================
     const $ = (id) => document.getElementById(id);
+
     const canvas = $('draw');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
@@ -89,7 +96,15 @@
       top3El.textContent = top3;
     }
 
-    // ---------- drawing ----------
+    // Показ ошибок прямо в UI (важно для iPhone, где консоль обычно не видна)
+    window.addEventListener('error', (e) => {
+      setStatus('Ошибка: ' + (e.message || 'unknown'));
+    });
+    window.addEventListener('unhandledrejection', (e) => {
+      setStatus('Promise error: ' + (e.reason?.message || e.reason || 'unknown'));
+    });
+
+    // ================== Drawing ==================
     function clearCanvas(){
       ctx.fillStyle = '#000';
       ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -98,6 +113,7 @@
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 22;
       setOut('—','Уверенность: —','—');
+      setStatus('готово: рисуй и жми «Угадать» (для точности — «Обучить»)');
     }
     clearCanvas();
 
@@ -140,7 +156,7 @@
 
     btnClear.addEventListener('click', clearCanvas);
 
-    // ---------- model ----------
+    // ================== Model ==================
     let model = null;
 
     function buildModel(){
@@ -157,33 +173,41 @@
       return m;
     }
 
-    // ---------- IMPORTANT: better preprocessing (crop + center) ----------
+    // ---------- Better preprocessing (robust & iPhone-safe) ----------
+    // IMPORTANT: avoids relying on coords.shape[0] synchronously (can be tricky).
+    // We compute bbox using reductions (sum along axes).
     function canvasToTensor(){
       return tf.tidy(() => {
         // grayscale 0..1 (white=1)
         const img = tf.browser.fromPixels(canvas, 1).toFloat().div(255.0).squeeze(); // [280,280]
+        const ink = img; // белые линии = 1 (чернила)
 
-        // ink = "чернила" (1=чернила, 0=фон)
-        // фон черный => img ~0, линии белые => img ~1, значит чернила = img
-        // но MNIST: чернила яркие, фон тёмный, так что оставляем как есть.
-        const ink = img;
+        // mask чернил
+        const mask = ink.greater(0.08).toFloat(); // [280,280] 0/1
 
-        // маска чернил
-        const mask = ink.greater(0.08);
-        const coords = tf.where(mask); // [N,2] (y,x)
-
-        // если пусто
-        if (coords.shape[0] === 0) {
+        // если пусто: sum==0
+        const total = mask.sum().dataSync()[0];
+        if (total < 1) {
           return tf.zeros([1,28,28,1]);
         }
 
-        const ys = coords.slice([0,0],[coords.shape[0],1]);
-        const xs = coords.slice([0,1],[coords.shape[0],1]);
+        // bbox через суммы по осям
+        const rows = mask.sum(1); // [280]
+        const cols = mask.sum(0); // [280]
 
-        const ymin = ys.min().dataSync()[0];
-        const ymax = ys.max().dataSync()[0];
-        const xmin = xs.min().dataSync()[0];
-        const xmax = xs.max().dataSync()[0];
+        const rowsArr = rows.dataSync();
+        const colsArr = cols.dataSync();
+
+        rows.dispose();
+        cols.dispose();
+
+        let ymin = 0, ymax = 279, xmin = 0, xmax = 279;
+
+        // find first/last non-zero
+        for(let i=0;i<280;i++){ if(rowsArr[i] > 0){ ymin = i; break; } }
+        for(let i=279;i>=0;i--){ if(rowsArr[i] > 0){ ymax = i; break; } }
+        for(let i=0;i<280;i++){ if(colsArr[i] > 0){ xmin = i; break; } }
+        for(let i=279;i>=0;i--){ if(colsArr[i] > 0){ xmax = i; break; } }
 
         // crop + padding
         const pad = 14;
@@ -197,7 +221,7 @@
 
         let cropped = ink.slice([y0, x0],[h, w]); // [h,w]
 
-        // делаем квадрат
+        // square pad
         const size = Math.max(h, w);
         const top = Math.floor((size - h)/2);
         const bottom = size - h - top;
@@ -208,36 +232,42 @@
 
         // resize to 28x28
         let resized = tf.image.resizeBilinear(cropped.expandDims(-1), [28,28]); // [28,28,1]
-
-        // нормализация/контраст
-        // делаем чуть сильнее чернила
         resized = resized.clipByValue(0,1);
-        resized = resized.pow(0.7); // усиливаем яркие пиксели
-
-        // MNIST-совместимость: в MNIST фон черный, чернила белые -> у нас так же, ок.
+        resized = resized.pow(0.7); // небольшой "контраст"
         return resized.expandDims(0); // [1,28,28,1]
       });
     }
 
     function predict(){
-      if(!model){ setStatus('модель не готова'); return; }
-      const x = canvasToTensor();
-      const y = model.predict(x);
-      const probs = y.dataSync();
-      x.dispose(); y.dispose();
+      try {
+        setStatus('думаю…');
 
-      const arr = Array.from(probs).map((p,i)=>({i,p}));
-      arr.sort((a,b)=>b.p-a.p);
-      const best = arr[0];
-      const top3 = arr.slice(0,3).map(o => `${o.i}:${(o.p*100).toFixed(1)}%`).join('  ');
+        if(!model){
+          setStatus('модель не готова');
+          return;
+        }
 
-      setOut(String(best.i), `Уверенность: ${(best.p*100).toFixed(1)}%`, top3);
-      setStatus('предсказание готово');
+        const x = canvasToTensor();             // [1,28,28,1]
+        const y = model.predict(x);             // [1,10]
+        const probs = Array.from(y.dataSync()); // [10]
+
+        x.dispose();
+        y.dispose();
+
+        const arr = probs.map((p,i)=>({i,p})).sort((a,b)=>b.p-a.p);
+        const best = arr[0];
+        const top3 = arr.slice(0,3).map(o => `${o.i}:${(o.p*100).toFixed(1)}%`).join('  ');
+
+        setOut(String(best.i), `Уверенность: ${(best.p*100).toFixed(1)}%`, top3);
+        setStatus('готово ✅');
+      } catch (e) {
+        setStatus('Ошибка в угадывании: ' + (e?.message || e));
+      }
     }
 
     btnGuess.addEventListener('click', predict);
 
-    // ---------- training data (MNIST mini) ----------
+    // ================== Training Data (MNIST mini) ==================
     async function loadMnistMini(){
       setStatus('качаю мини-датасет…');
 
@@ -261,7 +291,7 @@
       const c = CAN.getContext('2d', { willReadFrequently: true });
       c.drawImage(img, 0, 0);
 
-      const isStrip = (img.width === 28); // у этого файла обычно так
+      const isStrip = (img.width === 28); // обычно да
       const images = new Float32Array(NUM * H * W);
 
       if(isStrip){
@@ -320,7 +350,7 @@
       setStatus('обучаю…');
       try{
         await model.fit(data.xTrain, data.yTrain, {
-          epochs: 10,             // больше эпох = точнее
+          epochs: 10,
           batchSize: 64,
           validationData: [data.xTest, data.yTest],
           callbacks: {
@@ -341,19 +371,25 @@
       }
     }
 
-    btnTrain.addEventListener('click', train);
+    btnTrain.addEventListener('click', () => {
+      train().catch(e => setStatus('Ошибка обучения: ' + (e?.message || e)));
+    });
 
-    // ---------- save/load ----------
+    // ================== Save / Load ==================
     btnSave.addEventListener('click', async () => {
-      if(!model) return;
-      setStatus('сохраняю модель…');
-      await model.save('indexeddb://digit-draw-model');
-      setStatus('сохранено ✅');
+      try{
+        if(!model) return;
+        setStatus('сохраняю модель…');
+        await model.save('indexeddb://digit-draw-model');
+        setStatus('сохранено ✅');
+      } catch(e) {
+        setStatus('Ошибка сохранения: ' + (e?.message || e));
+      }
     });
 
     btnLoad.addEventListener('click', async () => {
-      setStatus('пытаюсь загрузить модель…');
       try{
+        setStatus('пытаюсь загрузить модель…');
         model = await tf.loadLayersModel('indexeddb://digit-draw-model');
         setStatus('модель загружена ✅');
         btnSave.disabled = false;
@@ -362,11 +398,11 @@
       }
     });
 
-    // init
+    // ================== Init ==================
     (async () => {
-      model = buildModel(); // готова, но не обучена пока
-      setStatus('готово: рисуй и жми «Угадать» (для точности — «Обучить»)');
+      model = buildModel(); // готова, но не обучена
       setOut('—','Уверенность: —','—');
+      setStatus('готово: рисуй и жми «Угадать» (для точности — «Обучить»)');
     })();
   </script>
 </body>
