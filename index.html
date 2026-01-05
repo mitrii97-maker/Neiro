@@ -28,7 +28,7 @@
 <body>
   <main class="wrap">
     <h1>Нейросеть: распознавание рукописных цифр</h1>
-    <p class="sub">Рисуй цифру (0–9) → «Угадать». Нажми «Обучить», чтобы стало точнее. Встроена диагностика ошибок (покажет причину прямо в статусе).</p>
+    <p class="sub">Рисуй цифру (0–9) → «Угадать». Нажми «Обучить», чтобы стало точнее. Ошибки показываются в статусе (удобно на iPhone).</p>
 
     <section class="card">
       <div class="canvasWrap">
@@ -52,16 +52,16 @@
             <button id="btnLoad" class="ghost">📦 Загрузить</button>
           </div>
 
-          <p class="mono warn" id="hint">
-            Подсказка: если «Угадать» не работает, статус покажет ошибку (это нормально — просто скажи мне текст ошибки).
+          <p class="mono warn">
+            Если «Угадать» не срабатывает, смотри строку «Статус» — там будет причина.
           </p>
 
           <details>
             <summary>Подсказки по рисованию</summary>
             <ul>
               <li>Рисуй ближе к центру, одним штрихом, потолще.</li>
-              <li>Если путает 1/7 или 3/8 — рисуй различимее.</li>
-              <li>«Сохранить» кладёт модель в память браузера на iPhone (IndexedDB).</li>
+              <li>Сначала нажми «Обучить» (или «Загрузить», если уже сохранял).</li>
+              <li>«Сохранить» хранит модель в браузере (IndexedDB) — после перезагрузки можно «Загрузить».</li>
             </ul>
           </details>
         </div>
@@ -113,7 +113,7 @@
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 22;
       setOut('—','Уверенность: —','—');
-      setStatus('готово: рисуй и жми «Угадать» (для точности — «Обучить»)');
+      setStatus('готово: рисуй и жми «Угадать» (для точности — «Обучить» / «Загрузить»)');
     }
     clearCanvas();
 
@@ -156,8 +156,18 @@
 
     btnClear.addEventListener('click', clearCanvas);
 
-    // ================== Model ==================
+    // ================== Model utils ==================
     let model = null;
+
+    function compileModel(m){
+      // ВАЖНО: после загрузки модели compile НЕ сохраняется -> компилируем заново
+      m.compile({
+        optimizer: tf.train.adam(0.001),
+        loss: 'categoricalCrossentropy',
+        metrics: ['accuracy']
+      });
+      return m;
+    }
 
     function buildModel(){
       const m = tf.sequential();
@@ -169,47 +179,37 @@
       m.add(tf.layers.dense({ units:64, activation:'relu' }));
       m.add(tf.layers.dropout({ rate:0.2 }));
       m.add(tf.layers.dense({ units:10, activation:'softmax' }));
-      m.compile({ optimizer: tf.train.adam(0.001), loss:'categoricalCrossentropy', metrics:['accuracy'] });
-      return m;
+      return compileModel(m);
     }
 
-    // ---------- Better preprocessing (robust & iPhone-safe) ----------
-    // IMPORTANT: avoids relying on coords.shape[0] synchronously (can be tricky).
-    // We compute bbox using reductions (sum along axes).
+    // модель "готова для тренировки/предикта"?
+    function isCompiled(m){
+      return !!(m && m.optimizer && m.loss);
+    }
+
+    // ---------- Better preprocessing (crop + center) ----------
     function canvasToTensor(){
       return tf.tidy(() => {
-        // grayscale 0..1 (white=1)
         const img = tf.browser.fromPixels(canvas, 1).toFloat().div(255.0).squeeze(); // [280,280]
-        const ink = img; // белые линии = 1 (чернила)
+        const ink = img; // белые линии = 1
 
-        // mask чернил
-        const mask = ink.greater(0.08).toFloat(); // [280,280] 0/1
-
-        // если пусто: sum==0
+        const mask = ink.greater(0.08).toFloat(); // [280,280]
         const total = mask.sum().dataSync()[0];
-        if (total < 1) {
-          return tf.zeros([1,28,28,1]);
-        }
+        if (total < 1) return tf.zeros([1,28,28,1]);
 
-        // bbox через суммы по осям
         const rows = mask.sum(1); // [280]
         const cols = mask.sum(0); // [280]
-
         const rowsArr = rows.dataSync();
         const colsArr = cols.dataSync();
-
-        rows.dispose();
-        cols.dispose();
+        rows.dispose(); cols.dispose();
 
         let ymin = 0, ymax = 279, xmin = 0, xmax = 279;
 
-        // find first/last non-zero
         for(let i=0;i<280;i++){ if(rowsArr[i] > 0){ ymin = i; break; } }
         for(let i=279;i>=0;i--){ if(rowsArr[i] > 0){ ymax = i; break; } }
         for(let i=0;i<280;i++){ if(colsArr[i] > 0){ xmin = i; break; } }
         for(let i=279;i>=0;i--){ if(colsArr[i] > 0){ xmax = i; break; } }
 
-        // crop + padding
         const pad = 14;
         const y0 = Math.max(0, ymin - pad);
         const x0 = Math.max(0, xmin - pad);
@@ -221,7 +221,6 @@
 
         let cropped = ink.slice([y0, x0],[h, w]); // [h,w]
 
-        // square pad
         const size = Math.max(h, w);
         const top = Math.floor((size - h)/2);
         const bottom = size - h - top;
@@ -229,11 +228,9 @@
         const right = size - w - left;
 
         cropped = tf.pad(cropped, [[top,bottom],[left,right]]); // [size,size]
-
-        // resize to 28x28
         let resized = tf.image.resizeBilinear(cropped.expandDims(-1), [28,28]); // [28,28,1]
-        resized = resized.clipByValue(0,1);
-        resized = resized.pow(0.7); // небольшой "контраст"
+        resized = resized.clipByValue(0,1).pow(0.7); // немного усиливаем "чернила"
+
         return resized.expandDims(0); // [1,28,28,1]
       });
     }
@@ -247,9 +244,14 @@
           return;
         }
 
-        const x = canvasToTensor();             // [1,28,28,1]
-        const y = model.predict(x);             // [1,10]
-        const probs = Array.from(y.dataSync()); // [10]
+        if(!isCompiled(model)){
+          setStatus('модель не скомпилирована (нажми «Обучить» или «Загрузить»)');
+          return;
+        }
+
+        const x = canvasToTensor();
+        const y = model.predict(x);
+        const probs = Array.from(y.dataSync());
 
         x.dispose();
         y.dispose();
@@ -267,7 +269,7 @@
 
     btnGuess.addEventListener('click', predict);
 
-    // ================== Training Data (MNIST mini) ==================
+    // ================== Training data (MNIST mini) ==================
     async function loadMnistMini(){
       setStatus('качаю мини-датасет…');
 
@@ -291,7 +293,7 @@
       const c = CAN.getContext('2d', { willReadFrequently: true });
       c.drawImage(img, 0, 0);
 
-      const isStrip = (img.width === 28); // обычно да
+      const isStrip = (img.width === 28);
       const images = new Float32Array(NUM * H * W);
 
       if(isStrip){
@@ -331,6 +333,7 @@
 
     async function train(){
       if(!model) model = buildModel();
+      if(!isCompiled(model)) model = compileModel(model);
 
       btnTrain.disabled = true;
       btnGuess.disabled = true;
@@ -340,7 +343,6 @@
       try{
         data = await loadMnistMini();
       } catch(e){
-        console.error(e);
         setStatus('не удалось скачать датасет (проверь интернет)');
         btnTrain.disabled = false;
         btnGuess.disabled = false;
@@ -361,11 +363,13 @@
             }
           }
         });
+
         setStatus('обучение готово ✅');
         btnSave.disabled = false;
       } finally {
         data.xTrain.dispose(); data.yTrain.dispose();
         data.xTest.dispose();  data.yTest.dispose();
+
         btnTrain.disabled = false;
         btnGuess.disabled = false;
       }
@@ -383,7 +387,7 @@
         await model.save('indexeddb://digit-draw-model');
         setStatus('сохранено ✅');
       } catch(e) {
-        setStatus('Ошибка сохранения: ' + (e?.message || e));
+        setStatus('Ошибка сохранения: ' + (e?.message || e)));
       }
     });
 
@@ -391,7 +395,8 @@
       try{
         setStatus('пытаюсь загрузить модель…');
         model = await tf.loadLayersModel('indexeddb://digit-draw-model');
-        setStatus('модель загружена ✅');
+        model = compileModel(model); // ✅ фикс ошибки "compile before training/testing"
+        setStatus('модель загружена и готова ✅');
         btnSave.disabled = false;
       } catch(e){
         setStatus('сохранённой модели нет (нажми «Обучить», потом «Сохранить»)');
@@ -400,7 +405,7 @@
 
     // ================== Init ==================
     (async () => {
-      model = buildModel(); // готова, но не обучена
+      model = buildModel(); // компилируем сразу
       setOut('—','Уверенность: —','—');
       setStatus('готово: рисуй и жми «Угадать» (для точности — «Обучить»)');
     })();
