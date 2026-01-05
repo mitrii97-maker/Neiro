@@ -1,184 +1,501 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Персональный ИИ</title>
-<style>
-body {
-  margin:0;
-  font-family:-apple-system, system-ui, Arial;
-  background:#0b0d12;
-  color:#e9eefc;
-}
-.wrap {
-  max-width:800px;
-  margin:0 auto;
-  padding:16px;
-}
-h1 { margin:0 0 10px; }
-.chat {
-  background:#111626;
-  border-radius:14px;
-  padding:12px;
-  height:55vh;
-  overflow-y:auto;
-  border:1px solid rgba(255,255,255,.08);
-}
-.msg {
-  margin:8px 0;
-  padding:8px 12px;
-  border-radius:12px;
-  max-width:85%;
-}
-.me {
-  background:#2a6bff;
-  margin-left:auto;
-}
-.ai {
-  background:#1c2238;
-}
-.controls {
-  display:flex;
-  gap:8px;
-  margin-top:10px;
-}
-input {
-  flex:1;
-  padding:12px;
-  border-radius:10px;
-  border:none;
-  outline:none;
-}
-button {
-  padding:12px 14px;
-  border-radius:10px;
-  border:none;
-  background:#2a6bff;
-  color:#fff;
-  font-weight:700;
-}
-.progressBox {
-  margin:12px 0;
-}
-.bar {
-  height:10px;
-  background:#222;
-  border-radius:6px;
-  overflow:hidden;
-}
-.bar > div {
-  height:100%;
-  background:#2a6bff;
-  width:0%;
-}
-.meta {
-  font-size:13px;
-  opacity:.8;
-  margin-top:6px;
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>ИИ, которого ты обучаешь</title>
+  <style>
+    :root { font-family: -apple-system, system-ui, Arial; }
+    body { margin:0; background:#0b0d12; color:#e9eefc; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 16px; }
+    h1 { margin: 8px 0 6px; font-size: 22px; }
+    .sub { margin: 0 0 12px; opacity:.8; line-height: 1.35; }
+    .card { background:#111626; border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:14px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:10px 0; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+
+    .chat {
+      height: 52vh;
+      overflow: auto;
+      padding: 10px;
+      background: #0a0f1c;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .msg { max-width: 85%; padding: 10px 12px; border-radius: 14px; margin: 8px 0; white-space: pre-wrap; }
+    .me { background:#2a6bff; margin-left:auto; }
+    .ai { background:#1c2238; }
+    .meta { font-size: 12px; opacity: .8; margin-top: 4px; }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: #0a0f1c;
+      color: #e9eefc;
+      outline: none;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-weight: 800;
+      background: #2a6bff;
+      color: #fff;
+    }
+    button.ghost { background: transparent; border: 1px solid rgba(255,255,255,.18); }
+    button:disabled { opacity: .45; }
+
+    .progressBox { margin: 10px 0 14px; }
+    .bar { height: 10px; background: rgba(255,255,255,.12); border-radius: 999px; overflow:hidden; }
+    .bar > div { height: 100%; width: 0%; background: #2a6bff; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; opacity:.9; }
+    .pill { display:inline-block; padding:6px 10px; border:1px solid rgba(255,255,255,.15); border-radius:999px; }
+    details { margin-top: 8px; opacity: .9; }
+    summary { cursor: pointer; }
+  </style>
 </head>
 <body>
+  <main class="wrap">
+    <h1>ИИ, которого ты обучаешь</h1>
+    <p class="sub">
+      Ты учишь: <b>“что ты говоришь” → “как он должен отвечать”</b>.
+      Он использует это в чате, а прогресс показывает, насколько он стал стабильнее и точнее.
+    </p>
 
-<div class="wrap">
-  <h1>Персональный ИИ</h1>
+    <section class="card">
+      <div class="progressBox">
+        <div class="row" style="justify-content: space-between;">
+          <div>Уровень “интеллекта”: <b id="lvl">0%</b></div>
+          <div class="mono" id="status">загрузка модели…</div>
+        </div>
+        <div class="bar"><div id="bar"></div></div>
+        <div class="row">
+          <span class="pill mono">Примеров: <b id="n">0</b></span>
+          <span class="pill mono">Самопроверка: <b id="acc">—</b></span>
+          <span class="pill mono">Порог ответа: <b id="thrLabel">0.45</b></span>
+          <button id="btnRecalc" class="ghost">🔄 Пересчитать прогресс</button>
+          <button id="btnWipe" class="ghost">🧨 Сбросить всё</button>
+        </div>
+      </div>
 
-  <div class="progressBox">
-    <div>Уровень интеллекта: <b id="lvl">0%</b></div>
-    <div class="bar"><div id="bar"></div></div>
-    <div class="meta" id="stats">Память пуста</div>
-  </div>
+      <div class="grid">
+        <div>
+          <div class="mono" style="margin-bottom:8px;">Чат</div>
+          <div class="chat" id="chat"></div>
 
-  <div class="chat" id="chat"></div>
+          <div class="row">
+            <input id="msg" placeholder="Напиши сообщение…" />
+            <button id="send">▶</button>
+          </div>
 
-  <div class="controls">
-    <input id="input" placeholder="Напиши что-нибудь…" />
-    <button id="send">▶</button>
-  </div>
-</div>
+          <div class="row">
+            <button id="btnRight" disabled>👍 правильно</button>
+            <button id="btnWrong" class="ghost" disabled>👎 исправить</button>
+          </div>
 
-<script>
-const chat = document.getElementById('chat');
-const input = document.getElementById('input');
-const send = document.getElementById('send');
-const bar = document.getElementById('bar');
-const lvl = document.getElementById('lvl');
-const stats = document.getElementById('stats');
+          <div class="mono" id="lastInfo">—</div>
+        </div>
 
-// ПАМЯТЬ ИИ
-let memory = JSON.parse(localStorage.getItem('ai_memory') || '[]');
+        <div>
+          <div class="mono" style="margin-bottom:8px;">Научить (вопрос → ответ)</div>
+          <div class="row">
+            <textarea id="teachQ" placeholder="Что ты говоришь (пример):&#10;“Сделай честно и коротко”&#10;“Если я пишу ‘жёстко’ — не смягчай”"></textarea>
+          </div>
+          <div class="row">
+            <textarea id="teachA" placeholder="Как ИИ должен отвечать"></textarea>
+          </div>
+          <div class="row">
+            <button id="btnTeach" disabled>➕ Добавить и обучить</button>
+            <button id="btnExport" class="ghost">📤 Экспорт</button>
+            <button id="btnImport" class="ghost">📥 Импорт</button>
+          </div>
 
-// Добавить сообщение
-function addMsg(text, cls){
-  const div = document.createElement('div');
-  div.className = 'msg ' + cls;
-  div.textContent = text;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-}
+          <details>
+            <summary>Как это “учится”</summary>
+            <ul>
+              <li>ИИ преобразует твою фразу в “смысловой вектор”.</li>
+              <li>Ищет самый похожий вопрос из того, чему ты его учил.</li>
+              <li>Если похожесть высокая — отвечает соответствующим ответом.</li>
+              <li>Прогресс растёт, когда примеров больше и самопроверка выше.</li>
+            </ul>
+          </details>
 
-// Прогресс = количество знаний (простая метрика)
-function updateProgress(){
-  const max = 50; // условный "умный"
-  const value = Math.min(memory.length, max);
-  const percent = Math.round((value / max) * 100);
-  bar.style.width = percent + '%';
-  lvl.textContent = percent + '%';
-  stats.textContent = `Фактов в памяти: ${memory.length}`;
-}
+          <details>
+            <summary>Что делать, если он отвечает “не знаю”</summary>
+            <ul>
+              <li>Нажми <b>“👎 исправить”</b> и дай правильный ответ — это будет новый пример.</li>
+              <li>Или добавь правило/пример в блоке “Научить”.</li>
+            </ul>
+          </details>
 
-// Ответ ИИ
-function aiReply(text){
-  // если учим
-  if(text.toLowerCase().startsWith('запомни')){
-    const fact = text.slice(8).trim();
-    if(fact){
-      memory.push(fact);
-      localStorage.setItem('ai_memory', JSON.stringify(memory));
-      updateProgress();
-      return 'Я запомнил это.';
+          <div class="row">
+            <label class="mono">Порог похожести:
+              <input id="thr" type="range" min="0.20" max="0.80" step="0.01" value="0.45" />
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- TFJS + Universal Sentence Encoder -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/universal-sentence-encoder@1.3.3"></script>
+
+  <script>
+    // ================== state ==================
+    const LS_KEY = "personal_ai_pairs_v1";
+
+    let useModel = null;
+    let pairs = [];        // {q: string, a: string}
+    let qEmb = [];         // Float32Array embeddings for q
+
+    let lastUserText = "";
+    let lastAiText = "";
+    let lastMatch = { idx: -1, sim: 0 };
+
+    // ================== ui ==================
+    const $ = (id) => document.getElementById(id);
+
+    const chat = $("chat");
+    const msg = $("msg");
+    const send = $("send");
+
+    const btnRight = $("btnRight");
+    const btnWrong = $("btnWrong");
+
+    const teachQ = $("teachQ");
+    const teachA = $("teachA");
+    const btnTeach = $("btnTeach");
+
+    const lvl = $("lvl");
+    const bar = $("bar");
+    const status = $("status");
+    const nEl = $("n");
+    const accEl = $("acc");
+    const lastInfo = $("lastInfo");
+
+    const btnRecalc = $("btnRecalc");
+    const btnWipe = $("btnWipe");
+
+    const btnExport = $("btnExport");
+    const btnImport = $("btnImport");
+
+    const thr = $("thr");
+    const thrLabel = $("thrLabel");
+
+    function setStatus(s){ status.textContent = s; }
+
+    function addMsg(text, who, meta){
+      const div = document.createElement("div");
+      div.className = "msg " + (who === "me" ? "me" : "ai");
+      div.textContent = text;
+      chat.appendChild(div);
+
+      if (meta){
+        const m = document.createElement("div");
+        m.className = "meta";
+        m.textContent = meta;
+        chat.appendChild(m);
+      }
+
+      chat.scrollTop = chat.scrollHeight;
     }
-  }
 
-  // если объяснение
-  if(text.toLowerCase().includes('это значит')){
-    memory.push(text);
-    localStorage.setItem('ai_memory', JSON.stringify(memory));
-    updateProgress();
-    return 'Принял. Это стало частью моего понимания.';
-  }
-
-  // попытка понять через память
-  for(const m of memory){
-    if(text.toLowerCase().includes(m.split(' ')[0])){
-      return 'Я думаю, это связано с тем, что ты раньше мне объяснял.';
+    // ================== utils ==================
+    function savePairs(){
+      localStorage.setItem(LS_KEY, JSON.stringify(pairs));
     }
-  }
 
-  return 'Я пока не уверен. Можешь объяснить или сказать «запомни …»';
-}
+    function loadPairs(){
+      try {
+        pairs = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
+        if (!Array.isArray(pairs)) pairs = [];
+      } catch {
+        pairs = [];
+      }
+    }
 
-// Отправка
-send.onclick = () => {
-  const text = input.value.trim();
-  if(!text) return;
-  input.value = '';
-  addMsg(text, 'me');
-  setTimeout(() => {
-    const reply = aiReply(text);
-    addMsg(reply, 'ai');
-  }, 300);
-};
+    async function embedOne(text){
+      // returns Float32Array
+      const t = await useModel.embed([text]);
+      const arr = await t.array();
+      t.dispose();
+      return new Float32Array(arr[0]);
+    }
 
-input.addEventListener('keydown', e => {
-  if(e.key === 'Enter') send.onclick();
-});
+    function cosine(a, b){
+      let dot = 0, na = 0, nb = 0;
+      for (let i=0;i<a.length;i++){
+        const x = a[i], y = b[i];
+        dot += x*y;
+        na += x*x;
+        nb += y*y;
+      }
+      return dot / (Math.sqrt(na)*Math.sqrt(nb) + 1e-8);
+    }
 
-// init
-addMsg('Я готов учиться. Расскажи мне что-нибудь.', 'ai');
-updateProgress();
-</script>
+    async function rebuildEmbeddings(){
+      qEmb = [];
+      for (let i=0;i<pairs.length;i++){
+        qEmb.push(await embedOne(pairs[i].q));
+      }
+    }
 
+    // nearest neighbor retrieval
+    function retrieve(queryEmb, excludeIdx = -1){
+      let bestIdx = -1;
+      let bestSim = -1;
+      for (let i=0;i<qEmb.length;i++){
+        if (i === excludeIdx) continue;
+        const s = cosine(queryEmb, qEmb[i]);
+        if (s > bestSim){
+          bestSim = s;
+          bestIdx = i;
+        }
+      }
+      return { idx: bestIdx, sim: bestSim };
+    }
+
+    function currentThreshold(){
+      return Number(thr.value);
+    }
+
+    function formatSim(s){
+      return (Math.max(0, Math.min(1, s)) * 100).toFixed(1) + "%";
+    }
+
+    // ================== "learning" metrics ==================
+    async function selfCheckAccuracy(){
+      if (pairs.length < 3) return null;
+
+      let correct = 0;
+      for (let i=0;i<pairs.length;i++){
+        const q = pairs[i].q;
+        const trueA = pairs[i].a;
+
+        // embed q
+        const qe = await embedOne(q);
+        const { idx } = retrieve(qe, i);
+
+        if (idx >= 0 && pairs[idx].a === trueA) correct++;
+      }
+      return correct / pairs.length;
+    }
+
+    function computeLevel(acc){
+      // level = mix of accuracy + knowledge volume
+      const maxN = 60;
+      const knowledge = Math.min(1, pairs.length / maxN);
+
+      const accPart = acc == null ? 0 : acc; // 0..1
+      const lvl01 = 0.65*accPart + 0.35*knowledge;
+      return Math.round(lvl01 * 100);
+    }
+
+    async function updateProgress(){
+      nEl.textContent = String(pairs.length);
+      thrLabel.textContent = currentThreshold().toFixed(2);
+
+      setStatus("самопроверка…");
+      let acc = null;
+      try {
+        acc = await selfCheckAccuracy();
+      } catch(e){
+        acc = null;
+      }
+
+      if (acc == null){
+        accEl.textContent = "— (мало данных)";
+      } else {
+        accEl.textContent = (acc*100).toFixed(1) + "%";
+      }
+
+      const level = computeLevel(acc);
+      lvl.textContent = level + "%";
+      bar.style.width = level + "%";
+
+      setStatus("готово");
+    }
+
+    function enableChatFeedback(enabled){
+      btnRight.disabled = !enabled;
+      btnWrong.disabled = !enabled;
+    }
+
+    // ================== core behavior ==================
+    async function answerUser(text){
+      lastUserText = text;
+
+      if (pairs.length === 0){
+        lastAiText = "Я пока пустой. Научи меня: справа добавь пример (вопрос → ответ).";
+        lastMatch = { idx:-1, sim:0 };
+        return { text: lastAiText, meta: "нет базы знаний" };
+      }
+
+      const qe = await embedOne(text);
+      const { idx, sim } = retrieve(qe);
+
+      lastMatch = { idx, sim };
+
+      if (idx < 0 || sim < currentThreshold()){
+        lastAiText = "Я не уверен. Исправь меня: нажми «👎 исправить» и напиши правильный ответ — я запомню.";
+        return { text: lastAiText, meta: `похожесть: ${formatSim(sim)} (ниже порога)` };
+      }
+
+      lastAiText = pairs[idx].a;
+      return { text: lastAiText, meta: `использую урок #${idx+1}, похожесть: ${formatSim(sim)}` };
+    }
+
+    async function teachPair(q, a){
+      pairs.push({ q, a });
+      savePairs();
+      qEmb.push(await embedOne(q));
+    }
+
+    // ================== handlers ==================
+    send.addEventListener("click", async () => {
+      const text = msg.value.trim();
+      if (!text) return;
+      msg.value = "";
+
+      addMsg(text, "me");
+      setStatus("думаю…");
+      enableChatFeedback(false);
+
+      try {
+        const res = await answerUser(text);
+        addMsg(res.text, "ai", res.meta);
+        lastInfo.textContent = `Последний матч: ${lastMatch.idx >= 0 ? ("#"+(lastMatch.idx+1)) : "нет"} | похожесть ${formatSim(lastMatch.sim)}`;
+        enableChatFeedback(true);
+      } catch(e){
+        addMsg("У меня ошибка. Попробуй ещё раз.", "ai");
+        setStatus("ошибка: " + (e?.message || e));
+      } finally {
+        setStatus("готово");
+      }
+    });
+
+    msg.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") send.click();
+    });
+
+    btnRight.addEventListener("click", () => {
+      // просто подтверждение, можно позже использовать как "confidence"
+      setStatus("принял ✅");
+      enableChatFeedback(false);
+      setTimeout(()=>setStatus("готово"), 300);
+    });
+
+    btnWrong.addEventListener("click", async () => {
+      const correct = prompt("Какой должен быть правильный ответ? (я запомню и буду использовать)");
+      if (!correct) return;
+
+      setStatus("учусь на твоей правке…");
+      enableChatFeedback(false);
+
+      try {
+        await teachPair(lastUserText, correct.trim());
+        addMsg("Окей. Я запомнил твою правку и буду отвечать так дальше.", "ai", "добавлен новый урок");
+        await updateProgress();
+      } catch(e){
+        setStatus("ошибка обучения: " + (e?.message || e));
+      } finally {
+        setStatus("готово");
+      }
+    });
+
+    function updateTeachButton(){
+      btnTeach.disabled = !(teachQ.value.trim() && teachA.value.trim() && useModel);
+    }
+    teachQ.addEventListener("input", updateTeachButton);
+    teachA.addEventListener("input", updateTeachButton);
+
+    btnTeach.addEventListener("click", async () => {
+      const q = teachQ.value.trim();
+      const a = teachA.value.trim();
+      if (!q || !a) return;
+
+      setStatus("добавляю урок…");
+      btnTeach.disabled = true;
+
+      try {
+        await teachPair(q, a);
+        teachQ.value = "";
+        teachA.value = "";
+        addMsg("Я получил новый урок. Можешь проверить в чате.", "ai", "обучение: вопрос→ответ");
+        await updateProgress();
+      } catch(e){
+        setStatus("ошибка обучения: " + (e?.message || e));
+      } finally {
+        setStatus("готово");
+        updateTeachButton();
+      }
+    });
+
+    btnRecalc.addEventListener("click", updateProgress);
+
+    btnWipe.addEventListener("click", async () => {
+      if (!confirm("Точно сбросить все знания?")) return;
+      pairs = [];
+      qEmb = [];
+      localStorage.removeItem(LS_KEY);
+      addMsg("Я всё забыл. Можешь учить меня заново.", "ai");
+      await updateProgress();
+    });
+
+    btnExport.addEventListener("click", async () => {
+      const payload = JSON.stringify({ pairs }, null, 2);
+      // покажем в prompt чтобы можно было копировать
+      prompt("Скопируй JSON (экспорт знаний):", payload);
+    });
+
+    btnImport.addEventListener("click", async () => {
+      const raw = prompt("Вставь JSON для импорта знаний:");
+      if (!raw) return;
+
+      try {
+        const obj = JSON.parse(raw);
+        if (!obj || !Array.isArray(obj.pairs)) throw new Error("Неверный формат");
+        pairs = obj.pairs.filter(x => x && typeof x.q === "string" && typeof x.a === "string");
+        savePairs();
+        setStatus("пересобираю эмбеддинги…");
+        await rebuildEmbeddings();
+        addMsg("Импорт завершён ✅", "ai");
+        await updateProgress();
+      } catch(e){
+        alert("Импорт не удался: " + (e?.message || e));
+      }
+    });
+
+    thr.addEventListener("input", async () => {
+      thrLabel.textContent = currentThreshold().toFixed(2);
+    });
+
+    // ================== init ==================
+    (async () => {
+      try {
+        loadPairs();
+        addMsg("Я готов. Научи меня справа (вопрос→ответ) или исправляй мои ответы в чате.", "ai");
+
+        setStatus("загружаю языковую модель…");
+        useModel = await use.load(); // Universal Sentence Encoder
+        setStatus("строю память…");
+        await rebuildEmbeddings();
+
+        updateTeachButton();
+        await updateProgress();
+        setStatus("готово");
+      } catch(e){
+        setStatus("ошибка загрузки: " + (e?.message || e));
+        addMsg("Не получилось загрузить модель. Проверь интернет и обнови страницу.", "ai");
+      }
+    })();
+  </script>
 </body>
 </html>
