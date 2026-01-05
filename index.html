@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Распознавание цифр (рисуй → угадываю)</title>
+  <title>Распознавание рукописных цифр (0–9)</title>
   <style>
     :root { font-family: -apple-system, system-ui, Arial; }
     body { margin:0; background:#0b0d12; color:#e9eefc; }
@@ -17,18 +17,17 @@
     button:disabled { opacity:.4; }
     .canvasWrap { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; }
     canvas { background:#000; border-radius:14px; border:1px solid rgba(255,255,255,.12); touch-action:none; }
-    .panel { min-width: 220px; flex: 1; }
-    .big { font-size: 44px; font-weight: 900; margin: 6px 0; }
+    .panel { min-width: 240px; flex: 1; }
+    .big { font-size: 54px; font-weight: 900; margin: 6px 0; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; opacity:.9; }
-    .bar { height: 10px; border-radius: 10px; background: rgba(255,255,255,.12); overflow:hidden; }
-    .bar > div { height:100%; width:0%; background:#2a6bff; }
     details { margin-top:10px; opacity:.9; }
+    summary { cursor: pointer; }
   </style>
 </head>
 <body>
   <main class="wrap">
     <h1>Нейросеть: распознавание рукописных цифр</h1>
-    <p class="sub">Нарисуй пальцем цифру (0–9) на чёрном поле → нажми «Угадать». Можно обучить модель (MNIST мини-датасет).</p>
+    <p class="sub">Рисуй пальцем цифру (0–9) → «Угадать». Нажми «Обучить», чтобы стало точнее. Модель можно сохранить в браузере.</p>
 
     <section class="card">
       <div class="canvasWrap">
@@ -36,7 +35,7 @@
           <canvas id="draw" width="280" height="280"></canvas>
           <div class="row">
             <button id="btnClear" class="ghost">Стереть</button>
-            <button id="btnGuess" disabled>🤖 Угадать</button>
+            <button id="btnGuess">🤖 Угадать</button>
           </div>
         </div>
 
@@ -44,21 +43,20 @@
           <div>Статус: <b id="status">загрузка…</b></div>
           <div class="big" id="pred">—</div>
           <div class="mono" id="conf">Уверенность: —</div>
+          <div class="mono">Топ-3: <span id="top3">—</span></div>
+
           <div class="row">
-            <button id="btnTrain">🎓 Обучить (быстро)</button>
+            <button id="btnTrain">🎓 Обучить (точнее)</button>
             <button id="btnSave" class="ghost" disabled>💾 Сохранить</button>
             <button id="btnLoad" class="ghost">📦 Загрузить</button>
           </div>
 
-          <div class="mono">Топ-3:</div>
-          <div id="top3" class="mono">—</div>
-
           <details>
             <summary>Подсказки</summary>
             <ul>
-              <li>Рисуй потолще и по центру.</li>
-              <li>После обучения точность сильно растёт.</li>
-              <li>Сохранение хранит модель в браузере (на iPhone тоже).</li>
+              <li>Рисуй ближе к центру, одним штрихом, потолще.</li>
+              <li>Если путает 1/7 или 3/8 — сделай цифры понятнее.</li>
+              <li>«Сохранить» кладёт модель в память браузера на iPhone (IndexedDB).</li>
             </ul>
           </details>
         </div>
@@ -85,8 +83,8 @@
     const top3El   = $('top3');
 
     function setStatus(s){ statusEl.textContent = s; }
-    function setPred(p, conf, top3){
-      predEl.textContent = p;
+    function setOut(pred, conf, top3){
+      predEl.textContent = pred;
       confEl.textContent = conf;
       top3El.textContent = top3;
     }
@@ -99,8 +97,7 @@
       ctx.lineJoin = 'round';
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 22;
-      setPred('—','Уверенность: —','—');
-      btnGuess.disabled = false;
+      setOut('—','Уверенность: —','—');
     }
     clearCanvas();
 
@@ -147,7 +144,6 @@
     let model = null;
 
     function buildModel(){
-      // Простая CNN для 28x28x1
       const m = tf.sequential();
       m.add(tf.layers.conv2d({ inputShape:[28,28,1], filters:16, kernelSize:3, activation:'relu' }));
       m.add(tf.layers.maxPooling2d({ poolSize:2 }));
@@ -161,18 +157,65 @@
       return m;
     }
 
-    // Преобразовать canvas -> 28x28 тензор
+    // ---------- IMPORTANT: better preprocessing (crop + center) ----------
     function canvasToTensor(){
       return tf.tidy(() => {
-        const img = tf.browser.fromPixels(canvas, 1);     // [280,280,1]
-        // уменьшить до 28x28
-        const small = tf.image.resizeBilinear(img, [28,28]);
-        // нормализация 0..1
-        const norm = small.toFloat().div(255.0);
-        // инверсия (фон черный, линии белые — норм, но MNIST обычно белый фон/черные цифры; инвертируем под MNIST)
-        const inv = tf.sub(1.0, norm);
-        // добавить batch
-        return inv.expandDims(0); // [1,28,28,1]
+        // grayscale 0..1 (white=1)
+        const img = tf.browser.fromPixels(canvas, 1).toFloat().div(255.0).squeeze(); // [280,280]
+
+        // ink = "чернила" (1=чернила, 0=фон)
+        // фон черный => img ~0, линии белые => img ~1, значит чернила = img
+        // но MNIST: чернила яркие, фон тёмный, так что оставляем как есть.
+        const ink = img;
+
+        // маска чернил
+        const mask = ink.greater(0.08);
+        const coords = tf.where(mask); // [N,2] (y,x)
+
+        // если пусто
+        if (coords.shape[0] === 0) {
+          return tf.zeros([1,28,28,1]);
+        }
+
+        const ys = coords.slice([0,0],[coords.shape[0],1]);
+        const xs = coords.slice([0,1],[coords.shape[0],1]);
+
+        const ymin = ys.min().dataSync()[0];
+        const ymax = ys.max().dataSync()[0];
+        const xmin = xs.min().dataSync()[0];
+        const xmax = xs.max().dataSync()[0];
+
+        // crop + padding
+        const pad = 14;
+        const y0 = Math.max(0, ymin - pad);
+        const x0 = Math.max(0, xmin - pad);
+        const y1 = Math.min(279, ymax + pad);
+        const x1 = Math.min(279, xmax + pad);
+
+        const h = y1 - y0 + 1;
+        const w = x1 - x0 + 1;
+
+        let cropped = ink.slice([y0, x0],[h, w]); // [h,w]
+
+        // делаем квадрат
+        const size = Math.max(h, w);
+        const top = Math.floor((size - h)/2);
+        const bottom = size - h - top;
+        const left = Math.floor((size - w)/2);
+        const right = size - w - left;
+
+        cropped = tf.pad(cropped, [[top,bottom],[left,right]]); // [size,size]
+
+        // resize to 28x28
+        let resized = tf.image.resizeBilinear(cropped.expandDims(-1), [28,28]); // [28,28,1]
+
+        // нормализация/контраст
+        // делаем чуть сильнее чернила
+        resized = resized.clipByValue(0,1);
+        resized = resized.pow(0.7); // усиливаем яркие пиксели
+
+        // MNIST-совместимость: в MNIST фон черный, чернила белые -> у нас так же, ок.
+        return resized.expandDims(0); // [1,28,28,1]
       });
     }
 
@@ -180,27 +223,25 @@
       if(!model){ setStatus('модель не готова'); return; }
       const x = canvasToTensor();
       const y = model.predict(x);
-      const probs = y.dataSync(); // 10 чисел
+      const probs = y.dataSync();
       x.dispose(); y.dispose();
 
-      // top-3
       const arr = Array.from(probs).map((p,i)=>({i,p}));
       arr.sort((a,b)=>b.p-a.p);
       const best = arr[0];
       const top3 = arr.slice(0,3).map(o => `${o.i}:${(o.p*100).toFixed(1)}%`).join('  ');
-      setPred(String(best.i), `Уверенность: ${(best.p*100).toFixed(1)}%`, top3);
+
+      setOut(String(best.i), `Уверенность: ${(best.p*100).toFixed(1)}%`, top3);
       setStatus('предсказание готово');
     }
 
     btnGuess.addEventListener('click', predict);
 
     // ---------- training data (MNIST mini) ----------
-    // Берём маленький набор MNIST из tfjs-examples (CDN). Это самый быстрый способ без сервера.
     async function loadMnistMini(){
       setStatus('качаю мини-датасет…');
-      // Эти файлы используются в официальных примерах tfjs (mnist)
-      // 2 спрайта: изображения и метки. Мини-версия: 2000 train + 200 test.
-      const IMG_URL = 'https://storage.googleapis.com/learnjs-data/model-builder/mnist_images.png';
+
+      const IMG_URL   = 'https://storage.googleapis.com/learnjs-data/model-builder/mnist_images.png';
       const LABEL_URL = 'https://storage.googleapis.com/learnjs-data/model-builder/mnist_labels_uint8';
 
       const img = new Image();
@@ -208,37 +249,29 @@
       img.src = IMG_URL;
       await new Promise((res, rej)=>{ img.onload=res; img.onerror=rej; });
 
-      const { data: labelData } = await tf.util.fetch(LABEL_URL, { method:'GET' }).then(r=>r.arrayBuffer()).then(buf=>({data: new Uint8Array(buf)}));
+      const labelBuf = await fetch(LABEL_URL).then(r => r.arrayBuffer());
+      const labelData = new Uint8Array(labelBuf);
 
-      // Разбираем спрайт: 28x28, 65000 примеров в оригинале.
-      // Мы возьмём первые 2200 (2000 train + 200 test) чтобы быстро.
       const NUM = 2200;
       const H = 28, W = 28;
+
       const CAN = document.createElement('canvas');
       CAN.width = img.width;
       CAN.height = img.height;
       const c = CAN.getContext('2d', { willReadFrequently: true });
       c.drawImage(img, 0, 0);
 
-      // В спрайте изображения идут в сетке по 5000 в ряд в примерах tfjs? — тут проще:
-      // В официальном файле model-builder/mnist_images.png это вертикальная "лента": ширина 28, высота 28*65000.
-      // Поэтому читаем подряд блоками 28x28 по вертикали.
-      // Проверяем: если ширина != 28, используем другой способ (на всякий).
-      const isStrip = (img.width === 28);
-
+      const isStrip = (img.width === 28); // у этого файла обычно так
       const images = new Float32Array(NUM * H * W);
 
       if(isStrip){
-        // strip: [28, 28*65000]
         for(let i=0;i<NUM;i++){
           const imageData = c.getImageData(0, i*H, W, H).data;
           for(let j=0;j<H*W;j++){
-            // берём R канал
             images[i*H*W + j] = imageData[j*4] / 255;
           }
         }
       } else {
-        // fallback: если спрайт сеткой
         const perRow = Math.floor(img.width / W);
         for(let i=0;i<NUM;i++){
           const sx = (i % perRow) * W;
@@ -250,11 +283,9 @@
         }
       }
 
-      // labels: one-hot по 10, значит длина labelData должна быть >= NUM*10
       const labels = new Uint8Array(NUM * 10);
       labels.set(labelData.slice(0, NUM*10));
 
-      // train/test split
       const TRAIN = 2000;
       const testCount = NUM - TRAIN;
 
@@ -271,9 +302,9 @@
     async function train(){
       if(!model) model = buildModel();
 
-      setStatus('готовлю данные…');
       btnTrain.disabled = true;
       btnGuess.disabled = true;
+      btnSave.disabled = true;
 
       let data;
       try{
@@ -286,27 +317,27 @@
         return;
       }
 
-      setStatus('обучаю… (быстро)');
+      setStatus('обучаю…');
       try{
         await model.fit(data.xTrain, data.yTrain, {
-          epochs: 3,
+          epochs: 10,             // больше эпох = точнее
           batchSize: 64,
           validationData: [data.xTest, data.yTest],
           callbacks: {
             onEpochEnd: (ep, logs) => {
               const acc = logs?.acc ?? logs?.accuracy ?? 0;
               const val = logs?.val_acc ?? logs?.val_accuracy ?? 0;
-              setStatus(`эпоха ${ep+1}/3 — acc ${(acc*100).toFixed(1)}% — val ${(val*100).toFixed(1)}%`);
+              setStatus(`эпоха ${ep+1}/10 — acc ${(acc*100).toFixed(1)}% — val ${(val*100).toFixed(1)}%`);
             }
           }
         });
-        setStatus('обучение готово ✅ рисуй и угадывай');
+        setStatus('обучение готово ✅');
         btnSave.disabled = false;
       } finally {
         data.xTrain.dispose(); data.yTrain.dispose();
         data.xTest.dispose();  data.yTest.dispose();
-        btnGuess.disabled = false;
         btnTrain.disabled = false;
+        btnGuess.disabled = false;
       }
     }
 
@@ -325,7 +356,6 @@
       try{
         model = await tf.loadLayersModel('indexeddb://digit-draw-model');
         setStatus('модель загружена ✅');
-        btnGuess.disabled = false;
         btnSave.disabled = false;
       } catch(e){
         setStatus('сохранённой модели нет (нажми «Обучить», потом «Сохранить»)');
@@ -334,9 +364,9 @@
 
     // init
     (async () => {
-      model = buildModel(); // сразу готова (но не обучена)
-      setStatus('готово: нарисуй цифру или нажми «Обучить»');
-      btnGuess.disabled = false;
+      model = buildModel(); // готова, но не обучена пока
+      setStatus('готово: рисуй и жми «Угадать» (для точности — «Обучить»)');
+      setOut('—','Уверенность: —','—');
     })();
   </script>
 </body>
