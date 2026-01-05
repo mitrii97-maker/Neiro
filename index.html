@@ -3,32 +3,37 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Распознавание рукописных цифр (0–9)</title>
+  <title>Учу нейросеть своим почерком (0–9)</title>
   <style>
     :root { font-family: -apple-system, system-ui, Arial; }
     body { margin:0; background:#0b0d12; color:#e9eefc; }
-    .wrap { max-width: 920px; margin: 0 auto; padding: 18px; }
-    h1 { margin: 10px 0 6px; font-size: 24px; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 18px; }
+    h1 { margin: 10px 0 6px; font-size: 22px; }
     .sub { margin: 0 0 12px; opacity:.8; line-height:1.35; }
     .card { background:#111626; border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:14px; }
     .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:10px 0; }
-    button { border:0; border-radius:12px; padding:12px 14px; font-weight:700; background:#2a6bff; color:#fff; }
+    button { border:0; border-radius:12px; padding:12px 14px; font-weight:800; background:#2a6bff; color:#fff; }
     button.ghost { background:transparent; border:1px solid rgba(255,255,255,.18); }
+    button.small { padding:10px 12px; font-weight:900; }
     button:disabled { opacity:.4; }
     .canvasWrap { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; }
     canvas { background:#000; border-radius:14px; border:1px solid rgba(255,255,255,.12); touch-action:none; }
-    .panel { min-width: 260px; flex: 1; }
-    .big { font-size: 54px; font-weight: 900; margin: 6px 0; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; opacity:.9; }
+    .panel { min-width: 280px; flex: 1; }
+    .big { font-size: 56px; font-weight: 950; margin: 6px 0; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; opacity:.92; }
+    .grid { display:grid; grid-template-columns: repeat(5, minmax(48px, 1fr)); gap:10px; }
     details { margin-top:10px; opacity:.9; }
     summary { cursor: pointer; }
-    .warn { opacity: .85; }
+    .pill { display:inline-block; padding:6px 10px; border:1px solid rgba(255,255,255,.15); border-radius:999px; }
   </style>
 </head>
 <body>
   <main class="wrap">
-    <h1>Нейросеть: распознавание рукописных цифр</h1>
-    <p class="sub">Рисуй цифру (0–9) → «Угадать». Нажми «Обучить», чтобы стало точнее. Ошибки показываются в статусе (удобно на iPhone).</p>
+    <h1>Нейросеть, которую ты учишь сам (цифры 0–9)</h1>
+    <p class="sub">
+      Рисуешь цифру → жмёшь <b>«Угадать»</b>. Если ошиблась — жми кнопку <b>правильной цифры</b> (0–9).
+      Она дообучается на твоём примере.
+    </p>
 
     <section class="card">
       <div class="canvasWrap">
@@ -41,27 +46,42 @@
         </div>
 
         <div class="panel">
-          <div>Статус: <b id="status">загрузка…</b></div>
+          <div class="mono">Статус: <b id="status">загрузка…</b></div>
           <div class="big" id="pred">—</div>
           <div class="mono" id="conf">Уверенность: —</div>
           <div class="mono">Топ-3: <span id="top3">—</span></div>
 
           <div class="row">
-            <button id="btnTrain">🎓 Обучить (точнее)</button>
-            <button id="btnSave" class="ghost" disabled>💾 Сохранить</button>
-            <button id="btnLoad" class="ghost">📦 Загрузить</button>
+            <span class="pill mono">Примеров: <b id="count">0</b></span>
+            <span class="pill mono">Классов: <b id="classes">0/10</b></span>
           </div>
 
-          <p class="mono warn">
-            Если «Угадать» не срабатывает, смотри строку «Статус» — там будет причина.
-          </p>
+          <div class="mono" style="margin-top:10px;">
+            Если неправильно — нажми, какая цифра на самом деле:
+          </div>
+          <div class="grid" id="labelGrid"></div>
+
+          <div class="row" style="margin-top:12px;">
+            <button id="btnSave" class="ghost" disabled>💾 Сохранить</button>
+            <button id="btnLoad" class="ghost">📦 Загрузить</button>
+            <button id="btnReset" class="ghost">🧨 Сбросить всё</button>
+          </div>
 
           <details>
-            <summary>Подсказки по рисованию</summary>
+            <summary>Как это работает</summary>
             <ul>
-              <li>Рисуй ближе к центру, одним штрихом, потолще.</li>
-              <li>Сначала нажми «Обучить» (или «Загрузить», если уже сохранял).</li>
-              <li>«Сохранить» хранит модель в браузере (IndexedDB) — после перезагрузки можно «Загрузить».</li>
+              <li><b>Угадать</b> — просто предсказание текущей моделью.</li>
+              <li><b>0–9</b> — ты задаёшь правильный ответ, и модель учится на этом примере.</li>
+              <li>Чем больше твоих примеров — тем точнее под твою руку.</li>
+            </ul>
+          </details>
+
+          <details>
+            <summary>Советы для точности</summary>
+            <ul>
+              <li>Рисуй по центру, потолще, не слишком мелко.</li>
+              <li>Собери по 10–20 примеров каждой цифры.</li>
+              <li>Если путает 1/7 — рисуй “1” без горизонтальной палки, а “7” с палкой.</li>
             </ul>
           </details>
         </div>
@@ -72,22 +92,23 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
 
   <script>
-    // ================== UI helpers ==================
+    // ================== helpers / UI ==================
     const $ = (id) => document.getElementById(id);
-
     const canvas = $('draw');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
     const btnClear = $('btnClear');
     const btnGuess = $('btnGuess');
-    const btnTrain = $('btnTrain');
     const btnSave  = $('btnSave');
     const btnLoad  = $('btnLoad');
+    const btnReset = $('btnReset');
 
     const statusEl = $('status');
     const predEl   = $('pred');
     const confEl   = $('conf');
     const top3El   = $('top3');
+    const countEl  = $('count');
+    const classesEl= $('classes');
 
     function setStatus(s){ statusEl.textContent = s; }
     function setOut(pred, conf, top3){
@@ -96,15 +117,11 @@
       top3El.textContent = top3;
     }
 
-    // Показ ошибок прямо в UI (важно для iPhone, где консоль обычно не видна)
-    window.addEventListener('error', (e) => {
-      setStatus('Ошибка: ' + (e.message || 'unknown'));
-    });
-    window.addEventListener('unhandledrejection', (e) => {
-      setStatus('Promise error: ' + (e.reason?.message || e.reason || 'unknown'));
-    });
+    // показывать ошибки прямо в UI (iPhone)
+    window.addEventListener('error', (e) => setStatus('Ошибка: ' + (e.message || 'unknown')));
+    window.addEventListener('unhandledrejection', (e) => setStatus('Promise error: ' + (e.reason?.message || e.reason || 'unknown')));
 
-    // ================== Drawing ==================
+    // ================== drawing ==================
     function clearCanvas(){
       ctx.fillStyle = '#000';
       ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -113,25 +130,22 @@
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 22;
       setOut('—','Уверенность: —','—');
-      setStatus('готово: рисуй и жми «Угадать» (для точности — «Обучить» / «Загрузить»)');
+      setStatus('рисуй → угадай → исправь (0–9) если надо');
     }
     clearCanvas();
 
-    let drawing = false;
-    let lastX = 0, lastY = 0;
-
+    let drawing=false, lastX=0, lastY=0;
     function getPos(e){
       const r = canvas.getBoundingClientRect();
       const t = e.touches?.[0];
       const x = (t ? t.clientX : e.clientX) - r.left;
       const y = (t ? t.clientY : e.clientY) - r.top;
-      return { x, y };
+      return {x,y};
     }
-
     function startDraw(e){
       drawing = true;
       const {x,y} = getPos(e);
-      lastX = x; lastY = y;
+      lastX=x; lastY=y;
       e.preventDefault();
     }
     function moveDraw(e){
@@ -141,10 +155,10 @@
       ctx.moveTo(lastX,lastY);
       ctx.lineTo(x,y);
       ctx.stroke();
-      lastX = x; lastY = y;
+      lastX=x; lastY=y;
       e.preventDefault();
     }
-    function endDraw(){ drawing = false; }
+    function endDraw(){ drawing=false; }
 
     canvas.addEventListener('mousedown', startDraw);
     canvas.addEventListener('mousemove', moveDraw);
@@ -156,15 +170,100 @@
 
     btnClear.addEventListener('click', clearCanvas);
 
-    // ================== Model utils ==================
+    // ================== data storage (your examples) ==================
+    // Мы храним примеры как Uint8[784] (28*28) + label (0..9)
+    let samples = []; // Array<{px: Uint8Array, y: number}>
+
+    function stats(){
+      countEl.textContent = String(samples.length);
+      const set = new Set(samples.map(s => s.y));
+      classesEl.textContent = `${set.size}/10`;
+      btnSave.disabled = (samples.length === 0);
+    }
+
+    // base64 encode/decode Uint8Array
+    function u8ToB64(u8){
+      let s = '';
+      for (let i=0;i<u8.length;i++) s += String.fromCharCode(u8[i]);
+      return btoa(s);
+    }
+    function b64ToU8(b64){
+      const bin = atob(b64);
+      const u8 = new Uint8Array(bin.length);
+      for (let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+      return u8;
+    }
+
+    // ================== preprocessing (crop+center -> 28x28) ==================
+    function canvasTo28x28Uint8(){
+      // Возвращает Uint8Array длины 784 (0..255)
+      return tf.tidy(() => {
+        const img = tf.browser.fromPixels(canvas, 1).toFloat().div(255.0).squeeze(); // [280,280]
+        const ink = img; // белые линии = 1
+
+        const mask = ink.greater(0.08).toFloat();
+        const total = mask.sum().dataSync()[0];
+        if (total < 1) {
+          // пусто
+          return new Uint8Array(28*28);
+        }
+
+        const rows = mask.sum(1);
+        const cols = mask.sum(0);
+        const rowsArr = rows.dataSync();
+        const colsArr = cols.dataSync();
+        rows.dispose(); cols.dispose();
+
+        let ymin=0, ymax=279, xmin=0, xmax=279;
+        for (let i=0;i<280;i++){ if(rowsArr[i]>0){ ymin=i; break; } }
+        for (let i=279;i>=0;i--){ if(rowsArr[i]>0){ ymax=i; break; } }
+        for (let i=0;i<280;i++){ if(colsArr[i]>0){ xmin=i; break; } }
+        for (let i=279;i>=0;i--){ if(colsArr[i]>0){ xmax=i; break; } }
+
+        const pad = 14;
+        const y0 = Math.max(0, ymin - pad);
+        const x0 = Math.max(0, xmin - pad);
+        const y1 = Math.min(279, ymax + pad);
+        const x1 = Math.min(279, xmax + pad);
+
+        const h = y1 - y0 + 1;
+        const w = x1 - x0 + 1;
+
+        let cropped = ink.slice([y0,x0],[h,w]); // [h,w]
+
+        const size = Math.max(h,w);
+        const top = Math.floor((size - h)/2);
+        const bottom = size - h - top;
+        const left = Math.floor((size - w)/2);
+        const right = size - w - left;
+
+        cropped = tf.pad(cropped, [[top,bottom],[left,right]]);      // [size,size]
+        let resized = tf.image.resizeBilinear(cropped.expandDims(-1), [28,28]); // [28,28,1]
+        resized = resized.clipByValue(0,1).pow(0.7); // контрастик
+
+        const u8 = new Uint8Array(28*28);
+        const data = resized.squeeze().mul(255).dataSync(); // Float32 -> numbers
+        for (let i=0;i<data.length;i++) u8[i] = Math.max(0, Math.min(255, Math.round(data[i])));
+        return u8;
+      });
+    }
+
+    function u8ToTensor(u8){
+      // Uint8[784] -> tf.Tensor4D [1,28,28,1] (float 0..1)
+      return tf.tidy(() => {
+        const f = tf.tensor1d(Array.from(u8), 'float32').div(255.0);
+        return f.reshape([1,28,28,1]);
+      });
+    }
+
+    // ================== model (small CNN) ==================
     let model = null;
 
     function compileModel(m){
-      // ВАЖНО: после загрузки модели compile НЕ сохраняется -> компилируем заново
       m.compile({
         optimizer: tf.train.adam(0.001),
         loss: 'categoricalCrossentropy',
-        metrics: ['accuracy']
+        metrics: ['accuracy'],
       });
       return m;
     }
@@ -182,232 +281,181 @@
       return compileModel(m);
     }
 
-    // модель "готова для тренировки/предикта"?
-    function isCompiled(m){
-      return !!(m && m.optimizer && m.loss);
+    function hasAnyTraining(){
+      return samples.length >= 2; // хотя бы пару примеров
     }
 
-    // ---------- Better preprocessing (crop + center) ----------
-    function canvasToTensor(){
-      return tf.tidy(() => {
-        const img = tf.browser.fromPixels(canvas, 1).toFloat().div(255.0).squeeze(); // [280,280]
-        const ink = img; // белые линии = 1
-
-        const mask = ink.greater(0.08).toFloat(); // [280,280]
-        const total = mask.sum().dataSync()[0];
-        if (total < 1) return tf.zeros([1,28,28,1]);
-
-        const rows = mask.sum(1); // [280]
-        const cols = mask.sum(0); // [280]
-        const rowsArr = rows.dataSync();
-        const colsArr = cols.dataSync();
-        rows.dispose(); cols.dispose();
-
-        let ymin = 0, ymax = 279, xmin = 0, xmax = 279;
-
-        for(let i=0;i<280;i++){ if(rowsArr[i] > 0){ ymin = i; break; } }
-        for(let i=279;i>=0;i--){ if(rowsArr[i] > 0){ ymax = i; break; } }
-        for(let i=0;i<280;i++){ if(colsArr[i] > 0){ xmin = i; break; } }
-        for(let i=279;i>=0;i--){ if(colsArr[i] > 0){ xmax = i; break; } }
-
-        const pad = 14;
-        const y0 = Math.max(0, ymin - pad);
-        const x0 = Math.max(0, xmin - pad);
-        const y1 = Math.min(279, ymax + pad);
-        const x1 = Math.min(279, xmax + pad);
-
-        const h = y1 - y0 + 1;
-        const w = x1 - x0 + 1;
-
-        let cropped = ink.slice([y0, x0],[h, w]); // [h,w]
-
-        const size = Math.max(h, w);
-        const top = Math.floor((size - h)/2);
-        const bottom = size - h - top;
-        const left = Math.floor((size - w)/2);
-        const right = size - w - left;
-
-        cropped = tf.pad(cropped, [[top,bottom],[left,right]]); // [size,size]
-        let resized = tf.image.resizeBilinear(cropped.expandDims(-1), [28,28]); // [28,28,1]
-        resized = resized.clipByValue(0,1).pow(0.7); // немного усиливаем "чернила"
-
-        return resized.expandDims(0); // [1,28,28,1]
-      });
-    }
-
+    // ================== predict ==================
     function predict(){
       try {
         setStatus('думаю…');
 
-        if(!model){
-          setStatus('модель не готова');
+        if(!model) { setStatus('модель не готова'); return; }
+
+        if(!hasAnyTraining()){
+          setStatus('мало данных: нарисуй и нажми правильную цифру (0–9), хотя бы 2–3 раза');
           return;
         }
 
-        if(!isCompiled(model)){
-          setStatus('модель не скомпилирована (нажми «Обучить» или «Загрузить»)');
+        const u8 = canvasTo28x28Uint8();
+        const sum = u8.reduce((a,b)=>a+b,0);
+        if (sum < 20){
+          setStatus('похоже, ты ничего не нарисовал 🙂');
           return;
         }
 
-        const x = canvasToTensor();
+        const x = u8ToTensor(u8);
         const y = model.predict(x);
         const probs = Array.from(y.dataSync());
-
-        x.dispose();
-        y.dispose();
+        x.dispose(); y.dispose();
 
         const arr = probs.map((p,i)=>({i,p})).sort((a,b)=>b.p-a.p);
         const best = arr[0];
         const top3 = arr.slice(0,3).map(o => `${o.i}:${(o.p*100).toFixed(1)}%`).join('  ');
-
         setOut(String(best.i), `Уверенность: ${(best.p*100).toFixed(1)}%`, top3);
-        setStatus('готово ✅');
-      } catch (e) {
-        setStatus('Ошибка в угадывании: ' + (e?.message || e));
+        setStatus('готово ✅ если ошиблась — нажми правильную цифру');
+      } catch(e){
+        setStatus('Ошибка угадывания: ' + (e?.message || e));
       }
     }
 
     btnGuess.addEventListener('click', predict);
 
-    // ================== Training data (MNIST mini) ==================
-    async function loadMnistMini(){
-      setStatus('качаю мини-датасет…');
+    // ================== training (your influence) ==================
+    async function trainOnAllDataQuick(){
+      // обучаемся на ВСЕХ твоих примерах немного (чтобы не забывать старые)
+      if(samples.length < 2) return;
 
-      const IMG_URL   = 'https://storage.googleapis.com/learnjs-data/model-builder/mnist_images.png';
-      const LABEL_URL = 'https://storage.googleapis.com/learnjs-data/model-builder/mnist_labels_uint8';
+      // соберём батч
+      const xs = tf.tidy(() => {
+        const list = samples.map(s => tf.tensor1d(Array.from(s.px), 'float32').div(255.0).reshape([28,28,1]));
+        return tf.stack(list); // [N,28,28,1]
+      });
 
-      const img = new Image();
-      img.crossOrigin = '';
-      img.src = IMG_URL;
-      await new Promise((res, rej)=>{ img.onload=res; img.onerror=rej; });
+      const ys = tf.tidy(() => {
+        const labels = samples.map(s => s.y);
+        const oh = tf.oneHot(tf.tensor1d(labels, 'int32'), 10);
+        return oh; // [N,10]
+      });
 
-      const labelBuf = await fetch(LABEL_URL).then(r => r.arrayBuffer());
-      const labelData = new Uint8Array(labelBuf);
-
-      const NUM = 2200;
-      const H = 28, W = 28;
-
-      const CAN = document.createElement('canvas');
-      CAN.width = img.width;
-      CAN.height = img.height;
-      const c = CAN.getContext('2d', { willReadFrequently: true });
-      c.drawImage(img, 0, 0);
-
-      const isStrip = (img.width === 28);
-      const images = new Float32Array(NUM * H * W);
-
-      if(isStrip){
-        for(let i=0;i<NUM;i++){
-          const imageData = c.getImageData(0, i*H, W, H).data;
-          for(let j=0;j<H*W;j++){
-            images[i*H*W + j] = imageData[j*4] / 255;
-          }
-        }
-      } else {
-        const perRow = Math.floor(img.width / W);
-        for(let i=0;i<NUM;i++){
-          const sx = (i % perRow) * W;
-          const sy = Math.floor(i / perRow) * H;
-          const imageData = c.getImageData(sx, sy, W, H).data;
-          for(let j=0;j<H*W;j++){
-            images[i*H*W + j] = imageData[j*4] / 255;
-          }
-        }
-      }
-
-      const labels = new Uint8Array(NUM * 10);
-      labels.set(labelData.slice(0, NUM*10));
-
-      const TRAIN = 2000;
-      const testCount = NUM - TRAIN;
-
-      const xTrain = tf.tensor4d(images.slice(0, TRAIN*H*W), [TRAIN, H, W, 1]);
-      const yTrain = tf.tensor2d(labels.slice(0, TRAIN*10), [TRAIN, 10]);
-
-      const xTest = tf.tensor4d(images.slice(TRAIN*H*W), [testCount, H, W, 1]);
-      const yTest = tf.tensor2d(labels.slice(TRAIN*10), [testCount, 10]);
-
-      setStatus('датасет готов');
-      return { xTrain, yTrain, xTest, yTest };
-    }
-
-    async function train(){
-      if(!model) model = buildModel();
-      if(!isCompiled(model)) model = compileModel(model);
-
-      btnTrain.disabled = true;
-      btnGuess.disabled = true;
-      btnSave.disabled = true;
-
-      let data;
-      try{
-        data = await loadMnistMini();
-      } catch(e){
-        setStatus('не удалось скачать датасет (проверь интернет)');
-        btnTrain.disabled = false;
-        btnGuess.disabled = false;
-        return;
-      }
-
-      setStatus('обучаю…');
-      try{
-        await model.fit(data.xTrain, data.yTrain, {
-          epochs: 10,
-          batchSize: 64,
-          validationData: [data.xTest, data.yTest],
-          callbacks: {
-            onEpochEnd: (ep, logs) => {
-              const acc = logs?.acc ?? logs?.accuracy ?? 0;
-              const val = logs?.val_acc ?? logs?.val_accuracy ?? 0;
-              setStatus(`эпоха ${ep+1}/10 — acc ${(acc*100).toFixed(1)}% — val ${(val*100).toFixed(1)}%`);
-            }
-          }
+      try {
+        const epochs = Math.min(8, Math.max(2, Math.floor(samples.length / 15))); // растёт чуть-чуть
+        const batchSize = Math.min(32, Math.max(8, samples.length));
+        await model.fit(xs, ys, {
+          epochs,
+          batchSize,
+          shuffle: true,
+          verbose: 0,
         });
-
-        setStatus('обучение готово ✅');
-        btnSave.disabled = false;
       } finally {
-        data.xTrain.dispose(); data.yTrain.dispose();
-        data.xTest.dispose();  data.yTest.dispose();
-
-        btnTrain.disabled = false;
-        btnGuess.disabled = false;
+        xs.dispose();
+        ys.dispose();
       }
     }
 
-    btnTrain.addEventListener('click', () => {
-      train().catch(e => setStatus('Ошибка обучения: ' + (e?.message || e)));
-    });
+    async function addExampleAndTrain(labelDigit){
+      try {
+        setStatus(`добавляю пример: это ${labelDigit}…`);
 
-    // ================== Save / Load ==================
-    btnSave.addEventListener('click', async () => {
-      try{
-        if(!model) return;
-        setStatus('сохраняю модель…');
-        await model.save('indexeddb://digit-draw-model');
-        setStatus('сохранено ✅');
+        const u8 = canvasTo28x28Uint8();
+        const sum = u8.reduce((a,b)=>a+b,0);
+        if (sum < 20){
+          setStatus('сначала нарисуй цифру 🙂');
+          return;
+        }
+
+        samples.push({ px: u8, y: labelDigit });
+        stats();
+
+        // обучаем коротко
+        setStatus('обучаю на твоих примерах…');
+        await trainOnAllDataQuick();
+
+        setStatus(`готово ✅ теперь я чуть лучше понимаю твою цифру ${labelDigit}`);
       } catch(e) {
-        setStatus('Ошибка сохранения: ' + (e?.message || e)));
+        setStatus('Ошибка обучения: ' + (e?.message || e));
       }
-    });
+    }
 
-    btnLoad.addEventListener('click', async () => {
+    // ================== label buttons (0..9) ==================
+    const grid = $('labelGrid');
+    for (let i=0;i<=9;i++){
+      const b = document.createElement('button');
+      b.className = 'small';
+      b.textContent = String(i);
+      b.addEventListener('click', () => addExampleAndTrain(i));
+      grid.appendChild(b);
+    }
+
+    // ================== Save / Load (model + samples) ==================
+    const LS_KEY = 'digit_samples_v1';
+    const MODEL_KEY = 'indexeddb://digit-personal-model';
+
+    async function saveAll(){
       try{
-        setStatus('пытаюсь загрузить модель…');
-        model = await tf.loadLayersModel('indexeddb://digit-draw-model');
-        model = compileModel(model); // ✅ фикс ошибки "compile before training/testing"
-        setStatus('модель загружена и готова ✅');
-        btnSave.disabled = false;
-      } catch(e){
-        setStatus('сохранённой модели нет (нажми «Обучить», потом «Сохранить»)');
-      }
-    });
+        if(!model || samples.length === 0) return;
 
-    // ================== Init ==================
+        setStatus('сохраняю модель…');
+        await model.save(MODEL_KEY);
+
+        setStatus('сохраняю твои примеры…');
+        const payload = samples.map(s => ({ y: s.y, px: u8ToB64(s.px) }));
+        localStorage.setItem(LS_KEY, JSON.stringify(payload));
+
+        setStatus('сохранено ✅');
+      } catch(e){
+        setStatus('Ошибка сохранения: ' + (e?.message || e));
+      }
+    }
+
+    async function loadAll(){
+      try{
+        setStatus('загружаю модель…');
+        model = await tf.loadLayersModel(MODEL_KEY);
+        model = compileModel(model); // важно после load
+        setStatus('модель загружена ✅');
+
+        setStatus('загружаю примеры…');
+        const raw = localStorage.getItem(LS_KEY);
+        if(raw){
+          const arr = JSON.parse(raw);
+          samples = arr.map(o => ({ y: o.y, px: b64ToU8(o.px) }));
+        } else {
+          samples = [];
+        }
+        stats();
+
+        setStatus(samples.length ? 'готово ✅ загружено' : 'модель загружена, но примеров нет (начни обучать кнопками 0–9)');
+      } catch(e){
+        setStatus('Нечего загружать: сначала обучи, потом «Сохранить»');
+      }
+    }
+
+    function resetAll(){
+      if(!confirm('Точно сбросить модель и все примеры?')) return;
+      samples = [];
+      localStorage.removeItem(LS_KEY);
+      // удалить модель из indexeddb
+      (async () => {
+        try {
+          await tf.io.removeModel(MODEL_KEY);
+        } catch(_) {}
+        model = buildModel();
+        stats();
+        clearCanvas();
+        setStatus('сброшено ✅ начни обучать заново (кнопки 0–9)');
+      })();
+    }
+
+    btnSave.addEventListener('click', saveAll);
+    btnLoad.addEventListener('click', loadAll);
+    btnReset.addEventListener('click', resetAll);
+
+    // ================== init ==================
     (async () => {
-      model = buildModel(); // компилируем сразу
-      setOut('—','Уверенность: —','—');
-      setStatus('готово: рисуй и жми «Угадать» (для точности — «Обучить»)');
+      model = buildModel();
+      stats();
+      setStatus('готово ✅ нарисуй цифру, нажми «Угадать», и если ошибся — нажми правильную цифру 0–9');
     })();
   </script>
 </body>
