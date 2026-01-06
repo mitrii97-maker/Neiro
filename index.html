@@ -2,842 +2,794 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Красные vs Синие — обучение атаки и защиты</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AquaSocial — макет</title>
   <style>
-    :root { font-family: -apple-system, system-ui, Arial; }
-    body { margin:0; background:#0b0d12; color:#e9eefc; }
-    .wrap { max-width: 1180px; margin: 0 auto; padding: 16px; }
-    h1 { margin: 8px 0 6px; font-size: 20px; }
-    .sub { margin: 0 0 12px; opacity:.85; line-height:1.35; }
-    .card { background:#111626; border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:14px; }
-    .grid { display:grid; grid-template-columns: 1.25fr 1fr; gap:12px; }
-    @media (max-width: 980px){ .grid { grid-template-columns: 1fr; } }
+    :root{
+      --apricot:#FBCEB1;
+      --apricot2:#FDD9B5;
+      --agate:#B5B8B1;
+      --aqua:#7FFFD4;
+      --aqua2:#78DBE2;
 
-    canvas { width:100%; height:auto; background:#0a0f1c; border-radius:14px; border:1px solid rgba(255,255,255,.12); }
-
-    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:10px 0; }
-    button{
-      border:0; border-radius:12px; padding:12px 14px; font-weight:900;
-      background:#2a6bff; color:#fff;
+      --bg:#ffffff;
+      --text:#111;
+      --muted: rgba(17,17,17,.65);
+      --card: rgba(255,255,255,.9);
+      --shadow: 0 10px 30px rgba(17,17,17,.10);
+      --shadow2: 0 8px 20px rgba(17,17,17,.08);
+      --radius: 18px;
     }
-    button.ghost { background:transparent; border:1px solid rgba(255,255,255,.18); }
-    button:disabled { opacity:.45; }
 
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; opacity:.92; }
-    .pill { display:inline-block; padding:6px 10px; border:1px solid rgba(255,255,255,.15); border-radius:999px; }
-
-    .bar { height: 10px; background: rgba(255,255,255,.12); border-radius:999px; overflow:hidden; }
-    .bar > div { height:100%; width:0%; background:#2a6bff; }
-    .barRed > div { background:#ff3b30; }
-    .barBlue > div { background:#2a6bff; }
-
-    .panelTitle { margin: 2px 0 8px; font-weight:900; }
-    .small { font-size: 12px; opacity:.8; }
-    .legend { display:flex; gap:10px; flex-wrap:wrap; }
-    .sw { display:inline-flex; gap:6px; align-items:center; }
-    .dot { width:12px; height:12px; border-radius:4px; display:inline-block; border:1px solid rgba(255,255,255,.18); }
-
-    .box {
-      padding: 10px;
-      border-radius: 12px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue";
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 20% -10%, var(--apricot2), transparent 70%),
+        radial-gradient(900px 520px at 85% 0%, var(--aqua2), transparent 65%),
+        linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,1));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
     }
-    input[type="range"]{ width: 220px; }
+
+    /* “Телефон” */
+    .phone{
+      width:min(420px, 100%);
+      height:min(860px, 92vh);
+      border-radius:34px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.75));
+      box-shadow: 0 30px 70px rgba(17,17,17,.18);
+      border:1px solid rgba(181,184,177,.35);
+      overflow:hidden;
+      position:relative;
+      backdrop-filter: blur(10px);
+    }
+
+    /* Верхняя панель */
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:10;
+      padding:14px 14px 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.70));
+      border-bottom:1px solid rgba(181,184,177,.28);
+      backdrop-filter: blur(12px);
+    }
+
+    .status{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      font-size:12px;
+      color:rgba(17,17,17,.85);
+      padding:2px 4px 8px;
+      letter-spacing:.2px;
+    }
+
+    .brandRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:0 4px 10px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+
+    .logo{
+      width:34px;height:34px;border-radius:12px;
+      background: linear-gradient(135deg, var(--aqua), var(--apricot));
+      box-shadow: var(--shadow2);
+      border:1px solid rgba(181,184,177,.35);
+      position:relative;
+      overflow:hidden;
+    }
+    .logo::after{
+      content:"";
+      position:absolute; inset:-20%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.7), transparent 40%),
+                  radial-gradient(circle at 70% 70%, rgba(255,255,255,.4), transparent 45%);
+      transform: rotate(18deg);
+    }
+
+    .actions{
+      display:flex; align-items:center; gap:10px;
+    }
+    .iconBtn{
+      border:none;
+      background: rgba(253,217,181,.55);
+      color:var(--text);
+      height:36px; width:36px;
+      border-radius:14px;
+      display:grid; place-items:center;
+      box-shadow: 0 10px 25px rgba(17,17,17,.08);
+      border:1px solid rgba(181,184,177,.25);
+      cursor:pointer;
+      transition: transform .12s ease, background .12s ease;
+    }
+    .iconBtn:active{transform: scale(.98)}
+    .iconBtn.secondary{ background: rgba(120,219,226,.45); }
+
+    .search{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:16px;
+      border:1px solid rgba(181,184,177,.35);
+      background: rgba(255,255,255,.75);
+      box-shadow: 0 10px 24px rgba(17,17,17,.06);
+    }
+    .search input{
+      border:none; outline:none; background:transparent;
+      width:100%;
+      font-size:14px;
+      color:var(--text);
+    }
+    .search input::placeholder{ color: rgba(17,17,17,.55); }
+
+    /* Контент */
+    .content{
+      height:100%;
+      overflow:auto;
+      padding:12px 12px 92px;
+      scroll-behavior:smooth;
+    }
+
+    /* Сторис */
+    .stories{
+      display:flex;
+      gap:10px;
+      overflow:auto;
+      padding:6px 2px 12px;
+    }
+    .stories::-webkit-scrollbar{height:0}
+
+    .story{
+      width:74px; flex:0 0 auto;
+      text-align:center;
+      cursor:pointer;
+    }
+    .ring{
+      width:64px;height:64px;border-radius:22px;
+      background: linear-gradient(135deg, var(--aqua2), var(--apricot2));
+      padding:2px;
+      box-shadow: 0 12px 24px rgba(17,17,17,.08);
+      border:1px solid rgba(181,184,177,.25);
+      margin:0 auto 6px;
+    }
+    .avatar{
+      width:100%;height:100%;
+      border-radius:20px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), transparent 35%),
+        linear-gradient(135deg, rgba(127,255,212,.9), rgba(251,206,177,.9));
+      border:1px solid rgba(181,184,177,.35);
+      display:grid; place-items:center;
+      font-weight:800;
+    }
+    .storyName{
+      font-size:12px;
+      color:rgba(17,17,17,.75);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    /* Карточка поста */
+    .card{
+      background: rgba(255,255,255,.78);
+      border:1px solid rgba(181,184,177,.28);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      margin: 10px 0 14px;
+    }
+    .cardHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px 12px 10px;
+    }
+    .user{
+      display:flex; align-items:center; gap:10px;
+    }
+    .user .mini{
+      width:38px;height:38px;border-radius:14px;
+      background: linear-gradient(135deg, var(--apricot), var(--aqua2));
+      border:1px solid rgba(181,184,177,.35);
+      box-shadow: 0 10px 18px rgba(17,17,17,.08);
+      display:grid; place-items:center;
+      font-weight:800;
+    }
+    .meta{
+      display:flex; flex-direction:column;
+      line-height:1.05;
+    }
+    .meta .name{font-weight:800; font-size:14px;}
+    .meta .sub{font-size:12px; color:rgba(17,17,17,.6);}
+    .dots{
+      border:none; background:transparent; cursor:pointer;
+      color:rgba(17,17,17,.65);
+      font-size:20px; line-height:1;
+      padding:6px 8px;
+      border-radius:10px;
+    }
+    .dots:active{background: rgba(181,184,177,.18);}
+
+    .media{
+      height: 230px;
+      position:relative;
+      background:
+        radial-gradient(120px 120px at 25% 20%, rgba(255,255,255,.85), transparent 60%),
+        radial-gradient(160px 130px at 70% 65%, rgba(255,255,255,.55), transparent 62%),
+        linear-gradient(135deg, var(--aqua), var(--apricot2));
+      border-top:1px solid rgba(181,184,177,.18);
+      border-bottom:1px solid rgba(181,184,177,.18);
+      overflow:hidden;
+    }
+    .media::after{
+      content:"";
+      position:absolute; inset:-20%;
+      background:
+        radial-gradient(circle at 20% 80%, rgba(253,217,181,.55), transparent 45%),
+        radial-gradient(circle at 80% 20%, rgba(120,219,226,.55), transparent 45%);
+      transform: rotate(-12deg);
+    }
+    .badge{
+      position:absolute;
+      left:12px; top:12px;
+      background: rgba(255,255,255,.8);
+      border:1px solid rgba(181,184,177,.25);
+      border-radius: 999px;
+      padding:6px 10px;
+      font-size:12px;
+      box-shadow: 0 10px 22px rgba(17,17,17,.08);
+      backdrop-filter: blur(10px);
+    }
+
+    .cardBody{
+      padding:12px 12px 12px;
+    }
+    .btnRow{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      padding-bottom:8px;
+    }
+    .btnGroup{
+      display:flex; align-items:center; gap:10px;
+    }
+    .pill{
+      border:none;
+      cursor:pointer;
+      padding:10px 12px;
+      border-radius:14px;
+      background: rgba(120,219,226,.45);
+      border:1px solid rgba(181,184,177,.25);
+      box-shadow: 0 10px 20px rgba(17,17,17,.06);
+      display:flex; align-items:center; gap:8px;
+      font-weight:700;
+      color: rgba(17,17,17,.9);
+      transition: transform .12s ease, background .12s ease;
+    }
+    .pill.apricot{ background: rgba(253,217,181,.55); }
+    .pill:active{ transform: scale(.98); }
+
+    .counts{
+      display:flex; gap:10px;
+      font-size:12px;
+      color: rgba(17,17,17,.65);
+      padding-bottom:10px;
+    }
+
+    .caption{
+      font-size:14px;
+      color: rgba(17,17,17,.86);
+      line-height:1.35;
+      margin:0 0 10px;
+    }
+
+    .commentBox{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      padding:10px;
+      border-radius:16px;
+      background: rgba(255,255,255,.72);
+      border:1px solid rgba(181,184,177,.35);
+    }
+    .commentBox input{
+      border:none; outline:none; background:transparent;
+      width:100%;
+      font-size:14px;
+    }
+    .send{
+      border:none; cursor:pointer;
+      height:36px; width:42px;
+      border-radius:14px;
+      background: linear-gradient(135deg, rgba(127,255,212,.9), rgba(251,206,177,.9));
+      border:1px solid rgba(181,184,177,.3);
+      box-shadow: 0 12px 22px rgba(17,17,17,.08);
+      font-weight:900;
+    }
+    .send:active{ transform: scale(.98); }
+
+    /* Нижняя навигация */
+    .bottomNav{
+      position:absolute;
+      left:0; right:0; bottom:0;
+      padding:12px 12px 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.92) 30%, rgba(255,255,255,.96));
+      border-top:1px solid rgba(181,184,177,.22);
+      backdrop-filter: blur(12px);
+    }
+    .navBar{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      background: rgba(255,255,255,.78);
+      border:1px solid rgba(181,184,177,.28);
+      border-radius: 20px;
+      padding:10px;
+      box-shadow: var(--shadow2);
+    }
+    .navBtn{
+      border:none; cursor:pointer;
+      background: transparent;
+      width:54px; height:44px;
+      border-radius:16px;
+      display:grid; place-items:center;
+      color: rgba(17,17,17,.75);
+      transition: background .12s ease, transform .12s ease;
+      font-weight:800;
+    }
+    .navBtn.active{
+      background: rgba(120,219,226,.45);
+      border:1px solid rgba(181,184,177,.25);
+      color: rgba(17,17,17,.92);
+    }
+    .navBtn:active{ transform: scale(.98); }
+
+    /* Модалка создания поста */
+    .modalOverlay{
+      position:absolute; inset:0;
+      background: rgba(17,17,17,.25);
+      display:none;
+      align-items:flex-end;
+      justify-content:center;
+      padding:14px;
+      z-index:50;
+    }
+    .modalOverlay.show{ display:flex; }
+
+    .modal{
+      width:100%;
+      background: rgba(255,255,255,.92);
+      border:1px solid rgba(181,184,177,.32);
+      border-radius: 22px;
+      box-shadow: 0 30px 70px rgba(17,17,17,.25);
+      overflow:hidden;
+      transform: translateY(0);
+    }
+    .modalTop{
+      padding:12px 12px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom:1px solid rgba(181,184,177,.22);
+      background: linear-gradient(135deg, rgba(253,217,181,.55), rgba(120,219,226,.35));
+    }
+    .modalTop .title{ font-weight:900; }
+    .close{
+      border:none;
+      background: rgba(255,255,255,.65);
+      border:1px solid rgba(181,184,177,.28);
+      height:34px; width:34px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:900;
+    }
+    .modalBody{ padding:12px; }
+    .field{
+      display:flex; flex-direction:column; gap:8px;
+      margin-bottom:10px;
+    }
+    textarea{
+      width:100%;
+      min-height:90px;
+      resize:none;
+      border-radius:16px;
+      border:1px solid rgba(181,184,177,.35);
+      padding:10px 12px;
+      font-size:14px;
+      outline:none;
+      background: rgba(255,255,255,.78);
+    }
+    .row{
+      display:flex; gap:10px; align-items:center;
+    }
+    .select{
+      flex:1;
+      border-radius:16px;
+      border:1px solid rgba(181,184,177,.35);
+      padding:10px 12px;
+      background: rgba(255,255,255,.78);
+      outline:none;
+      font-weight:700;
+    }
+    .postBtn{
+      width:100%;
+      border:none;
+      cursor:pointer;
+      padding:12px 14px;
+      border-radius:16px;
+      background: linear-gradient(135deg, var(--aqua), var(--apricot));
+      border:1px solid rgba(181,184,177,.3);
+      box-shadow: 0 14px 26px rgba(17,17,17,.10);
+      font-weight:900;
+    }
+    .postBtn:active{ transform: scale(.99); }
+
+    /* Тост уведомления */
+    .toast{
+      position:absolute;
+      left:50%;
+      bottom:104px;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,.9);
+      border:1px solid rgba(181,184,177,.30);
+      border-radius: 999px;
+      padding:10px 12px;
+      box-shadow: var(--shadow2);
+      font-size:13px;
+      display:none;
+      z-index:60;
+    }
+    .toast.show{ display:block; animation: pop .22s ease; }
+    @keyframes pop{
+      from{ transform: translateX(-50%) translateY(8px); opacity:.0; }
+      to{ transform: translateX(-50%) translateY(0); opacity:1; }
+    }
   </style>
 </head>
+
 <body>
-  <main class="wrap">
-    <h1>Красные vs Синие — обучение атаки и защиты</h1>
-    <p class="sub">
-      Красные учатся выбирать вход (какой чаще приводит к прорыву). Синие учатся, куда идёт давление, и усиливают эти входы баррикадами.
-      Баррикады можно ломать и чинить — поэтому стратегии “плавают” и это видно.
-    </p>
+  <div class="phone" id="app">
+    <div class="topbar">
+      <div class="status">
+        <div id="clock">09:47</div>
+        <div>LTE • 🔋 10%</div>
+      </div>
 
-    <section class="card">
-      <div class="grid">
-        <div>
-          <canvas id="cv" width="980" height="980"></canvas>
-
-          <div class="row">
-            <button id="btnStart">▶ Старт</button>
-            <button id="btnReset" class="ghost">🔄 Сброс</button>
-            <button id="btnFast" class="ghost">⚡ Быстрее</button>
-            <button id="btnSlow" class="ghost">🐢 Медленнее</button>
-          </div>
-
-          <div class="legend mono">
-            <span class="sw"><span class="dot" style="background:#2b2f3f"></span> стены</span>
-            <span class="sw"><span class="dot" style="background:#ffd60a"></span> входы</span>
-            <span class="sw"><span class="dot" style="background:#a3a3a3"></span> баррикады</span>
-            <span class="sw"><span class="dot" style="background:#2a6bff"></span> синие</span>
-            <span class="sw"><span class="dot" style="background:#ff3b30"></span> красные</span>
-            <span class="sw"><span class="dot" style="background:#7c3aed"></span> ядро</span>
-          </div>
+      <div class="brandRow">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>AquaSocial</div>
         </div>
-
-        <div>
-          <div class="panelTitle">Прогресс</div>
-
-          <div class="mono">Красные (прорывы): <b id="rPct">0%</b></div>
-          <div class="bar barRed"><div id="rBar"></div></div>
-
-          <div style="height:10px"></div>
-
-          <div class="mono">Синие (сдерживание): <b id="bPct">0%</b></div>
-          <div class="bar barBlue"><div id="bBar"></div></div>
-
-          <div class="row mono">
-            <span class="pill">Тик: <b id="tick">0</b></span>
-            <span class="pill">Красных: <b id="rN">0</b></span>
-            <span class="pill">Синих: <b id="bN">0</b></span>
-            <span class="pill">Баррикад: <b id="barN">0</b></span>
-          </div>
-
-          <div class="row mono">
-            <span class="pill">Атаки (окно): <b id="attW">0</b></span>
-            <span class="pill">Прорывы (окно): <b id="succW">0</b></span>
-            <span class="pill">Блоки (окно): <b id="blockW">0</b></span>
-            <span class="pill">Ремонты (окно): <b id="repW">0</b></span>
-          </div>
-
-          <div class="panelTitle">График (последние 80)</div>
-          <canvas id="spark" width="560" height="140" class="box"></canvas>
-          <div class="small mono">Красная линия = % прорывов, синяя линия = % сдерживания</div>
-
-          <div class="panelTitle" style="margin-top:14px;">Настройки</div>
-          <div class="box mono">
-            <div class="row" style="margin:0;">
-              <span>Сложность:</span>
-              <input id="diff" type="range" min="0" max="100" value="55" />
-              <span class="pill" id="diffLabel">55</span>
-            </div>
-            <div class="small" style="margin-top:8px; opacity:.85; line-height:1.35;">
-              Сложность влияет на скорость спавна красных, HP баррикад и количество синих ремонтников.
-            </div>
-          </div>
-
-          <div class="panelTitle" style="margin-top:14px;">Куда лезут красные</div>
-          <div class="mono" id="prefLine">N/E/S/W: —</div>
+        <div class="actions">
+          <button class="iconBtn secondary" id="btnNew" title="Новый пост">＋</button>
+          <button class="iconBtn" id="btnBell" title="Уведомления">🔔</button>
+          <button class="iconBtn" id="btnMsg" title="Сообщения">✉️</button>
         </div>
       </div>
-    </section>
-  </main>
 
-<script>
-(() => {
-  // ===================== UI =====================
-  const $ = (id) => document.getElementById(id);
-
-  const cv = $('cv');
-  const ctx = cv.getContext('2d');
-
-  const spark = $('spark');
-  const sp = spark.getContext('2d');
-
-  const btnStart = $('btnStart');
-  const btnReset = $('btnReset');
-  const btnFast  = $('btnFast');
-  const btnSlow  = $('btnSlow');
-
-  const elTick = $('tick');
-  const elRN = $('rN');
-  const elBN = $('bN');
-  const elBarN = $('barN');
-
-  const elAttW = $('attW');
-  const elSuccW = $('succW');
-  const elBlockW = $('blockW');
-  const elRepW = $('repW');
-
-  const rPct = $('rPct');
-  const bPct = $('bPct');
-  const rBar = $('rBar');
-  const bBar = $('bBar');
-
-  const diff = $('diff');
-  const diffLabel = $('diffLabel');
-  const prefLine = $('prefLine');
-
-  // ===================== Helpers =====================
-  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
-  const randInt = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-  const key = (x,y)=>x+','+y;
-
-  // ===================== World =====================
-  const W = 41, H = 41;
-  const EMPTY = 0, WALL = 1;
-
-  const base = { x0: 13, y0: 13, x1: 27, y1: 27 };
-  const core = { x: 20, y: 20 };
-
-  const entrances = [
-    { name:'N', ex:20, ey:13, tx:20, ty:2  },
-    { name:'E', ex:27, ey:20, tx:38, ty:20 },
-    { name:'S', ex:20, ey:27, tx:20, ty:38 },
-    { name:'W', ex:13, ey:20, tx:2,  ty:20 },
-  ];
-
-  let grid = [];
-  // barricades on entrance tiles only: key(ex,ey) -> {hp, hpMax}
-  let barricades = new Map();
-
-  // agents
-  let reds = [];   // {x,y, ent, path, life, stuck, cooldown}
-  let blues = [];  // {x,y, role, ent}
-
-  // ===================== Learning =====================
-  // red values for entrances
-  let Qent = [0,0,0,0];
-  let temperature = 1.0;
-  let lrRed = 0.10;
-
-  // blue pressure per entrance
-  let pressure = [0,0,0,0];  // EMA of attacks
-  let threat   = [0,0,0,0];  // EMA of hits on barricades
-  let lrBlue = 0.08;
-
-  // ===================== Metrics =====================
-  const WIN = 220;
-  let wAtt=[], wSucc=[], wBlock=[], wRep=[];
-  const pushWin = (arr,v)=>{ arr.push(v); if(arr.length>WIN) arr.shift(); };
-  const sum = (arr)=>arr.reduce((a,b)=>a+b,0);
-
-  const HIST = 80;
-  let histR=[], histB=[];
-
-  // ===================== Simulation =====================
-  let tick = 0;
-  let playing = false;
-  let stepsPerFrame = 2;
-
-  function difficultyValue(){ return Number(diff.value); }
-
-  // ===================== Map build =====================
-  function makeEmpty(){
-    grid = Array.from({length:H},()=>Array(W).fill(EMPTY));
-    barricades.clear();
-  }
-
-  function buildMap(){
-    makeEmpty();
-
-    // border walls
-    for(let x=0;x<W;x++){ grid[0][x]=WALL; grid[H-1][x]=WALL; }
-    for(let y=0;y<H;y++){ grid[y][0]=WALL; grid[y][W-1]=WALL; }
-
-    // base walls square
-    for(let x=base.x0; x<=base.x1; x++){
-      grid[base.y0][x]=WALL;
-      grid[base.y1][x]=WALL;
-    }
-    for(let y=base.y0; y<=base.y1; y++){
-      grid[y][base.x0]=WALL;
-      grid[y][base.x1]=WALL;
-    }
-
-    // carve entrances
-    for(const e of entrances){
-      grid[e.ey][e.ex]=EMPTY;
-    }
-
-    // tunnels
-    for(const e of entrances){
-      const dx = Math.sign(e.tx - e.ex);
-      const dy = Math.sign(e.ty - e.ey);
-      let x=e.ex, y=e.ey;
-      while(x!==e.tx || y!==e.ty){
-        x+=dx; y+=dy;
-        if(x<=0||x>=W-1||y<=0||y>=H-1) break;
-        grid[y][x]=EMPTY;
-      }
-    }
-
-    // interior obstacles (random, но не слишком)
-    const D = difficultyValue();
-    const obs = 10 + Math.floor(D/3); // 10..43
-    for(let i=0;i<obs;i++){
-      const x=randInt(base.x0+1, base.x1-1);
-      const y=randInt(base.y0+1, base.y1-1);
-      if(x===core.x && y===core.y) continue;
-      // не ставим прямо у входов внутри
-      let near=false;
-      for(const e of entrances){
-        const ix = clamp(e.ex + Math.sign(core.x - e.ex), base.x0+1, base.x1-1);
-        const iy = clamp(e.ey + Math.sign(core.y - e.ey), base.y0+1, base.y1-1);
-        if(Math.abs(x-ix)+Math.abs(y-iy)<=1){ near=true; break; }
-      }
-      if(near) continue;
-      grid[y][x]=WALL;
-    }
-
-    grid[core.y][core.x]=EMPTY;
-  }
-
-  // ===================== Pathfinding (A*) =====================
-  function isBlocked(x,y){
-    if(x<0||x>=W||y<0||y>=H) return true;
-    if(grid[y][x]===WALL) return true;
-    if(barricades.has(key(x,y))) return true; // only entrance tile can have
-    return false;
-  }
-
-  function astar(sx,sy,gx,gy, maxIter=7000){
-    const startK = key(sx,sy);
-    const goalK  = key(gx,gy);
-
-    const open = new Map();  // k -> f
-    const gScore = new Map();
-    const came = new Map();
-    const h = (x,y)=>Math.abs(x-gx)+Math.abs(y-gy);
-
-    open.set(startK, h(sx,sy));
-    gScore.set(startK, 0);
-
-    let iter=0;
-    while(open.size && iter++<maxIter){
-      let curK=null, bestF=Infinity;
-      for(const [k,f] of open){
-        if(f<bestF){ bestF=f; curK=k; }
-      }
-      if(curK===goalK){
-        const path=[];
-        let k=curK;
-        while(k!==startK){
-          const [x,y]=k.split(',').map(Number);
-          path.push({x,y});
-          k=came.get(k);
-          if(!k) break;
-        }
-        path.reverse();
-        return path;
-      }
-
-      open.delete(curK);
-      const [cx,cy]=curK.split(',').map(Number);
-      const cg = gScore.get(curK) ?? Infinity;
-
-      const neigh = [
-        {x:cx+1,y:cy},{x:cx-1,y:cy},{x:cx,y:cy+1},{x:cx,y:cy-1}
-      ];
-      for(const n of neigh){
-        if(isBlocked(n.x,n.y)) continue;
-        const nk = key(n.x,n.y);
-        const ng = cg + 1;
-        const old = gScore.get(nk);
-        if(old===undefined || ng<old){
-          came.set(nk, curK);
-          gScore.set(nk, ng);
-          open.set(nk, ng + h(n.x,n.y));
-        }
-      }
-    }
-    return null;
-  }
-
-  // ===================== Red policy (softmax) =====================
-  function softmaxProbs(vals){
-    const t = temperature;
-    const exps = vals.map(v => Math.exp(v / t));
-    const s = exps.reduce((a,b)=>a+b,0) || 1;
-    return exps.map(e => e/s);
-  }
-
-  function pickEntrance(){
-    const p = softmaxProbs(Qent);
-    let r = Math.random();
-    for(let i=0;i<p.length;i++){
-      r -= p[i];
-      if(r<=0) return i;
-    }
-    return p.length-1;
-  }
-
-  function updateRed(ent, reward){
-    // EMA update: fast adaptation
-    Qent[ent] = Qent[ent] + lrRed * (reward - Qent[ent]);
-    // keep bounded
-    Qent[ent] = clamp(Qent[ent], -2.5, 2.5);
-  }
-
-  // ===================== Spawning =====================
-  function spawnRed(){
-    const D = difficultyValue();
-    const ent = pickEntrance();
-    const e = entrances[ent];
-
-    // record attack & pressure
-    pressure[ent] = (1-lrBlue)*pressure[ent] + lrBlue*1;
-
-    let sx = clamp(e.tx + randInt(-1,1), 1, W-2);
-    let sy = clamp(e.ty + randInt(-1,1), 1, H-2);
-    if(grid[sy][sx]===WALL) return;
-
-    const path = astar(sx,sy, core.x,core.y) || [];
-    reds.push({
-      x:sx, y:sy, ent,
-      path,
-      life: 230 + randInt(0,90) - Math.floor(D/5),
-      stuck: 0,
-      cooldown: 0
-    });
-
-    pushWin(wAtt,1);
-    pushWin(wSucc,0);
-    pushWin(wBlock,0);
-    pushWin(wRep,0);
-  }
-
-  function resetAgents(){
-    reds=[];
-    blues=[];
-    const D = difficultyValue();
-    const blueCount = 6 + Math.floor(D/20);
-    for(let i=0;i<blueCount;i++){
-      blues.push({
-        x: randInt(base.x0+2, base.x1-2),
-        y: randInt(base.y0+2, base.y1-2),
-        role: (i%3===0 ? 'repair' : 'patrol'),
-        ent: randInt(0,3)
-      });
-    }
-  }
-
-  // ===================== Blue defense =====================
-  function ensureBarricade(entIdx){
-    const D = difficultyValue();
-    const e = entrances[entIdx];
-    const k = key(e.ex,e.ey);
-
-    const baseHp = 10 + Math.floor(D/8); // 10..22
-    if(!barricades.has(k)){
-      barricades.set(k, { hp: baseHp, hpMax: baseHp });
-      return;
-    }
-    // refresh a bit (soft reinforce)
-    const b = barricades.get(k);
-    b.hpMax = Math.max(b.hpMax, baseHp);
-  }
-
-  function blueStep(){
-    const D = difficultyValue();
-
-    // decay
-    for(let i=0;i<4;i++){
-      pressure[i]*=0.995;
-      threat[i]*=0.994;
-    }
-
-    // choose entrance scores
-    const score = [0,1,2,3].map(i => ({
-      i,
-      s: pressure[i]*1.0 + threat[i]*1.5
-    })).sort((a,b)=>b.s-a.s);
-
-    // budget of barricades
-    const budget = 2 + Math.floor(D/35); // 2..4
-    for(let j=0;j<budget;j++){
-      ensureBarricade(score[j].i);
-    }
-
-    // blue movement + repairs
-    for(const b of blues){
-      // sometimes retarget to most threatened
-      if(Math.random()<0.05) b.ent = score[0].i;
-
-      const e = entrances[b.ent];
-      const ix = clamp(e.ex + Math.sign(core.x - e.ex), base.x0+1, base.x1-1);
-      const iy = clamp(e.ey + Math.sign(core.y - e.ey), base.y0+1, base.y1-1);
-
-      // move one step toward target
-      const tx = (b.role==='patrol') ? core.x : ix;
-      const ty = (b.role==='patrol') ? core.y : iy;
-
-      const dx = Math.sign(tx - b.x);
-      const dy = Math.sign(ty - b.y);
-      const chooseX = Math.random()<0.55;
-
-      let nx = b.x + (chooseX ? dx : 0);
-      let ny = b.y + (!chooseX ? dy : 0);
-
-      if(!isBlocked(nx,ny) && !(nx===core.x && ny===core.y)){
-        b.x=nx; b.y=ny;
-      } else {
-        // try other axis
-        if(!isBlocked(b.x+dx,b.y) && !((b.x+dx)===core.x && b.y===core.y)) b.x += dx;
-        else if(!isBlocked(b.x,b.y+dy) && !(b.x===core.x && (b.y+dy)===core.y)) b.y += dy;
-      }
-
-      // repair if near entrance inner cell and barricade exists
-      if(b.role==='repair'){
-        const bk = key(e.ex,e.ey);
-        const barr = barricades.get(bk);
-        if(barr && (Math.abs(b.x-ix)+Math.abs(b.y-iy)<=1) && barr.hp < barr.hpMax){
-          const rep = 1 + Math.floor(D/60);
-          barr.hp = Math.min(barr.hpMax, barr.hp + rep);
-          pushWin(wRep,1);
-        } else {
-          pushWin(wRep,0);
-        }
-      } else {
-        pushWin(wRep,0);
-      }
-    }
-
-    // slowly regenerate weak barricades a tiny bit (passive maintenance)
-    for(const [k,b] of barricades){
-      if(b.hp < b.hpMax && Math.random()<0.05){
-        b.hp = Math.min(b.hpMax, b.hp + 1);
-      }
-    }
-  }
-
-  // ===================== Red step =====================
-  function redStep(r){
-    const D = difficultyValue();
-    r.life--;
-    if(r.life<=0){
-      updateRed(r.ent, -0.6);
-      return 'dead';
-    }
-
-    if(r.x===core.x && r.y===core.y){
-      updateRed(r.ent, +1.0);
-      return 'success';
-    }
-
-    if(!r.path || r.path.length===0 || Math.random()<0.04){
-      r.path = astar(r.x,r.y, core.x,core.y) || [];
-    }
-
-    if(r.path.length){
-      const n = r.path[0];
-
-      // barricade hit
-      const bk = key(n.x,n.y);
-      if(barricades.has(bk)){
-        pushWin(wBlock,1);
-        threat[r.ent] = (1-lrBlue)*threat[r.ent] + lrBlue*1;
-
-        updateRed(r.ent, -0.12);
-
-        const barr = barricades.get(bk);
-        if(r.cooldown<=0){
-          const dmg = 1 + Math.floor(D/70);
-          barr.hp -= dmg;
-          r.cooldown = 2;
-          if(barr.hp <= 0){
-            barricades.delete(bk);
-            updateRed(r.ent, +0.10); // broke through
-          }
-        } else {
-          r.cooldown--;
-        }
-
-        r.stuck++;
-        return 'ok';
-      }
-
-      if(isBlocked(n.x,n.y)){
-        r.path = [];
-        r.stuck++;
-        updateRed(r.ent, -0.06);
-        pushWin(wBlock,0);
-        return 'ok';
-      }
-
-      // move
-      r.x = n.x; r.y = n.y;
-      r.path.shift();
-      pushWin(wBlock,0);
-
-      // shaping reward: closer to core
-      const dist = Math.abs(r.x-core.x)+Math.abs(r.y-core.y);
-      updateRed(r.ent, dist<10 ? +0.02 : +0.005);
-
-      r.stuck = Math.max(0, r.stuck - 1);
-      return 'ok';
-    }
-
-    // wander fallback
-    const ds=[{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
-    const d=ds[randInt(0,3)];
-    const nx=r.x+d.x, ny=r.y+d.y;
-    if(!isBlocked(nx,ny)){ r.x=nx; r.y=ny; }
-    r.stuck++;
-    updateRed(r.ent, -0.02);
-    pushWin(wBlock,0);
-    return 'ok';
-  }
-
-  // ===================== Draw =====================
-  function roundRect(x,y,w,h,r){
-    const rr = Math.min(r, w/2, h/2);
-    ctx.beginPath();
-    ctx.moveTo(x+rr,y);
-    ctx.arcTo(x+w,y,x+w,y+h,rr);
-    ctx.arcTo(x+w,y+h,x,y+h,rr);
-    ctx.arcTo(x,y+h,x,y,rr);
-    ctx.arcTo(x,y,x+w,y,rr);
-    ctx.closePath();
-  }
-
-  function draw(){
-    const cw=cv.width, ch=cv.height;
-    ctx.clearRect(0,0,cw,ch);
-
-    const pad=20;
-    const size=Math.min(cw,ch)-pad*2;
-    const cell=size/W;
-
-    // background
-    ctx.fillStyle='#0a0f1c';
-    ctx.fillRect(0,0,cw,ch);
-
-    // walls
-    for(let y=0;y<H;y++){
-      for(let x=0;x<W;x++){
-        if(grid[y][x]!==WALL) continue;
-        const px=pad+x*cell;
-        const py=pad+y*cell;
-        ctx.fillStyle='#2b2f3f';
-        roundRect(px+cell*0.08,py+cell*0.08,cell*0.84,cell*0.84,cell*0.18);
-        ctx.fill();
-      }
-    }
-
-    // entrances
-    for(const e of entrances){
-      const px=pad+e.ex*cell;
-      const py=pad+e.ey*cell;
-      ctx.fillStyle='#ffd60a';
-      roundRect(px+cell*0.16,py+cell*0.16,cell*0.68,cell*0.68,cell*0.22);
-      ctx.fill();
-    }
-
-    // barricades
-    for(const [k,b] of barricades){
-      const [x,y]=k.split(',').map(Number);
-      const px=pad+x*cell;
-      const py=pad+y*cell;
-      ctx.fillStyle='#a3a3a3';
-      roundRect(px+cell*0.12,py+cell*0.12,cell*0.76,cell*0.76,cell*0.18);
-      ctx.fill();
-
-      // hp bar
-      ctx.fillStyle='rgba(0,0,0,0.35)';
-      ctx.fillRect(px+cell*0.12, py+cell*0.06, cell*0.76, cell*0.07);
-      ctx.fillStyle='#ffffff';
-      ctx.fillRect(px+cell*0.12, py+cell*0.06, cell*0.76*(b.hp/Math.max(1,b.hpMax)), cell*0.07);
-    }
-
-    // core
-    {
-      const px=pad+core.x*cell;
-      const py=pad+core.y*cell;
-      ctx.fillStyle='#7c3aed';
-      roundRect(px+cell*0.18,py+cell*0.18,cell*0.64,cell*0.64,cell*0.22);
-      ctx.fill();
-    }
-
-    // blues (triangle shield)
-    for(const b of blues){
-      const cx=pad+b.x*cell+cell/2;
-      const cy=pad+b.y*cell+cell/2;
-      ctx.fillStyle='#2a6bff';
-      ctx.beginPath();
-      ctx.moveTo(cx, cy - cell*0.26);
-      ctx.lineTo(cx + cell*0.22, cy + cell*0.18);
-      ctx.lineTo(cx - cell*0.22, cy + cell*0.18);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    // reds (arrow)
-    for(const r of reds){
-      const cx=pad+r.x*cell+cell/2;
-      const cy=pad+r.y*cell+cell/2;
-      ctx.fillStyle='#ff3b30';
-      ctx.beginPath();
-      ctx.moveTo(cx + cell*0.26, cy);
-      ctx.lineTo(cx - cell*0.18, cy - cell*0.18);
-      ctx.lineTo(cx - cell*0.18, cy + cell*0.18);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    // overlay text
-    ctx.fillStyle='rgba(233,238,252,0.86)';
-    ctx.font='14px ui-monospace, Menlo, monospace';
-    ctx.fillText(`steps/frame: ${stepsPerFrame}   temp: ${temperature.toFixed(2)}`, 18, 22);
-  }
-
-  // ===================== Sparkline =====================
-  function drawSpark(){
-    const w=spark.width, h=spark.height;
-    sp.clearRect(0,0,w,h);
-    sp.fillStyle='rgba(255,255,255,0.02)';
-    sp.fillRect(0,0,w,h);
-
-    sp.strokeStyle='rgba(255,255,255,0.10)';
-    for(let i=1;i<4;i++){
-      const y=(h*i)/4;
-      sp.beginPath(); sp.moveTo(0,y); sp.lineTo(w,y); sp.stroke();
-    }
-
-    const drawLine=(arr, color)=>{
-      if(arr.length<2) return;
-      sp.strokeStyle=color;
-      sp.lineWidth=2;
-      sp.beginPath();
-      for(let i=0;i<arr.length;i++){
-        const x=(i/(HIST-1))*w;
-        const y=h - (arr[i]/100)*h;
-        if(i===0) sp.moveTo(x,y); else sp.lineTo(x,y);
-      }
-      sp.stroke();
+      <div class="search">
+        <div aria-hidden="true">🔎</div>
+        <input id="search" placeholder="Поиск: люди, посты, теги..." />
+      </div>
+    </div>
+
+    <div class="content" id="feed">
+      <div class="stories" id="stories"></div>
+      <div id="posts"></div>
+    </div>
+
+    <div class="toast" id="toast">Готово</div>
+
+    <div class="bottomNav">
+      <div class="navBar">
+        <button class="navBtn active" data-tab="feed" title="Лента">🏠</button>
+        <button class="navBtn" data-tab="discover" title="Поиск">🧭</button>
+        <button class="navBtn" data-tab="new" title="Создать">＋</button>
+        <button class="navBtn" data-tab="reels" title="Клипы">▶</button>
+        <button class="navBtn" data-tab="profile" title="Профиль">👤</button>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modalOverlay" id="overlay">
+      <div class="modal" role="dialog" aria-modal="true" aria-label="Создать пост">
+        <div class="modalTop">
+          <div class="title">Создать пост</div>
+          <button class="close" id="closeModal" title="Закрыть">✕</button>
+        </div>
+        <div class="modalBody">
+          <div class="field">
+            <label style="font-weight:800;">Текст</label>
+            <textarea id="newText" placeholder="Что нового?"></textarea>
+          </div>
+
+          <div class="row" style="margin-bottom:10px;">
+            <select class="select" id="newMood" title="Настроение">
+              <option value="aqua">Aqua</option>
+              <option value="aqua2">Aqua Crayola</option>
+              <option value="apricot">Apricot</option>
+              <option value="apricot2">Apricot Crayola</option>
+              <option value="agate">Agate Gray</option>
+            </select>
+            <select class="select" id="newTag" title="Тег">
+              <option value="#день">#день</option>
+              <option value="#работа">#работа</option>
+              <option value="#дизайн">#дизайн</option>
+              <option value="#мысли">#мысли</option>
+              <option value="#вдохновение">#вдохновение</option>
+            </select>
+          </div>
+
+          <button class="postBtn" id="publish">Опубликовать</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---- Demo data ----
+    const users = [
+      {name:"Дима", city:"Новокузнецк", initial:"Д"},
+      {name:"Наталья", city:"Лаборатория", initial:"Н"},
+      {name:"Марина", city:"Вена", initial:"М"},
+      {name:"Олег", city:"Прага", initial:"О"},
+      {name:"Саша", city:"Бишкек", initial:"С"},
+      {name:"Ира", city:"Алматы", initial:"И"},
+      {name:"Кирилл", city:"Берлин", initial:"К"},
+    ];
+
+    let posts = [
+      {id:1, user: users[0], minutes: 8, badge:"#дизайн", text:"Собрал новый макет интерфейса — хочу, чтобы всё ощущалось живым и «как в настоящей соцсети».", likes: 124, comments: 17, liked:false, mood:"aqua2"},
+      {id:2, user: users[1], minutes: 32, badge:"#мысли", text:"Контраст света и спокойных оттенков — это как порядок в хаосе. Сегодня прям зашло.", likes: 88, comments: 9, liked:true, mood:"apricot2"},
+      {id:3, user: users[2], minutes: 61, badge:"#день", text:"Коротко: кофе, идеи, лента. И ещё раз идеи.", likes: 51, comments: 4, liked:false, mood:"aqua"},
+    ];
+
+    const moodToGradient = (mood) => {
+      const map = {
+        aqua:   "linear-gradient(135deg, rgba(127,255,212,.95), rgba(253,217,181,.65))",
+        aqua2:  "linear-gradient(135deg, rgba(120,219,226,.95), rgba(251,206,177,.65))",
+        apricot:"linear-gradient(135deg, rgba(251,206,177,.95), rgba(127,255,212,.65))",
+        apricot2:"linear-gradient(135deg, rgba(253,217,181,.95), rgba(120,219,226,.55))",
+        agate:  "linear-gradient(135deg, rgba(181,184,177,.95), rgba(253,217,181,.55))",
+      };
+      return map[mood] || map.aqua2;
     };
 
-    drawLine(histR,'#ff3b30');
-    drawLine(histB,'#2a6bff');
-  }
+    // ---- UI helpers ----
+    const $ = (sel) => document.querySelector(sel);
+    const el = (tag, cls) => {
+      const e = document.createElement(tag);
+      if (cls) e.className = cls;
+      return e;
+    };
 
-  // ===================== UI update =====================
-  function updateUI(){
-    diffLabel.textContent = String(difficultyValue());
-
-    elTick.textContent = String(tick);
-    elRN.textContent = String(reds.length);
-    elBN.textContent = String(blues.length);
-    elBarN.textContent = String(barricades.size);
-
-    const att = sum(wAtt);
-    const suc = sum(wSucc);
-    const blk = sum(wBlock);
-    const rep = sum(wRep);
-
-    elAttW.textContent = String(att);
-    elSuccW.textContent = String(suc);
-    elBlockW.textContent = String(blk);
-    elRepW.textContent = String(rep);
-
-    const redRate = att>0 ? (suc/att) : 0;
-    const rP = Math.round(redRate*100);
-
-    // blue proxy: blocks+repairs relative to attacks
-    const blueRate = att>0 ? clamp((blk*0.30 + rep*0.80)/(att*2.2), 0, 1) : 0;
-    const bP = Math.round(blueRate*100);
-
-    rPct.textContent = rP + '%';
-    bPct.textContent = bP + '%';
-    rBar.style.width = rP + '%';
-    bBar.style.width = bP + '%';
-
-    // history
-    histR.push(rP); if(histR.length>HIST) histR.shift();
-    histB.push(bP); if(histB.length>HIST) histB.shift();
-    drawSpark();
-
-    // show entrance probs
-    const p = softmaxProbs(Qent);
-    prefLine.textContent = `N/E/S/W: ${p.map(x => (x*100).toFixed(0)+'%').join('  ')}   |  Q: ${Qent.map(v=>v.toFixed(2)).join('  ')}`;
-  }
-
-  // ===================== Main loop =====================
-  function simStep(){
-    tick++;
-    const D = difficultyValue();
-
-    // spawn control
-    const spawnRate = 0.16 + (D/100)*0.24; // 0.16..0.40
-    const maxR = 34 + Math.floor(D/8);
-    if(reds.length < maxR && Math.random() < spawnRate){
-      spawnRed();
+    function toast(msg){
+      const t = $("#toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(()=>t.classList.remove("show"), 1200);
     }
 
-    // blue
-    blueStep();
+    function renderStories(){
+      const wrap = $("#stories");
+      wrap.innerHTML = "";
 
-    // red
-    const alive=[];
-    for(const r of reds){
-      const res = redStep(r);
-      if(res==='success'){
-        pushWin(wSucc,1);
-        // remove on success
-      } else if(res==='dead'){
-        // remove
-      } else {
-        alive.push(r);
-      }
+      // "Ваша сторис"
+      const me = makeStory({name:"Вы", initial:"★"});
+      wrap.appendChild(me);
+
+      users.slice(0,6).forEach(u => wrap.appendChild(makeStory(u)));
     }
-    reds = alive;
 
-    // temperature cool -> more “уверенная” стратегия
-    temperature = clamp(temperature * 0.9996, 0.55, 1.15);
-
-    updateUI();
-    draw();
-  }
-
-  function frame(){
-    if(playing){
-      for(let i=0;i<stepsPerFrame;i++) simStep();
+    function makeStory(u){
+      const s = el("div","story");
+      s.innerHTML = `
+        <div class="ring"><div class="avatar">${u.initial}</div></div>
+        <div class="storyName">${u.name}</div>
+      `;
+      s.addEventListener("click", ()=> toast(`Сторис: ${u.name}`));
+      return s;
     }
-    requestAnimationFrame(frame);
-  }
 
-  // ===================== Controls =====================
-  btnStart.addEventListener('click', ()=>{
-    playing = !playing;
-    btnStart.textContent = playing ? '⏸ Пауза' : '▶ Старт';
-  });
+    function renderPosts(list){
+      const wrap = $("#posts");
+      wrap.innerHTML = "";
+      list.forEach(p => wrap.appendChild(makePost(p)));
+    }
 
-  btnReset.addEventListener('click', ()=>{
-    resetAll();
-  });
+    function makePost(p){
+      const card = el("div","card");
 
-  btnFast.addEventListener('click', ()=>{
-    stepsPerFrame = Math.min(80, stepsPerFrame*2);
-  });
+      const header = el("div","cardHeader");
+      header.innerHTML = `
+        <div class="user">
+          <div class="mini">${p.user.initial}</div>
+          <div class="meta">
+            <div class="name">${p.user.name}</div>
+            <div class="sub">${p.user.city} • ${timeAgo(p.minutes)}</div>
+          </div>
+        </div>
+        <button class="dots" title="Меню">⋯</button>
+      `;
 
-  btnSlow.addEventListener('click', ()=>{
-    stepsPerFrame = Math.max(1, Math.floor(stepsPerFrame/2));
-  });
+      const media = el("div","media");
+      media.style.background = `
+        radial-gradient(120px 120px at 25% 20%, rgba(255,255,255,.85), transparent 60%),
+        radial-gradient(160px 130px at 70% 65%, rgba(255,255,255,.55), transparent 62%),
+        ${moodToGradient(p.mood)}
+      `;
+      const badge = el("div","badge");
+      badge.textContent = p.badge;
+      media.appendChild(badge);
 
-  diff.addEventListener('input', ()=>{
-    diffLabel.textContent = String(difficultyValue());
-  });
+      const body = el("div","cardBody");
 
-  // ===================== Reset =====================
-  function resetLearning(){
-    Qent=[0,0,0,0];
-    pressure=[0,0,0,0];
-    threat=[0,0,0,0];
-    temperature=1.0;
+      const btnRow = el("div","btnRow");
+      const left = el("div","btnGroup");
 
-    wAtt=[]; wSucc=[]; wBlock=[]; wRep=[];
-    histR=[]; histB=[];
-    tick=0;
-  }
+      const likeBtn = el("button","pill");
+      likeBtn.classList.toggle("apricot", p.liked);
+      likeBtn.innerHTML = `${p.liked ? "♥" : "♡"} <span>Лайк</span>`;
+      likeBtn.addEventListener("click", ()=>{
+        p.liked = !p.liked;
+        p.likes += p.liked ? 1 : -1;
+        toast(p.liked ? "Лайк!" : "Убрали лайк");
+        renderPosts(currentFiltered());
+      });
 
-  function resetAll(){
-    playing=false;
-    btnStart.textContent='▶ Старт';
+      const комBtn = el("button","pill apricot");
+      комBtn.innerHTML = `💬 <span>Коммент</span>`;
+      комBtn.addEventListener("click", ()=>{
+        const input = card.querySelector("input");
+        input.focus();
+      });
 
-    buildMap();
-    resetLearning();
-    resetAgents();
+      const shareBtn = el("button","pill");
+      shareBtn.innerHTML = `↗ <span>Поделиться</span>`;
+      shareBtn.addEventListener("click", ()=> toast("Ссылка скопирована"));
 
-    updateUI();
-    draw();
-  }
+      left.append(likeBtn, комBtn);
+      btnRow.append(left, shareBtn);
 
-  // init
-  resetAll();
-  frame();
-})();
-</script>
+      const counts = el("div","counts");
+      counts.innerHTML = `
+        <div><b>${p.likes}</b> лайков</div>
+        <div><b>${p.comments}</b> комментариев</div>
+      `;
+
+      const caption = el("p","caption");
+      caption.textContent = p.text;
+
+      const commentBox = el("div","commentBox");
+      commentBox.innerHTML = `
+        <span style="opacity:.75;">💭</span>
+        <input placeholder="Добавить комментарий..." />
+        <button class="send" title="Отправить">→</button>
+      `;
+
+      const send = commentBox.querySelector(".send");
+      const input = commentBox.querySelector("input");
+      send.addEventListener("click", ()=>{
+        const v = input.value.trim();
+        if(!v) return toast("Пусто 🙂");
+        p.comments += 1;
+        input.value = "";
+        toast("Комментарий добавлен");
+        renderPosts(currentFiltered());
+      });
+
+      body.append(btnRow, counts, caption, commentBox);
+
+      card.append(header, media, body);
+      card.querySelector(".dots").addEventListener("click", ()=> toast("Меню поста"));
+      return card;
+    }
+
+    function timeAgo(min){
+      if (min < 60) return `${min} мин назад`;
+      const h = Math.floor(min/60);
+      return `${h} ч назад`;
+    }
+
+    // ---- Search / filter ----
+    function currentFiltered(){
+      const q = $("#search").value.trim().toLowerCase();
+      if(!q) return posts;
+      return posts.filter(p =>
+        p.user.name.toLowerCase().includes(q) ||
+        p.user.city.toLowerCase().includes(q) ||
+        p.text.toLowerCase().includes(q) ||
+        p.badge.toLowerCase().includes(q)
+      );
+    }
+
+    $("#search").addEventListener("input", ()=> renderPosts(currentFiltered()));
+
+    // ---- Nav behavior ----
+    document.querySelectorAll(".navBtn").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        document.querySelectorAll(".navBtn").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const tab = btn.dataset.tab;
+        if(tab === "new") openModal();
+        else toast(tab === "feed" ? "Лента" :
+                   tab === "discover" ? "Поиск" :
+                   tab === "reels" ? "Клипы" : "Профиль");
+      });
+    });
+
+    // ---- Modal create post ----
+    const overlay = $("#overlay");
+    const openModal = ()=> { overlay.classList.add("show"); $("#newText").focus(); };
+    const closeModal = ()=> overlay.classList.remove("show");
+
+    $("#btnNew").addEventListener("click", openModal);
+    $("#closeModal").addEventListener("click", closeModal);
+    overlay.addEventListener("click", (e)=>{ if(e.target === overlay) closeModal(); });
+
+    $("#publish").addEventListener("click", ()=>{
+      const text = $("#newText").value.trim();
+      if(!text) return toast("Напиши текст поста");
+      const mood = $("#newMood").value;
+      const tag = $("#newTag").value;
+
+      const newPost = {
+        id: Date.now(),
+        user: {name:"Вы", city:"Онлайн", initial:"★"},
+        minutes: 1,
+        badge: tag,
+        text,
+        likes: 0,
+        comments: 0,
+        liked: false,
+        mood
+      };
+
+      posts = [newPost, ...posts].map((p,i)=> ({...p, minutes: p.minutes + (i===0?0:3)}));
+      $("#newText").value = "";
+      closeModal();
+      toast("Опубликовано");
+      renderPosts(currentFiltered());
+      $("#feed").scrollTo({top:0, behavior:"smooth"});
+    });
+
+    // ---- Top actions ----
+    $("#btnBell").addEventListener("click", ()=> toast("Уведомления"));
+    $("#btnMsg").addEventListener("click", ()=> toast("Сообщения"));
+
+    // ---- Clock ----
+    function setClock(){
+      const d = new Date();
+      const hh = String(d.getHours()).padStart(2,"0");
+      const mm = String(d.getMinutes()).padStart(2,"0");
+      $("#clock").textContent = `${hh}:${mm}`;
+    }
+
+    // Init
+    setClock();
+    setInterval(setClock, 1000 * 10);
+    renderStories();
+    renderPosts(posts);
+  </script>
 </body>
 </html>
