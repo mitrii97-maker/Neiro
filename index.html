@@ -3,14 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>ИИ учится обходить препятствия (Q-learning)</title>
+  <title>Красные vs Синие: обучение атаки и защиты</title>
   <style>
     :root { font-family: -apple-system, system-ui, Arial; }
     body { margin:0; background:#0b0d12; color:#e9eefc; }
-    .wrap { max-width: 980px; margin: 0 auto; padding: 16px; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
     h1 { margin: 8px 0 6px; font-size: 20px; }
-    .sub { margin: 0 0 12px; opacity: .85; line-height: 1.35; }
+    .sub { margin: 0 0 12px; opacity:.85; line-height:1.35; }
     .card { background:#111626; border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:14px; }
+
+    .grid { display:grid; grid-template-columns: 1.2fr 1fr; gap:12px; }
+    @media (max-width: 920px){ .grid { grid-template-columns: 1fr; } }
+
+    canvas { width:100%; height:auto; background:#0a0f1c; border-radius:14px; border:1px solid rgba(255,255,255,.12); }
+
     .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:10px 0; }
     button {
       border:0; border-radius:12px; padding:12px 14px; font-weight:800;
@@ -19,14 +25,15 @@
     button.ghost { background:transparent; border:1px solid rgba(255,255,255,.18); }
     button:disabled { opacity:.45; }
 
-    .grid { display:grid; grid-template-columns: 1.2fr 1fr; gap: 12px; }
-    @media (max-width: 860px){ .grid{ grid-template-columns: 1fr; } }
-
-    canvas { width:100%; height:auto; background:#0a0f1c; border-radius:14px; border:1px solid rgba(255,255,255,.12); touch-action:none; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; opacity:.92; }
     .pill { display:inline-block; padding:6px 10px; border:1px solid rgba(255,255,255,.15); border-radius:999px; }
+
     .bar { height: 10px; background: rgba(255,255,255,.12); border-radius:999px; overflow:hidden; }
     .bar > div { height:100%; width:0%; background:#2a6bff; }
+
+    .barRed > div { background:#ff3b30; }
+    .barBlue > div { background:#2a6bff; }
+
     .legend { display:flex; gap:10px; flex-wrap:wrap; }
     .sw { display:inline-flex; gap:6px; align-items:center; }
     .dot { width:12px; height:12px; border-radius:3px; display:inline-block; border:1px solid rgba(255,255,255,.18); }
@@ -34,57 +41,59 @@
 </head>
 <body>
   <main class="wrap">
-    <h1>Визуализация: ИИ учится обходить препятствия</h1>
+    <h1>Красные vs Синие — “обучение” в бою</h1>
     <p class="sub">
-      Это реальное обучение с подкреплением (Q-learning): агент сначала тыкается в стены, потом начинает понимать,
-      куда лучше идти. Прогресс-бар растёт, когда средняя длина успешного пути приближается к кратчайшему.
+      Красные выбирают вход и учатся, какой вход приносит прорыв. Синие учатся, куда чаще атакуют, и ставят баррикады.
+      Это не “заранее написанный путь”: стратегии меняются во времени.
     </p>
 
     <section class="card">
       <div class="grid">
         <div>
-          <canvas id="cv" width="720" height="720"></canvas>
+          <canvas id="cv" width="900" height="900"></canvas>
           <div class="row">
             <button id="btnStart">▶ Старт</button>
-            <button id="btnStep" class="ghost">⏭ Шаг</button>
             <button id="btnReset" class="ghost">🔄 Сброс</button>
-            <button id="btnRandom" class="ghost">🎲 Новый лабиринт</button>
+            <button id="btnFast" class="ghost">⚡ Быстрее</button>
+            <button id="btnSlow" class="ghost">🐢 Медленнее</button>
           </div>
           <div class="legend mono">
-            <span class="sw"><span class="dot" style="background:#0a0f1c"></span> пусто</span>
-            <span class="sw"><span class="dot" style="background:#2b2f3f"></span> стена</span>
-            <span class="sw"><span class="dot" style="background:#2a6bff"></span> агент</span>
-            <span class="sw"><span class="dot" style="background:#2bd67b"></span> цель</span>
-            <span class="sw"><span class="dot" style="background:#ffcc00"></span> старт</span>
+            <span class="sw"><span class="dot" style="background:#2b2f3f"></span> стены</span>
+            <span class="sw"><span class="dot" style="background:#2a6bff"></span> синие (защита)</span>
+            <span class="sw"><span class="dot" style="background:#ff3b30"></span> красные (атака)</span>
+            <span class="sw"><span class="dot" style="background:#ffd60a"></span> входы</span>
+            <span class="sw"><span class="dot" style="background:#7c3aed"></span> ядро базы</span>
+            <span class="sw"><span class="dot" style="background:#a3a3a3"></span> баррикада</span>
           </div>
         </div>
 
         <div>
-          <div class="mono">Уровень “умнения”: <b id="lvl">0%</b></div>
-          <div class="bar"><div id="barFill"></div></div>
+          <div class="mono">Ум красных (прорывы): <b id="rPct">0%</b></div>
+          <div class="bar barRed"><div id="rBar"></div></div>
+
+          <div style="height:10px"></div>
+
+          <div class="mono">Ум синих (блокировка): <b id="bPct">0%</b></div>
+          <div class="bar barBlue"><div id="bBar"></div></div>
 
           <div class="row mono">
-            <span class="pill">Эпизод: <b id="ep">0</b></span>
-            <span class="pill">Шаг в эпизоде: <b id="st">0</b></span>
-            <span class="pill">Успехов: <b id="wins">0</b></span>
+            <span class="pill">Тик: <b id="tick">0</b></span>
+            <span class="pill">Красных: <b id="rN">0</b></span>
+            <span class="pill">Синих: <b id="bN">0</b></span>
+            <span class="pill">Баррикад: <b id="barrN">0</b></span>
           </div>
 
           <div class="row mono">
-            <span class="pill">ε (исследование): <b id="eps">1.00</b></span>
-            <span class="pill">Средн. шагов: <b id="avg">—</b></span>
-            <span class="pill">Оптимум: <b id="opt">—</b></span>
-          </div>
-
-          <div class="row">
-            <button id="btnFast" class="ghost">⚡ Быстрее</button>
-            <button id="btnSlow" class="ghost">🐢 Медленнее</button>
+            <span class="pill">Атаки (окно): <b id="attW">0</b></span>
+            <span class="pill">Прорывы (окно): <b id="succW">0</b></span>
+            <span class="pill">Блоки (окно): <b id="blockW">0</b></span>
           </div>
 
           <div class="mono" style="opacity:.85; line-height:1.35;">
-            <b>Как читать прогресс:</b><br/>
-            • 0% = почти не доходит до цели или ходит очень долго.<br/>
-            • 100% = обычно доходит и путь близок к кратчайшему.<br/><br/>
-            <b>Подсказка:</b> нажми “⚡ Быстрее”, чтобы увидеть “умнение” быстрее.
+            <b>Что тут “учится”:</b><br>
+            • Красные выбирают вход по “весу” (softmax) и обновляют веса по успехам/провалам.<br>
+            • Синие перераспределяют баррикады по “давлению атак” на входы.<br><br>
+            Хочешь ещё круче — добавим: “умные” патрули синих, разрушение баррикад, разные классы красных.
           </div>
         </div>
       </div>
@@ -93,389 +102,604 @@
 
 <script>
 (() => {
-  // ======== Grid world settings ========
-  const W = 10, H = 10;
-  const ACTIONS = 4; // 0 up,1 right,2 down,3 left
-  const dirs = [
-    {dx:0, dy:-1},
-    {dx:1, dy:0},
-    {dx:0, dy:1},
-    {dx:-1, dy:0}
-  ];
+  // ---------- world ----------
+  const W = 33, H = 33;
+  const WALL = 1, EMPTY = 0;
 
-  // Rewards
-  const R_STEP = -0.04;
-  const R_WALL = -1.0;
-  const R_GOAL = +10.0;
-
-  // Q-learning hyperparams
-  let alpha = 0.25;
-  let gamma = 0.95;
-  let epsilon = 1.0;
-  let epsilonMin = 0.05;
-  let epsilonDecay = 0.995;
-
-  // Simulation speed
-  let stepsPerFrame = 1;   // can increase
-  let playing = false;
-
-  // UI
   const cv = document.getElementById('cv');
   const ctx = cv.getContext('2d');
 
   const btnStart = document.getElementById('btnStart');
-  const btnStep = document.getElementById('btnStep');
   const btnReset = document.getElementById('btnReset');
-  const btnRandom = document.getElementById('btnRandom');
   const btnFast = document.getElementById('btnFast');
   const btnSlow = document.getElementById('btnSlow');
 
-  const elLvl = document.getElementById('lvl');
-  const elFill = document.getElementById('barFill');
-  const elEp = document.getElementById('ep');
-  const elSt = document.getElementById('st');
-  const elWins = document.getElementById('wins');
-  const elEps = document.getElementById('eps');
-  const elAvg = document.getElementById('avg');
-  const elOpt = document.getElementById('opt');
+  const elTick = document.getElementById('tick');
+  const elRN = document.getElementById('rN');
+  const elBN = document.getElementById('bN');
+  const elBarrN = document.getElementById('barrN');
 
-  // ======== Environment state ========
-  let grid = []; // 0 empty, 1 wall
-  let start = {x:1, y:8};
-  let goal  = {x:8, y:1};
+  const elAttW = document.getElementById('attW');
+  const elSuccW = document.getElementById('succW');
+  const elBlockW = document.getElementById('blockW');
 
-  let agent = {x:start.x, y:start.y};
-  let episode = 0;
-  let stepInEp = 0;
-  let wins = 0;
-  let maxSteps = 200;
+  const rBar = document.getElementById('rBar');
+  const bBar = document.getElementById('bBar');
+  const rPct = document.getElementById('rPct');
+  const bPct = document.getElementById('bPct');
 
-  // Progress tracking
-  const successSteps = []; // store steps to goal for last N successes
-  const SUCCESS_WINDOW = 30;
-  let optimalSteps = null;
+  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+  const randInt = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 
-  // Q-table: [H][W][A]
-  let Q = null;
+  // simulation speed
+  let stepsPerFrame = 2;
+  let playing = false;
 
-  // ======== Helpers ========
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const randInt = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+  // grid + base layout
+  let grid = [];
+  const base = {
+    x0: 11, y0: 11, x1: 21, y1: 21, // square base walls boundary
+  };
+  const core = { x: 16, y: 16 };
 
-  function makeEmptyGrid(){
-    grid = Array.from({length:H}, () => Array(W).fill(0));
+  // entrances (4)
+  // each entrance is a gap in base wall and a tunnel to outside
+  const entrances = [
+    { name:'N', ex:16, ey:11, tx:16, ty:2 },  // opening at top wall, tunnel goes upward
+    { name:'E', ex:21, ey:16, tx:30, ty:16 }, // right
+    { name:'S', ex:16, ey:21, tx:16, ty:30 }, // down
+    { name:'W', ex:11, ey:16, tx:2,  ty:16 }, // left
+  ];
+
+  // barricades: placed on entrance tile (ex,ey) to block
+  // each barricade has hp and ttl; reds can "damage" it by pushing
+  let barricades = new Map(); // key "x,y" -> {hp, ttl}
+
+  function key(x,y){ return x + ',' + y; }
+
+  // agents
+  let reds = [];   // {x,y,targetEnt, path, stuck, life}
+  let blues = [];  // {x,y, role}
+  const BLUE_COUNT = 6;
+
+  // learning state
+  // red entrance preferences (policy) updated by reward
+  let pref = [0,0,0,0]; // logits
+  let temperature = 0.9;
+  let lrRed = 0.12;
+
+  // blue pressure estimates for entrances (EMA of attacks)
+  let pressure = [0,0,0,0];
+  let lrBlue = 0.08;
+
+  // windows for progress metrics
+  const WINDOW = 160;
+  let recentAttacks = [];
+  let recentSuccess = [];
+  let recentBlocks = [];
+
+  let tick = 0;
+
+  function pushWindow(arr, v){
+    arr.push(v);
+    if(arr.length > WINDOW) arr.shift();
+  }
+  function sum(arr){ return arr.reduce((a,b)=>a+b,0); }
+
+  // ---------- build map ----------
+  function makeEmpty(){
+    grid = Array.from({length:H},()=>Array(W).fill(EMPTY));
+    barricades.clear();
   }
 
-  // Simple maze generator: random walls but keep connectivity (retry)
-  function randomMaze(){
-    for (let tries=0; tries<50; tries++){
-      makeEmptyGrid();
-      // outer border optional: keep edges open for simplicity
-      const wallCount = randInt(14, 24);
-      for (let i=0;i<wallCount;i++){
-        const x = randInt(0, W-1);
-        const y = randInt(0, H-1);
-        if ((x===start.x && y===start.y) || (x===goal.x && y===goal.y)) continue;
-        grid[y][x] = 1;
-      }
-      const opt = bfsShortest(start, goal);
-      if (opt != null && opt <= 40){
-        optimalSteps = opt;
-        return;
+  function addWalls(){
+    // border walls
+    for(let x=0;x<W;x++){ grid[0][x]=WALL; grid[H-1][x]=WALL; }
+    for(let y=0;y<H;y++){ grid[y][0]=WALL; grid[y][W-1]=WALL; }
+
+    // base walls (a hollow square)
+    for(let x=base.x0; x<=base.x1; x++){
+      grid[base.y0][x]=WALL;
+      grid[base.y1][x]=WALL;
+    }
+    for(let y=base.y0; y<=base.y1; y++){
+      grid[y][base.x0]=WALL;
+      grid[y][base.x1]=WALL;
+    }
+
+    // carve entrances (gaps)
+    for(const e of entrances){
+      grid[e.ey][e.ex] = EMPTY;
+    }
+
+    // build tunnels from each entrance to outside
+    // tunnel is a 1-cell wide corridor
+    for(const e of entrances){
+      const dx = Math.sign(e.tx - e.ex);
+      const dy = Math.sign(e.ty - e.ey);
+      let x = e.ex, y = e.ey;
+      while(x !== e.tx || y !== e.ty){
+        x += dx; y += dy;
+        if(x<=0||x>=W-1||y<=0||y>=H-1) break;
+        grid[y][x] = EMPTY;
+        // add tunnel walls around (for look): optional
       }
     }
-    // fallback: fixed walls if random fails
-    fixedMaze();
+
+    // random interior obstacles inside base (but keep passable to core)
+    // make small blocks, not on core
+    const obstacles = 16;
+    for(let i=0;i<obstacles;i++){
+      const x = randInt(base.x0+1, base.x1-1);
+      const y = randInt(base.y0+1, base.y1-1);
+      if(Math.abs(x-core.x)+Math.abs(y-core.y) <= 1) continue;
+      grid[y][x] = WALL;
+    }
+
+    // ensure core is empty
+    grid[core.y][core.x] = EMPTY;
   }
 
-  function fixedMaze(){
-    makeEmptyGrid();
-    // some walls
-    const walls = [
-      // vertical-ish
-      [3,0],[3,1],[3,2],[3,3],[3,4],
-      [6,2],[6,3],[6,4],[6,5],[6,6],
-      // horizontal-ish
-      [1,6],[2,6],[3,6],[4,6],[5,6],
-      [4,8],[5,8],[6,8],[7,8],
-      // extra
-      [7,3],[8,3],
-      [1,2],[2,2]
+  function resetAgents(){
+    reds = [];
+    blues = [];
+    // place blues inside base
+    for(let i=0;i<BLUE_COUNT;i++){
+      blues.push({
+        x: randInt(base.x0+2, base.x1-2),
+        y: randInt(base.y0+2, base.y1-2),
+        role: 'def'
+      });
+    }
+  }
+
+  function resetLearning(){
+    pref = [0,0,0,0];
+    pressure = [0,0,0,0];
+    recentAttacks = [];
+    recentSuccess = [];
+    recentBlocks = [];
+    tick = 0;
+  }
+
+  function resetAll(){
+    playing = false;
+    btnStart.textContent = '▶ Старт';
+    makeEmpty();
+    addWalls();
+    resetAgents();
+    resetLearning();
+    updateUI();
+    draw();
+  }
+
+  // ---------- pathfinding (A*) ----------
+  function neighbors(x,y){
+    return [
+      {x:x+1,y}, {x:x-1,y}, {x,y:y+1}, {x,y:y-1},
     ];
-    for (const [x,y] of walls){
-      if ((x===start.x && y===start.y) || (x===goal.x && y===goal.y)) continue;
-      if (x>=0 && x<W && y>=0 && y<H) grid[y][x] = 1;
-    }
-    optimalSteps = bfsShortest(start, goal);
+  }
+  function isBlocked(x,y){
+    if(x<0||x>=W||y<0||y>=H) return true;
+    if(grid[y][x]===WALL) return true;
+    // barricade blocks on its tile
+    if(barricades.has(key(x,y))) return true;
+    return false;
   }
 
-  function bfsShortest(s, g){
-    // returns shortest path length in steps (Manhattan moves), or null
-    const q = [];
-    const dist = Array.from({length:H},()=>Array(W).fill(-1));
-    dist[s.y][s.x]=0;
-    q.push(s);
-    while(q.length){
-      const cur = q.shift();
-      if (cur.x===g.x && cur.y===g.y) return dist[cur.y][cur.x];
-      for (const d of dirs){
-        const nx=cur.x+d.dx, ny=cur.y+d.dy;
-        if(nx<0||nx>=W||ny<0||ny>=H) continue;
-        if(grid[ny][nx]===1) continue;
-        if(dist[ny][nx]!==-1) continue;
-        dist[ny][nx]=dist[cur.y][cur.x]+1;
-        q.push({x:nx,y:ny});
+  function astar(sx,sy, gx,gy, maxIter=2500){
+    const startK = key(sx,sy);
+    const goalK = key(gx,gy);
+    const open = new Map(); // k -> f
+    const gScore = new Map();
+    const came = new Map();
+
+    function h(x,y){ return Math.abs(x-gx)+Math.abs(y-gy); }
+
+    open.set(startK, h(sx,sy));
+    gScore.set(startK, 0);
+
+    let iter=0;
+    while(open.size && iter++ < maxIter){
+      // pick min f
+      let curK=null, curF=Infinity;
+      for(const [k,f] of open){
+        if(f<curF){ curF=f; curK=k; }
+      }
+      if(curK===goalK){
+        // reconstruct
+        const path = [];
+        let k = curK;
+        while(k!==startK){
+          const [x,y] = k.split(',').map(Number);
+          path.push({x,y});
+          k = came.get(k);
+          if(!k) break;
+        }
+        path.reverse();
+        return path;
+      }
+      open.delete(curK);
+      const [cx,cy] = curK.split(',').map(Number);
+      const cg = gScore.get(curK) ?? Infinity;
+
+      for(const nb of neighbors(cx,cy)){
+        if(isBlocked(nb.x, nb.y)) continue;
+        const nk = key(nb.x, nb.y);
+        const ng = cg + 1;
+        const old = gScore.get(nk);
+        if(old===undefined || ng < old){
+          came.set(nk, curK);
+          gScore.set(nk, ng);
+          open.set(nk, ng + h(nb.x, nb.y));
+        }
       }
     }
     return null;
   }
 
-  function resetQ(){
-    Q = Array.from({length:H}, () =>
-      Array.from({length:W}, () => Array(ACTIONS).fill(0))
-    );
+  // ---------- red policy ----------
+  function softmaxPick(logits){
+    const t = temperature;
+    const exps = logits.map(v => Math.exp(v / t));
+    const s = exps.reduce((a,b)=>a+b,0);
+    let r = Math.random()*s;
+    for(let i=0;i<exps.length;i++){
+      r -= exps[i];
+      if(r<=0) return i;
+    }
+    return exps.length-1;
   }
 
-  function resetAll(keepMaze=false){
-    playing=false;
-    btnStart.textContent = '▶ Старт';
+  function spawnRed(){
+    const ent = softmaxPick(pref);
 
-    episode = 0;
-    stepInEp = 0;
-    wins = 0;
+    // spawn near tunnel outer end
+    const e = entrances[ent];
+    // spawn around tunnel end with small randomness
+    let sx = e.tx, sy = e.ty;
+    sx = clamp(sx + randInt(-1,1), 1, W-2);
+    sy = clamp(sy + randInt(-1,1), 1, H-2);
+    // ensure not blocked
+    if(grid[sy][sx]===WALL) return;
 
-    epsilon = 1.0;
-    successSteps.length = 0;
+    // attack begins: count pressure
+    pressure[ent] = (1-lrBlue)*pressure[ent] + lrBlue*1;
 
-    agent = {x:start.x, y:start.y};
+    const p = astar(sx,sy, core.x, core.y);
+    reds.push({
+      x:sx, y:sy,
+      targetEnt: ent,
+      path: p ?? [],
+      stuck: 0,
+      life: randInt(220, 320), // time to try before dying
+    });
 
-    if (!keepMaze){
-      fixedMaze();
-    } else {
-      optimalSteps = bfsShortest(start, goal);
-    }
-
-    resetQ();
-    updateUI();
-    draw();
+    pushWindow(recentAttacks, 1);
+    pushWindow(recentSuccess, 0);
+    pushWindow(recentBlocks, 0);
   }
 
-  function stateKey(x,y){ return y*W+x; }
-
-  function chooseAction(x,y){
-    if (Math.random() < epsilon){
-      return randInt(0, ACTIONS-1);
+  // ---------- blue defense ----------
+  // Blue place limited barricades at entrances with highest pressure
+  const MAX_BARRICADES = 3;
+  function blueDefend(){
+    // decay pressure slowly
+    for(let i=0;i<pressure.length;i++){
+      pressure[i] *= 0.995;
     }
-    // greedy with random tie-break
-    let best = -Infinity;
-    let bestActions = [];
-    for (let a=0;a<ACTIONS;a++){
-      const v = Q[y][x][a];
-      if (v > best + 1e-9){
-        best = v;
-        bestActions = [a];
-      } else if (Math.abs(v - best) <= 1e-9){
-        bestActions.push(a);
+
+    // choose entrances to barricade
+    const order = [0,1,2,3].sort((a,b)=>pressure[b]-pressure[a]);
+
+    // remove expired barricades
+    for(const [k,v] of barricades){
+      v.ttl -= 1;
+      if(v.ttl <= 0) barricades.delete(k);
+    }
+
+    // ensure barricades on top entrances
+    let placed = 0;
+    for(const idx of order){
+      if(placed >= MAX_BARRICADES) break;
+      const e = entrances[idx];
+      const k = key(e.ex, e.ey);
+      if(!barricades.has(k)){
+        barricades.set(k, { hp: 6, ttl: 360 }); // lasts for a while
+      }
+      placed++;
+    }
+
+    // also: small chance to relocate blue agents to threatened entrance (for visuals)
+    for(const b of blues){
+      // pick most pressured entrance
+      const idx = order[0];
+      const e = entrances[idx];
+      // move a bit toward core side near entrance
+      const tx = clamp(e.ex + (e.ex < core.x ? 1 : e.ex > core.x ? -1 : 0), base.x0+1, base.x1-1);
+      const ty = clamp(e.ey + (e.ey < core.y ? 1 : e.ey > core.y ? -1 : 0), base.y0+1, base.y1-1);
+      // simple greedy step
+      const dx = Math.sign(tx - b.x);
+      const dy = Math.sign(ty - b.y);
+      const nx = b.x + (Math.random()<0.6 ? dx : 0);
+      const ny = b.y + (Math.random()<0.6 ? dy : 0);
+      if(!isBlocked(nx,ny) && !(nx===core.x && ny===core.y)){
+        b.x = nx; b.y = ny;
       }
     }
-    return bestActions[randInt(0, bestActions.length-1)];
   }
 
-  function step(){
-    // one RL step
-    const ax = agent.x, ay = agent.y;
-    const a = chooseAction(ax, ay);
-    const d = dirs[a];
-    const nx = ax + d.dx, ny = ay + d.dy;
+  // ---------- red behavior ----------
+  function redStep(r){
+    r.life--;
+    if(r.life <= 0) return 'dead';
 
-    let reward = R_STEP;
-    let nextX = ax, nextY = ay;
-    let done = false;
+    // reached core => success
+    if(r.x===core.x && r.y===core.y) return 'success';
 
-    if (nx < 0 || nx >= W || ny < 0 || ny >= H || grid[ny][nx] === 1){
-      // hit wall / boundary: stay
-      reward = R_WALL;
-    } else {
-      nextX = nx; nextY = ny;
-      if (nextX === goal.x && nextY === goal.y){
-        reward = R_GOAL;
-        done = true;
+    // if no path or path empty => recalc
+    if(!r.path || r.path.length===0){
+      const p = astar(r.x, r.y, core.x, core.y);
+      r.path = p ?? [];
+      if(!r.path.length){
+        // wander randomly
+        const dirs = [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+        const d = dirs[randInt(0,3)];
+        const nx=r.x+d.x, ny=r.y+d.y;
+        if(!isBlocked(nx,ny)){ r.x=nx; r.y=ny; }
+        r.stuck++;
+        return 'ok';
       }
     }
 
-    // Q update: Q(s,a) ← Q(s,a)+α[r+γ max_a' Q(s',a') - Q(s,a)]
-    const oldQ = Q[ay][ax][a];
-    let maxNext = -Infinity;
-    for (let a2=0;a2<ACTIONS;a2++){
-      maxNext = Math.max(maxNext, Q[nextY][nextX][a2]);
-    }
-    const target = reward + (done ? 0 : gamma * maxNext);
-    Q[ay][ax][a] = oldQ + alpha * (target - oldQ);
-
-    // move agent
-    agent.x = nextX; agent.y = nextY;
-    stepInEp++;
-
-    // episode termination
-    if (done || stepInEp >= maxSteps){
-      episode++;
-      if (done){
-        wins++;
-        successSteps.push(stepInEp);
-        if (successSteps.length > SUCCESS_WINDOW) successSteps.shift();
+    const next = r.path[0];
+    // if next blocked by barricade => attack it a bit (simulate pushing)
+    if(barricades.has(key(next.x,next.y))){
+      const b = barricades.get(key(next.x,next.y));
+      b.hp -= 1; // red damages barricade
+      pushWindow(recentBlocks, 1); // blue successfully blocked a step
+      if(b.hp <= 0){
+        barricades.delete(key(next.x,next.y)); // broken
+      } else {
+        // remain in place
       }
-      // decay epsilon
-      epsilon = Math.max(epsilonMin, epsilon * epsilonDecay);
-      // reset agent
-      agent.x = start.x; agent.y = start.y;
-      stepInEp = 0;
+      r.stuck++;
+      // negative reward for this entrance
+      pref[r.targetEnt] -= lrRed*0.25;
+      return 'ok';
+    }
+
+    // if next is wall/border => recalc
+    if(isBlocked(next.x,next.y)){
+      r.path = [];
+      r.stuck++;
+      pref[r.targetEnt] -= lrRed*0.15;
+      return 'ok';
+    }
+
+    // move
+    r.x = next.x; r.y = next.y;
+    r.path.shift();
+
+    // small shaping: if makes progress toward core, reward slightly
+    const dist = Math.abs(r.x-core.x)+Math.abs(r.y-core.y);
+    const reward = dist < 10 ? 0.01 : 0.003;
+    pref[r.targetEnt] += lrRed*reward;
+
+    // if too stuck, maybe switch entrance preference (implicit: die soon and learn)
+    if(r.stuck > 22){
+      pref[r.targetEnt] -= lrRed*0.35;
+      return 'dead';
+    }
+
+    return 'ok';
+  }
+
+  function resolveRedOutcome(ent, outcome){
+    // update red preference by outcome
+    if(outcome==='success'){
+      pref[ent] += lrRed * 1.8; // big reward
+    } else if(outcome==='dead'){
+      pref[ent] -= lrRed * 0.9; // penalty
     }
   }
 
-  function avg(arr){
-    if (!arr.length) return null;
-    return arr.reduce((a,b)=>a+b,0)/arr.length;
+  // ---------- main sim ----------
+  function simStep(){
+    tick++;
+
+    // spawn reds occasionally
+    // frequency increases slightly over time (pressure)
+    const spawnChance = 0.22 + 0.10*Math.min(1, tick/2000);
+    if(Math.random() < spawnChance){
+      spawnRed();
+    }
+
+    // blue defense update
+    blueDefend();
+
+    // red update
+    const alive = [];
+    for(const r of reds){
+      const res = redStep(r);
+      if(res==='success'){
+        // record success
+        pushWindow(recentSuccess, 1);
+        resolveRedOutcome(r.targetEnt, 'success');
+      } else if(res==='dead'){
+        resolveRedOutcome(r.targetEnt, 'dead');
+        // (no success)
+      } else {
+        alive.push(r);
+      }
+    }
+    reds = alive;
+
+    // small decay of prefs so it doesn't explode
+    for(let i=0;i<pref.length;i++){
+      pref[i] *= 0.999;
+      pref[i] = clamp(pref[i], -4, 4);
+    }
   }
 
-  function progressPercent(){
-    // Based on how close avg successful steps is to optimal.
-    // If no successes yet => 0.
-    const a = avg(successSteps);
-    if (a == null || optimalSteps == null) return 0;
-
-    // map: optimalSteps => 100, maxSteps => ~0
-    const worst = Math.max(optimalSteps + 1, Math.min(maxSteps, optimalSteps + 60));
-    const p = 1 - ((a - optimalSteps) / (worst - optimalSteps));
-    return Math.round(clamp(p, 0, 1) * 100);
-  }
-
+  // ---------- metrics/progress ----------
   function updateUI(){
-    elEp.textContent = String(episode);
-    elSt.textContent = String(stepInEp);
-    elWins.textContent = String(wins);
-    elEps.textContent = epsilon.toFixed(2);
+    elTick.textContent = String(tick);
+    elRN.textContent = String(reds.length);
+    elBN.textContent = String(blues.length);
+    elBarrN.textContent = String(barricades.size);
 
-    const a = avg(successSteps);
-    elAvg.textContent = a == null ? '—' : a.toFixed(1);
-    elOpt.textContent = optimalSteps == null ? '—' : String(optimalSteps);
+    const att = sum(recentAttacks);
+    const suc = sum(recentSuccess);
+    const blk = sum(recentBlocks);
 
-    const p = progressPercent();
-    elLvl.textContent = p + '%';
-    elFill.style.width = p + '%';
+    elAttW.textContent = String(att);
+    elSuccW.textContent = String(suc);
+    elBlockW.textContent = String(blk);
+
+    // Red "intelligence": success rate among attacks (window)
+    const redRate = att > 0 ? (suc/att) : 0;
+    const rP = Math.round(redRate*100);
+    rPct.textContent = rP + '%';
+    rBar.style.width = rP + '%';
+
+    // Blue "intelligence": how much of attacks were blocked (proxy)
+    // blocked steps is not same as blocked attacks, but gives a “defense pressure” feel.
+    const blueRate = att > 0 ? clamp(blk / (att*6), 0, 1) : 0;
+    const bP = Math.round(blueRate*100);
+    bPct.textContent = bP + '%';
+    bBar.style.width = bP + '%';
   }
 
+  // ---------- draw ----------
   function draw(){
-    const cw = cv.width, ch = cv.height;
+    const cw=cv.width, ch=cv.height;
     ctx.clearRect(0,0,cw,ch);
 
     const pad = 18;
-    const size = Math.min(cw, ch) - pad*2;
+    const size = Math.min(cw,ch) - pad*2;
     const cell = size / W;
 
-    // background
+    // bg
     ctx.fillStyle = '#0a0f1c';
     ctx.fillRect(0,0,cw,ch);
 
-    // grid cells
-    for (let y=0;y<H;y++){
-      for (let x=0;x<W;x++){
+    // cells
+    for(let y=0;y<H;y++){
+      for(let x=0;x<W;x++){
         const px = pad + x*cell;
         const py = pad + y*cell;
 
-        // cell base
-        ctx.fillStyle = '#0a0f1c';
-        ctx.fillRect(px,py,cell,cell);
-
         // walls
-        if (grid[y][x] === 1){
+        if(grid[y][x]===WALL){
           ctx.fillStyle = '#2b2f3f';
           ctx.fillRect(px,py,cell,cell);
         }
 
-        // border lines
-        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        // light grid
+        ctx.strokeStyle = 'rgba(255,255,255,0.05)';
         ctx.strokeRect(px,py,cell,cell);
       }
     }
 
-    // start & goal
-    {
-      const sx = pad + start.x*cell, sy = pad + start.y*cell;
-      ctx.fillStyle = '#ffcc00';
-      ctx.fillRect(sx+cell*0.18, sy+cell*0.18, cell*0.64, cell*0.64);
-    }
-    {
-      const gx = pad + goal.x*cell, gy = pad + goal.y*cell;
-      ctx.fillStyle = '#2bd67b';
-      ctx.fillRect(gx+cell*0.18, gy+cell*0.18, cell*0.64, cell*0.64);
+    // entrances
+    for(const e of entrances){
+      const px = pad + e.ex*cell;
+      const py = pad + e.ey*cell;
+      ctx.fillStyle = '#ffd60a';
+      ctx.fillRect(px+cell*0.2, py+cell*0.2, cell*0.6, cell*0.6);
     }
 
-    // agent
+    // barricades
+    for(const [k,v] of barricades){
+      const [x,y]=k.split(',').map(Number);
+      const px = pad + x*cell;
+      const py = pad + y*cell;
+      ctx.fillStyle = '#a3a3a3';
+      ctx.fillRect(px+cell*0.12, py+cell*0.12, cell*0.76, cell*0.76);
+
+      // hp bar
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.fillRect(px+cell*0.12, py+cell*0.06, cell*0.76, cell*0.08);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(px+cell*0.12, py+cell*0.06, cell*0.76*(v.hp/6), cell*0.08);
+    }
+
+    // core
     {
-      const ax = pad + agent.x*cell, ay = pad + agent.y*cell;
+      const px = pad + core.x*cell;
+      const py = pad + core.y*cell;
+      ctx.fillStyle = '#7c3aed';
+      ctx.fillRect(px+cell*0.18, py+cell*0.18, cell*0.64, cell*0.64);
+    }
+
+    // blues
+    for(const b of blues){
+      const px = pad + b.x*cell + cell/2;
+      const py = pad + b.y*cell + cell/2;
       ctx.fillStyle = '#2a6bff';
       ctx.beginPath();
-      ctx.arc(ax + cell/2, ay + cell/2, cell*0.28, 0, Math.PI*2);
+      ctx.arc(px,py,cell*0.22,0,Math.PI*2);
       ctx.fill();
     }
 
-    // title overlay
-    ctx.fillStyle = 'rgba(233,238,252,0.8)';
-    ctx.font = '16px -apple-system, system-ui, Arial';
-    ctx.fillText(`steps/frame: ${stepsPerFrame}`, 18, 22);
+    // reds
+    for(const r of reds){
+      const px = pad + r.x*cell + cell/2;
+      const py = pad + r.y*cell + cell/2;
+      ctx.fillStyle = '#ff3b30';
+      ctx.beginPath();
+      ctx.arc(px,py,cell*0.20,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    // tiny overlay: entrance weights
+    // show which entrance reds prefer
+    const probs = softmaxProbs(pref);
+    ctx.fillStyle = 'rgba(233,238,252,0.85)';
+    ctx.font = '14px ui-monospace, Menlo, monospace';
+    ctx.fillText(`Red pref N/E/S/W: ${probs.map(p => (p*100).toFixed(0)+'%').join(' ')}`, 18, 22);
   }
 
-  function tick(){
-    if (playing){
-      for (let i=0;i<stepsPerFrame;i++) step();
+  function softmaxProbs(logits){
+    const t = temperature;
+    const exps = logits.map(v => Math.exp(v/t));
+    const s = exps.reduce((a,b)=>a+b,0) || 1;
+    return exps.map(e => e/s);
+  }
+
+  // ---------- loop ----------
+  function frame(){
+    if(playing){
+      for(let i=0;i<stepsPerFrame;i++){
+        simStep();
+      }
       updateUI();
       draw();
     }
-    requestAnimationFrame(tick);
+    requestAnimationFrame(frame);
   }
 
-  // ======== UI handlers ========
-  btnStart.addEventListener('click', () => {
+  // ---------- controls ----------
+  btnStart.addEventListener('click', ()=>{
     playing = !playing;
     btnStart.textContent = playing ? '⏸ Пауза' : '▶ Старт';
   });
 
-  btnStep.addEventListener('click', () => {
-    // do a little burst so it's visible
-    for (let i=0;i<20;i++) step();
-    updateUI();
-    draw();
+  btnReset.addEventListener('click', ()=>{
+    resetAll();
   });
 
-  btnReset.addEventListener('click', () => {
-    resetAll(true); // keep maze, reset learning
+  btnFast.addEventListener('click', ()=>{
+    stepsPerFrame = Math.min(60, stepsPerFrame * 2);
   });
-
-  btnRandom.addEventListener('click', () => {
-    playing = false;
-    btnStart.textContent = '▶ Старт';
-    randomMaze();
-    resetQ();
-    agent = {x:start.x, y:start.y};
-    episode = 0; stepInEp = 0; wins = 0; epsilon = 1.0; successSteps.length = 0;
-    updateUI();
-    draw();
-  });
-
-  btnFast.addEventListener('click', () => {
-    stepsPerFrame = Math.min(500, stepsPerFrame * 2);
-    draw();
-  });
-
-  btnSlow.addEventListener('click', () => {
+  btnSlow.addEventListener('click', ()=>{
     stepsPerFrame = Math.max(1, Math.floor(stepsPerFrame / 2));
-    draw();
   });
 
-  // ======== Init ========
-  fixedMaze();
-  resetAll(true);
-  tick();
+  // init
+  resetAll();
+  frame();
 })();
 </script>
 </body>
