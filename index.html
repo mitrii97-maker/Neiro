@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AquaSocial — макет</title>
+  <title>VK-like Mobile — макет</title>
   <style>
     :root{
       --apricot:#FBCEB1;
@@ -13,124 +13,59 @@
       --aqua2:#78DBE2;
 
       --bg:#ffffff;
-      --text:#111;
+      --text:#111111;
+
       --muted: rgba(17,17,17,.65);
-      --card: rgba(255,255,255,.9);
-      --shadow: 0 10px 30px rgba(17,17,17,.10);
-      --shadow2: 0 8px 20px rgba(17,17,17,.08);
-      --radius: 18px;
+      --line: rgba(181,184,177,.55);
+      --card: rgba(255,255,255,.92);
+      --shadow: 0 10px 24px rgba(17,17,17,.10);
+
+      --radius: 14px;
     }
 
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue";
-      color:var(--text);
-      background:
-        radial-gradient(900px 500px at 20% -10%, var(--apricot2), transparent 70%),
-        radial-gradient(900px 520px at 85% 0%, var(--aqua2), transparent 65%),
-        linear-gradient(180deg, rgba(255,255,255,1), rgba(255,255,255,1));
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
+      background: var(--bg);
+      color: var(--text);
     }
 
-    /* “Телефон” */
-    .phone{
-      width:min(420px, 100%);
-      height:min(860px, 92vh);
-      border-radius:34px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.75));
-      box-shadow: 0 30px 70px rgba(17,17,17,.18);
-      border:1px solid rgba(181,184,177,.35);
-      overflow:hidden;
-      position:relative;
-      backdrop-filter: blur(10px);
-    }
-
-    /* Верхняя панель */
+    /* top bar (VK mobile vibe) */
     .topbar{
       position:sticky;
       top:0;
-      z-index:10;
-      padding:14px 14px 10px;
-      background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.70));
-      border-bottom:1px solid rgba(181,184,177,.28);
-      backdrop-filter: blur(12px);
+      z-index:50;
+      background: linear-gradient(180deg, var(--aqua2), var(--aqua));
+      border-bottom: 1px solid rgba(17,17,17,.08);
+      padding: 10px 12px 10px;
     }
-
-    .status{
+    .toprow{
       display:flex;
       align-items:center;
-      justify-content:space-between;
-      font-size:12px;
-      color:rgba(17,17,17,.85);
-      padding:2px 4px 8px;
-      letter-spacing:.2px;
-    }
-
-    .brandRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
       gap:10px;
-      padding:0 4px 10px;
     }
-
     .brand{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      font-weight:800;
+      font-weight:900;
       letter-spacing:.2px;
+      white-space:nowrap;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.55);
+      border:1px solid rgba(17,17,17,.10);
+      user-select:none;
     }
-
-    .logo{
-      width:34px;height:34px;border-radius:12px;
-      background: linear-gradient(135deg, var(--aqua), var(--apricot));
-      box-shadow: var(--shadow2);
-      border:1px solid rgba(181,184,177,.35);
-      position:relative;
-      overflow:hidden;
-    }
-    .logo::after{
-      content:"";
-      position:absolute; inset:-20%;
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.7), transparent 40%),
-                  radial-gradient(circle at 70% 70%, rgba(255,255,255,.4), transparent 45%);
-      transform: rotate(18deg);
-    }
-
-    .actions{
-      display:flex; align-items:center; gap:10px;
-    }
-    .iconBtn{
-      border:none;
-      background: rgba(253,217,181,.55);
-      color:var(--text);
-      height:36px; width:36px;
-      border-radius:14px;
-      display:grid; place-items:center;
-      box-shadow: 0 10px 25px rgba(17,17,17,.08);
-      border:1px solid rgba(181,184,177,.25);
-      cursor:pointer;
-      transition: transform .12s ease, background .12s ease;
-    }
-    .iconBtn:active{transform: scale(.98)}
-    .iconBtn.secondary{ background: rgba(120,219,226,.45); }
-
     .search{
+      flex:1;
       display:flex;
       align-items:center;
-      gap:10px;
-      padding:10px 12px;
-      border-radius:16px;
-      border:1px solid rgba(181,184,177,.35);
-      background: rgba(255,255,255,.75);
-      box-shadow: 0 10px 24px rgba(17,17,17,.06);
+      gap:8px;
+      background: rgba(255,255,255,.78);
+      border:1px solid rgba(17,17,17,.10);
+      border-radius: 999px;
+      padding: 10px 12px;
+      min-width:0;
     }
     .search input{
       border:none; outline:none; background:transparent;
@@ -139,657 +74,596 @@
       color:var(--text);
     }
     .search input::placeholder{ color: rgba(17,17,17,.55); }
+    .iconBtn{
+      width:40px;height:40px;
+      border-radius: 12px;
+      border:1px solid rgba(17,17,17,.10);
+      background: rgba(255,255,255,.55);
+      display:grid;place-items:center;
+      cursor:pointer;
+      user-select:none;
+      font-weight:900;
+    }
+    .iconBtn:active{ transform: scale(.98); }
 
-    /* Контент */
-    .content{
-      height:100%;
+    /* tabs under top bar */
+    .tabs{
+      display:flex;
+      gap:8px;
+      padding-top: 10px;
       overflow:auto;
-      padding:12px 12px 92px;
-      scroll-behavior:smooth;
+      scrollbar-width:none;
+    }
+    .tabs::-webkit-scrollbar{height:0}
+    .tab{
+      flex:0 0 auto;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(17,17,17,.10);
+      background: rgba(255,255,255,.55);
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .tab.active{
+      background: linear-gradient(135deg, rgba(253,217,181,.85), rgba(255,255,255,.55));
     }
 
-    /* Сторис */
-    .stories{
+    /* layout */
+    .page{
+      max-width: 680px;
+      margin: 0 auto;
+      padding-bottom: 74px; /* bottom nav */
+    }
+
+    /* quick actions (like VK “что у вас нового?” block) */
+    .composer{
+      margin: 12px 12px 0;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .composerTop{
       display:flex;
       gap:10px;
-      overflow:auto;
-      padding:6px 2px 12px;
+      align-items:center;
+      padding: 12px;
     }
-    .stories::-webkit-scrollbar{height:0}
-
-    .story{
-      width:74px; flex:0 0 auto;
-      text-align:center;
+    .ava{
+      width:38px;height:38px;border-radius: 12px;
+      background: linear-gradient(135deg, var(--apricot2), var(--aqua2));
+      border:1px solid rgba(17,17,17,.10);
+      display:grid;place-items:center;
+      font-weight:900;
+    }
+    .composerInput{
+      flex:1;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border:1px solid rgba(17,17,17,.10);
+      background: rgba(255,255,255,.75);
+      color: rgba(17,17,17,.55);
+      font-size:14px;
+      user-select:none;
       cursor:pointer;
     }
-    .ring{
-      width:64px;height:64px;border-radius:22px;
-      background: linear-gradient(135deg, var(--aqua2), var(--apricot2));
-      padding:2px;
-      box-shadow: 0 12px 24px rgba(17,17,17,.08);
-      border:1px solid rgba(181,184,177,.25);
-      margin:0 auto 6px;
+    .composerActions{
+      display:flex;
+      gap:8px;
+      padding: 0 12px 12px;
     }
-    .avatar{
-      width:100%;height:100%;
-      border-radius:20px;
-      background:
-        radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), transparent 35%),
-        linear-gradient(135deg, rgba(127,255,212,.9), rgba(251,206,177,.9));
-      border:1px solid rgba(181,184,177,.35);
-      display:grid; place-items:center;
-      font-weight:800;
+    .qbtn{
+      flex:1;
+      border:none;
+      border-radius: 12px;
+      padding: 10px 10px;
+      font-weight:900;
+      cursor:pointer;
+      background: rgba(120,219,226,.55);
+      border:1px solid rgba(17,17,17,.10);
     }
-    .storyName{
-      font-size:12px;
-      color:rgba(17,17,17,.75);
+    .qbtn.secondary{ background: rgba(253,217,181,.65); }
+    .qbtn:active{ transform: scale(.99); }
+
+    /* feed cards */
+    .feed{
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .cardHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 12px 12px 10px;
+    }
+    .u{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .miniAva{
+      width:40px;height:40px;border-radius: 14px;
+      background: linear-gradient(135deg, var(--aqua), var(--apricot));
+      border:1px solid rgba(17,17,17,.10);
+      display:grid;place-items:center;
+      font-weight:900;
+      flex:0 0 auto;
+    }
+    .uMeta{ min-width:0; }
+    .uMeta b{
+      display:block;
+      font-size:14px;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
     }
-
-    /* Карточка поста */
-    .card{
-      background: rgba(255,255,255,.78);
-      border:1px solid rgba(181,184,177,.28);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
+    .uMeta small{
+      display:block;
+      font-size:12px;
+      color: var(--muted);
+      margin-top:2px;
+      white-space:nowrap;
       overflow:hidden;
-      margin: 10px 0 14px;
+      text-overflow:ellipsis;
     }
-    .cardHeader{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:12px 12px 10px;
-    }
-    .user{
-      display:flex; align-items:center; gap:10px;
-    }
-    .user .mini{
-      width:38px;height:38px;border-radius:14px;
-      background: linear-gradient(135deg, var(--apricot), var(--aqua2));
-      border:1px solid rgba(181,184,177,.35);
-      box-shadow: 0 10px 18px rgba(17,17,17,.08);
-      display:grid; place-items:center;
-      font-weight:800;
-    }
-    .meta{
-      display:flex; flex-direction:column;
-      line-height:1.05;
-    }
-    .meta .name{font-weight:800; font-size:14px;}
-    .meta .sub{font-size:12px; color:rgba(17,17,17,.6);}
     .dots{
-      border:none; background:transparent; cursor:pointer;
-      color:rgba(17,17,17,.65);
-      font-size:20px; line-height:1;
-      padding:6px 8px;
-      border-radius:10px;
+      width:38px;height:38px;
+      border-radius: 12px;
+      border:1px solid rgba(17,17,17,.10);
+      background: rgba(255,255,255,.75);
+      display:grid;place-items:center;
+      cursor:pointer;
+      user-select:none;
+      font-size:20px;
+      line-height:1;
     }
-    .dots:active{background: rgba(181,184,177,.18);}
+    .dots:active{ transform: scale(.98); }
+
+    .text{
+      padding: 0 12px 10px;
+      font-size:14px;
+      line-height:1.35;
+    }
+    .text .tag{ color: rgba(17,17,17,.70); font-weight:900; }
 
     .media{
-      height: 230px;
-      position:relative;
+      height: 220px;
       background:
-        radial-gradient(120px 120px at 25% 20%, rgba(255,255,255,.85), transparent 60%),
-        radial-gradient(160px 130px at 70% 65%, rgba(255,255,255,.55), transparent 62%),
-        linear-gradient(135deg, var(--aqua), var(--apricot2));
-      border-top:1px solid rgba(181,184,177,.18);
-      border-bottom:1px solid rgba(181,184,177,.18);
+        radial-gradient(140px 140px at 22% 25%, rgba(255,255,255,.85), transparent 60%),
+        radial-gradient(200px 180px at 78% 70%, rgba(255,255,255,.55), transparent 62%),
+        linear-gradient(135deg, rgba(120,219,226,.95), rgba(127,255,212,.80), rgba(253,217,181,.75));
+      border-top:1px solid rgba(17,17,17,.06);
+      border-bottom:1px solid rgba(17,17,17,.06);
+      position:relative;
       overflow:hidden;
     }
-    .media::after{
-      content:"";
-      position:absolute; inset:-20%;
-      background:
-        radial-gradient(circle at 20% 80%, rgba(253,217,181,.55), transparent 45%),
-        radial-gradient(circle at 80% 20%, rgba(120,219,226,.55), transparent 45%);
-      transform: rotate(-12deg);
-    }
-    .badge{
+    .chip{
       position:absolute;
       left:12px; top:12px;
-      background: rgba(255,255,255,.8);
-      border:1px solid rgba(181,184,177,.25);
+      background: rgba(255,255,255,.78);
+      border:1px solid rgba(17,17,17,.10);
       border-radius: 999px;
-      padding:6px 10px;
+      padding: 6px 10px;
       font-size:12px;
-      box-shadow: 0 10px 22px rgba(17,17,17,.08);
-      backdrop-filter: blur(10px);
-    }
-
-    .cardBody{
-      padding:12px 12px 12px;
-    }
-    .btnRow{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px;
-      padding-bottom:8px;
-    }
-    .btnGroup{
-      display:flex; align-items:center; gap:10px;
-    }
-    .pill{
-      border:none;
-      cursor:pointer;
-      padding:10px 12px;
-      border-radius:14px;
-      background: rgba(120,219,226,.45);
-      border:1px solid rgba(181,184,177,.25);
-      box-shadow: 0 10px 20px rgba(17,17,17,.06);
-      display:flex; align-items:center; gap:8px;
-      font-weight:700;
-      color: rgba(17,17,17,.9);
-      transition: transform .12s ease, background .12s ease;
-    }
-    .pill.apricot{ background: rgba(253,217,181,.55); }
-    .pill:active{ transform: scale(.98); }
-
-    .counts{
-      display:flex; gap:10px;
-      font-size:12px;
-      color: rgba(17,17,17,.65);
-      padding-bottom:10px;
-    }
-
-    .caption{
-      font-size:14px;
-      color: rgba(17,17,17,.86);
-      line-height:1.35;
-      margin:0 0 10px;
-    }
-
-    .commentBox{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      padding:10px;
-      border-radius:16px;
-      background: rgba(255,255,255,.72);
-      border:1px solid rgba(181,184,177,.35);
-    }
-    .commentBox input{
-      border:none; outline:none; background:transparent;
-      width:100%;
-      font-size:14px;
-    }
-    .send{
-      border:none; cursor:pointer;
-      height:36px; width:42px;
-      border-radius:14px;
-      background: linear-gradient(135deg, rgba(127,255,212,.9), rgba(251,206,177,.9));
-      border:1px solid rgba(181,184,177,.3);
-      box-shadow: 0 12px 22px rgba(17,17,17,.08);
       font-weight:900;
+      box-shadow: 0 10px 22px rgba(17,17,17,.08);
     }
-    .send:active{ transform: scale(.98); }
 
-    /* Нижняя навигация */
-    .bottomNav{
-      position:absolute;
-      left:0; right:0; bottom:0;
-      padding:12px 12px 18px;
-      background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.92) 30%, rgba(255,255,255,.96));
-      border-top:1px solid rgba(181,184,177,.22);
-      backdrop-filter: blur(12px);
-    }
-    .navBar{
+    .stats{
+      padding: 10px 12px 0;
       display:flex;
       justify-content:space-between;
-      gap:10px;
-      background: rgba(255,255,255,.78);
-      border:1px solid rgba(181,184,177,.28);
-      border-radius: 20px;
-      padding:10px;
-      box-shadow: var(--shadow2);
+      font-size:12px;
+      color: var(--muted);
     }
-    .navBtn{
-      border:none; cursor:pointer;
-      background: transparent;
-      width:54px; height:44px;
-      border-radius:16px;
-      display:grid; place-items:center;
-      color: rgba(17,17,17,.75);
-      transition: background .12s ease, transform .12s ease;
-      font-weight:800;
+    .divider{
+      height:1px;
+      background: rgba(181,184,177,.45);
+      margin: 10px 12px;
     }
-    .navBtn.active{
-      background: rgba(120,219,226,.45);
-      border:1px solid rgba(181,184,177,.25);
-      color: rgba(17,17,17,.92);
-    }
-    .navBtn:active{ transform: scale(.98); }
 
-    /* Модалка создания поста */
-    .modalOverlay{
-      position:absolute; inset:0;
+    .actions{
+      display:flex;
+      gap:8px;
+      padding: 0 12px 12px;
+    }
+    .abtn{
+      flex:1;
+      border:none;
+      cursor:pointer;
+      border-radius: 12px;
+      padding: 10px 10px;
+      font-weight:900;
+      border:1px solid rgba(17,17,17,.10);
+      background: rgba(255,255,255,.78);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
+    .abtn.like.on{
+      background: rgba(253,217,181,.75);
+    }
+    .abtn:active{ transform: scale(.99); }
+
+    /* bottom nav (VK vibe) */
+    .bottomNav{
+      position:fixed;
+      left:0; right:0; bottom:0;
+      background: rgba(255,255,255,.92);
+      border-top:1px solid rgba(181,184,177,.55);
+      backdrop-filter: blur(12px);
+      padding: 8px 10px 10px;
+    }
+    .bottomNav .wrap{
+      max-width: 680px;
+      margin: 0 auto;
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+    }
+    .nav{
+      flex:1;
+      height:46px;
+      border-radius: 14px;
+      border:1px solid rgba(17,17,17,.10);
+      background: rgba(120,219,226,.25);
+      display:grid;place-items:center;
+      cursor:pointer;
+      user-select:none;
+      font-weight:900;
+      color: rgba(17,17,17,.80);
+    }
+    .nav.active{
+      background: linear-gradient(135deg, rgba(120,219,226,.65), rgba(127,255,212,.45));
+    }
+
+    /* modal (create post) */
+    .overlay{
+      position:fixed;
+      inset:0;
       background: rgba(17,17,17,.25);
       display:none;
       align-items:flex-end;
       justify-content:center;
-      padding:14px;
-      z-index:50;
+      padding: 12px;
+      z-index:100;
     }
-    .modalOverlay.show{ display:flex; }
-
-    .modal{
-      width:100%;
-      background: rgba(255,255,255,.92);
-      border:1px solid rgba(181,184,177,.32);
-      border-radius: 22px;
+    .overlay.show{ display:flex; }
+    .sheet{
+      width:min(680px, 100%);
+      background: rgba(255,255,255,.95);
+      border:1px solid rgba(181,184,177,.55);
+      border-radius: 18px;
       box-shadow: 0 30px 70px rgba(17,17,17,.25);
       overflow:hidden;
-      transform: translateY(0);
     }
-    .modalTop{
-      padding:12px 12px 10px;
+    .sheetHead{
+      padding: 12px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      border-bottom:1px solid rgba(181,184,177,.22);
-      background: linear-gradient(135deg, rgba(253,217,181,.55), rgba(120,219,226,.35));
-    }
-    .modalTop .title{ font-weight:900; }
-    .close{
-      border:none;
-      background: rgba(255,255,255,.65);
-      border:1px solid rgba(181,184,177,.28);
-      height:34px; width:34px;
-      border-radius:14px;
-      cursor:pointer;
+      background: linear-gradient(135deg, rgba(120,219,226,.45), rgba(253,217,181,.55));
+      border-bottom:1px solid rgba(181,184,177,.55);
       font-weight:900;
     }
-    .modalBody{ padding:12px; }
-    .field{
-      display:flex; flex-direction:column; gap:8px;
-      margin-bottom:10px;
+    .close{
+      width:36px;height:36px;
+      border-radius:12px;
+      border:1px solid rgba(17,17,17,.10);
+      background: rgba(255,255,255,.75);
+      cursor:pointer;
+      display:grid;place-items:center;
+      font-weight:900;
     }
+    .sheetBody{ padding: 12px; display:grid; gap:10px; }
     textarea{
       width:100%;
       min-height:90px;
       resize:none;
-      border-radius:16px;
-      border:1px solid rgba(181,184,177,.35);
-      padding:10px 12px;
-      font-size:14px;
+      border-radius: 14px;
+      border:1px solid rgba(181,184,177,.55);
+      padding: 10px 12px;
       outline:none;
-      background: rgba(255,255,255,.78);
+      font:inherit;
     }
-    .row{
-      display:flex; gap:10px; align-items:center;
-    }
-    .select{
+    .row{ display:flex; gap:10px; }
+    select, .pub{
       flex:1;
-      border-radius:16px;
-      border:1px solid rgba(181,184,177,.35);
-      padding:10px 12px;
-      background: rgba(255,255,255,.78);
+      border-radius: 14px;
+      border:1px solid rgba(181,184,177,.55);
+      padding: 10px 12px;
+      background: rgba(255,255,255,.9);
+      font-weight:900;
       outline:none;
-      font-weight:700;
     }
-    .postBtn{
-      width:100%;
+    .pub{
       border:none;
       cursor:pointer;
-      padding:12px 14px;
-      border-radius:16px;
-      background: linear-gradient(135deg, var(--aqua), var(--apricot));
-      border:1px solid rgba(181,184,177,.3);
-      box-shadow: 0 14px 26px rgba(17,17,17,.10);
-      font-weight:900;
+      background: linear-gradient(135deg, var(--aqua2), var(--apricot2));
+      border:1px solid rgba(17,17,17,.10);
     }
-    .postBtn:active{ transform: scale(.99); }
-
-    /* Тост уведомления */
     .toast{
-      position:absolute;
+      position:fixed;
       left:50%;
-      bottom:104px;
+      bottom: 80px;
       transform: translateX(-50%);
-      background: rgba(255,255,255,.9);
-      border:1px solid rgba(181,184,177,.30);
+      background: rgba(255,255,255,.92);
+      border:1px solid rgba(181,184,177,.55);
       border-radius: 999px;
-      padding:10px 12px;
-      box-shadow: var(--shadow2);
-      font-size:13px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow);
       display:none;
-      z-index:60;
+      z-index:120;
+      max-width: calc(100% - 24px);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      font-size:13px;
     }
-    .toast.show{ display:block; animation: pop .22s ease; }
-    @keyframes pop{
-      from{ transform: translateX(-50%) translateY(8px); opacity:.0; }
-      to{ transform: translateX(-50%) translateY(0); opacity:1; }
-    }
+    .toast.show{ display:block; animation: pop .2s ease; }
+    @keyframes pop { from{ transform:translateX(-50%) translateY(8px); opacity:0 } to{ opacity:1 } }
   </style>
 </head>
-
 <body>
-  <div class="phone" id="app">
-    <div class="topbar">
-      <div class="status">
-        <div id="clock">09:47</div>
-        <div>LTE • 🔋 10%</div>
-      </div>
 
-      <div class="brandRow">
-        <div class="brand">
-          <div class="logo" aria-hidden="true"></div>
-          <div>AquaSocial</div>
-        </div>
-        <div class="actions">
-          <button class="iconBtn secondary" id="btnNew" title="Новый пост">＋</button>
-          <button class="iconBtn" id="btnBell" title="Уведомления">🔔</button>
-          <button class="iconBtn" id="btnMsg" title="Сообщения">✉️</button>
-        </div>
-      </div>
-
+  <header class="topbar">
+    <div class="toprow">
+      <div class="brand">VK-ish</div>
       <div class="search">
-        <div aria-hidden="true">🔎</div>
-        <input id="search" placeholder="Поиск: люди, посты, теги..." />
+        <span aria-hidden="true">🔎</span>
+        <input id="search" placeholder="Поиск" />
       </div>
+      <div class="iconBtn" id="btnBell" title="Уведомления">🔔</div>
     </div>
 
-    <div class="content" id="feed">
-      <div class="stories" id="stories"></div>
-      <div id="posts"></div>
-    </div>
+    <nav class="tabs" id="tabs">
+      <div class="tab active" data-tab="feed">Новости</div>
+      <div class="tab" data-tab="reco">Рекомендации</div>
+      <div class="tab" data-tab="friends">Друзья</div>
+      <div class="tab" data-tab="groups">Сообщества</div>
+      <div class="tab" data-tab="videos">Видео</div>
+    </nav>
+  </header>
 
-    <div class="toast" id="toast">Готово</div>
-
-    <div class="bottomNav">
-      <div class="navBar">
-        <button class="navBtn active" data-tab="feed" title="Лента">🏠</button>
-        <button class="navBtn" data-tab="discover" title="Поиск">🧭</button>
-        <button class="navBtn" data-tab="new" title="Создать">＋</button>
-        <button class="navBtn" data-tab="reels" title="Клипы">▶</button>
-        <button class="navBtn" data-tab="profile" title="Профиль">👤</button>
+  <main class="page">
+    <section class="composer" id="composer">
+      <div class="composerTop">
+        <div class="ava">★</div>
+        <div class="composerInput" id="openComposer">Что у вас нового?</div>
       </div>
+      <div class="composerActions">
+        <button class="qbtn" id="qPhoto">Фото</button>
+        <button class="qbtn secondary" id="qPost">Запись</button>
+        <button class="qbtn" id="qPoll">Опрос</button>
+      </div>
+    </section>
+
+    <section class="feed" id="feed"></section>
+  </main>
+
+  <footer class="bottomNav">
+    <div class="wrap">
+      <div class="nav active" data-nav="home">🏠</div>
+      <div class="nav" data-nav="msg">💬</div>
+      <div class="nav" data-nav="add" id="navAdd">＋</div>
+      <div class="nav" data-nav="notif">🔔</div>
+      <div class="nav" data-nav="me">👤</div>
     </div>
+  </footer>
 
-    <!-- Modal -->
-    <div class="modalOverlay" id="overlay">
-      <div class="modal" role="dialog" aria-modal="true" aria-label="Создать пост">
-        <div class="modalTop">
-          <div class="title">Создать пост</div>
-          <button class="close" id="closeModal" title="Закрыть">✕</button>
+  <!-- modal -->
+  <div class="overlay" id="overlay" aria-modal="true" role="dialog">
+    <div class="sheet">
+      <div class="sheetHead">
+        Создать запись
+        <div class="close" id="close">✕</div>
+      </div>
+      <div class="sheetBody">
+        <textarea id="newText" placeholder="Текст записи..."></textarea>
+        <div class="row">
+          <select id="newTag">
+            <option value="#новости">#новости</option>
+            <option value="#дизайн">#дизайн</option>
+            <option value="#мысли">#мысли</option>
+            <option value="#вдохновение">#вдохновение</option>
+          </select>
+          <select id="newChip">
+            <option value="Обновление">Обновление</option>
+            <option value="Подборка">Подборка</option>
+            <option value="Вопрос">Вопрос</option>
+          </select>
         </div>
-        <div class="modalBody">
-          <div class="field">
-            <label style="font-weight:800;">Текст</label>
-            <textarea id="newText" placeholder="Что нового?"></textarea>
-          </div>
-
-          <div class="row" style="margin-bottom:10px;">
-            <select class="select" id="newMood" title="Настроение">
-              <option value="aqua">Aqua</option>
-              <option value="aqua2">Aqua Crayola</option>
-              <option value="apricot">Apricot</option>
-              <option value="apricot2">Apricot Crayola</option>
-              <option value="agate">Agate Gray</option>
-            </select>
-            <select class="select" id="newTag" title="Тег">
-              <option value="#день">#день</option>
-              <option value="#работа">#работа</option>
-              <option value="#дизайн">#дизайн</option>
-              <option value="#мысли">#мысли</option>
-              <option value="#вдохновение">#вдохновение</option>
-            </select>
-          </div>
-
-          <button class="postBtn" id="publish">Опубликовать</button>
-        </div>
+        <button class="pub" id="publish">Опубликовать</button>
       </div>
     </div>
   </div>
 
+  <div class="toast" id="toast">Готово</div>
+
   <script>
-    // ---- Demo data ----
-    const users = [
-      {name:"Дима", city:"Новокузнецк", initial:"Д"},
-      {name:"Наталья", city:"Лаборатория", initial:"Н"},
-      {name:"Марина", city:"Вена", initial:"М"},
-      {name:"Олег", city:"Прага", initial:"О"},
-      {name:"Саша", city:"Бишкек", initial:"С"},
-      {name:"Ира", city:"Алматы", initial:"И"},
-      {name:"Кирилл", city:"Берлин", initial:"К"},
-    ];
+    const $ = (s)=>document.querySelector(s);
 
     let posts = [
-      {id:1, user: users[0], minutes: 8, badge:"#дизайн", text:"Собрал новый макет интерфейса — хочу, чтобы всё ощущалось живым и «как в настоящей соцсети».", likes: 124, comments: 17, liked:false, mood:"aqua2"},
-      {id:2, user: users[1], minutes: 32, badge:"#мысли", text:"Контраст света и спокойных оттенков — это как порядок в хаосе. Сегодня прям зашло.", likes: 88, comments: 9, liked:true, mood:"apricot2"},
-      {id:3, user: users[2], minutes: 61, badge:"#день", text:"Коротко: кофе, идеи, лента. И ещё раз идеи.", likes: 51, comments: 4, liked:false, mood:"aqua"},
+      {id:1, user:"natalia.lab", init:"Н", time:"2 ч назад", chip:"Подборка", tag:"#дизайн",
+       text:"Собрала палитру для интерфейса: аквамарин + абрикос, серый агат для линий. Хочу, чтобы выглядело как реальная соцсеть." ,
+       likes:128, comments:34, shares:9, liked:false},
+      {id:2, user:"dima_ivanov", init:"Д", time:"вчера", chip:"Обновление", tag:"#новости",
+       text:"Сделал макет мобильной версии «как ВК»: шапка, вкладки, лента, фикс-меню снизу. Без «нарисованного телефона» 🙂",
+       likes:76, comments:18, shares:4, liked:true},
+      {id:3, user:"ui.mockups", init:"U", time:"3 д назад", chip:"Вопрос", tag:"#вдохновение",
+       text:"Какой блок важнее в ленте: «что у вас нового» или сразу посты? Я за быстрый композер сверху.",
+       likes:210, comments:52, shares:21, liked:false},
     ];
-
-    const moodToGradient = (mood) => {
-      const map = {
-        aqua:   "linear-gradient(135deg, rgba(127,255,212,.95), rgba(253,217,181,.65))",
-        aqua2:  "linear-gradient(135deg, rgba(120,219,226,.95), rgba(251,206,177,.65))",
-        apricot:"linear-gradient(135deg, rgba(251,206,177,.95), rgba(127,255,212,.65))",
-        apricot2:"linear-gradient(135deg, rgba(253,217,181,.95), rgba(120,219,226,.55))",
-        agate:  "linear-gradient(135deg, rgba(181,184,177,.95), rgba(253,217,181,.55))",
-      };
-      return map[mood] || map.aqua2;
-    };
-
-    // ---- UI helpers ----
-    const $ = (sel) => document.querySelector(sel);
-    const el = (tag, cls) => {
-      const e = document.createElement(tag);
-      if (cls) e.className = cls;
-      return e;
-    };
 
     function toast(msg){
       const t = $("#toast");
       t.textContent = msg;
       t.classList.add("show");
-      clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(()=>t.classList.remove("show"), 1200);
+      clearTimeout(window.__tt);
+      window.__tt = setTimeout(()=>t.classList.remove("show"), 1200);
     }
 
-    function renderStories(){
-      const wrap = $("#stories");
-      wrap.innerHTML = "";
-
-      // "Ваша сторис"
-      const me = makeStory({name:"Вы", initial:"★"});
-      wrap.appendChild(me);
-
-      users.slice(0,6).forEach(u => wrap.appendChild(makeStory(u)));
-    }
-
-    function makeStory(u){
-      const s = el("div","story");
-      s.innerHTML = `
-        <div class="ring"><div class="avatar">${u.initial}</div></div>
-        <div class="storyName">${u.name}</div>
-      `;
-      s.addEventListener("click", ()=> toast(`Сторис: ${u.name}`));
-      return s;
-    }
-
-    function renderPosts(list){
-      const wrap = $("#posts");
-      wrap.innerHTML = "";
-      list.forEach(p => wrap.appendChild(makePost(p)));
-    }
-
-    function makePost(p){
-      const card = el("div","card");
-
-      const header = el("div","cardHeader");
-      header.innerHTML = `
-        <div class="user">
-          <div class="mini">${p.user.initial}</div>
-          <div class="meta">
-            <div class="name">${p.user.name}</div>
-            <div class="sub">${p.user.city} • ${timeAgo(p.minutes)}</div>
+    function render(list){
+      const feed = $("#feed");
+      feed.innerHTML = "";
+      list.forEach(p=>{
+        const card = document.createElement("article");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="cardHead">
+            <div class="u">
+              <div class="miniAva">${p.init}</div>
+              <div class="uMeta">
+                <b>@${p.user}</b>
+                <small>${p.time} • ${p.tag}</small>
+              </div>
+            </div>
+            <div class="dots" title="Меню">⋯</div>
           </div>
-        </div>
-        <button class="dots" title="Меню">⋯</button>
-      `;
 
-      const media = el("div","media");
-      media.style.background = `
-        radial-gradient(120px 120px at 25% 20%, rgba(255,255,255,.85), transparent 60%),
-        radial-gradient(160px 130px at 70% 65%, rgba(255,255,255,.55), transparent 62%),
-        ${moodToGradient(p.mood)}
-      `;
-      const badge = el("div","badge");
-      badge.textContent = p.badge;
-      media.appendChild(badge);
+          <div class="text">${escapeHtml(p.text)} <span class="tag">${p.tag}</span></div>
 
-      const body = el("div","cardBody");
+          <div class="media" role="img" aria-label="Медиа">
+            <div class="chip">${p.chip}</div>
+          </div>
 
-      const btnRow = el("div","btnRow");
-      const left = el("div","btnGroup");
+          <div class="stats">
+            <div>${p.likes} лайков • ${p.comments} комм.</div>
+            <div>${p.shares} репостов</div>
+          </div>
 
-      const likeBtn = el("button","pill");
-      likeBtn.classList.toggle("apricot", p.liked);
-      likeBtn.innerHTML = `${p.liked ? "♥" : "♡"} <span>Лайк</span>`;
-      likeBtn.addEventListener("click", ()=>{
-        p.liked = !p.liked;
-        p.likes += p.liked ? 1 : -1;
-        toast(p.liked ? "Лайк!" : "Убрали лайк");
-        renderPosts(currentFiltered());
+          <div class="divider"></div>
+
+          <div class="actions">
+            <button class="abtn like ${p.liked ? "on":""}">❤ Лайк</button>
+            <button class="abtn">💬 Коммент</button>
+            <button class="abtn">↗ Репост</button>
+          </div>
+        `;
+
+        card.querySelector(".dots").onclick = ()=>toast("Меню поста");
+        card.querySelector(".media").onclick = ()=>toast("Открыть медиа");
+        card.querySelector(".abtn:nth-child(2)").onclick = ()=>toast("Комментарии (макет)");
+        card.querySelector(".abtn:nth-child(3)").onclick = ()=>toast("Поделиться (макет)");
+
+        const likeBtn = card.querySelector(".like");
+        likeBtn.onclick = ()=>{
+          p.liked = !p.liked;
+          p.likes += p.liked ? 1 : -1;
+          toast(p.liked ? "Лайк!" : "Убрали лайк");
+          render(currentFiltered());
+        };
+
+        feed.appendChild(card);
       });
-
-      const комBtn = el("button","pill apricot");
-      комBtn.innerHTML = `💬 <span>Коммент</span>`;
-      комBtn.addEventListener("click", ()=>{
-        const input = card.querySelector("input");
-        input.focus();
-      });
-
-      const shareBtn = el("button","pill");
-      shareBtn.innerHTML = `↗ <span>Поделиться</span>`;
-      shareBtn.addEventListener("click", ()=> toast("Ссылка скопирована"));
-
-      left.append(likeBtn, комBtn);
-      btnRow.append(left, shareBtn);
-
-      const counts = el("div","counts");
-      counts.innerHTML = `
-        <div><b>${p.likes}</b> лайков</div>
-        <div><b>${p.comments}</b> комментариев</div>
-      `;
-
-      const caption = el("p","caption");
-      caption.textContent = p.text;
-
-      const commentBox = el("div","commentBox");
-      commentBox.innerHTML = `
-        <span style="opacity:.75;">💭</span>
-        <input placeholder="Добавить комментарий..." />
-        <button class="send" title="Отправить">→</button>
-      `;
-
-      const send = commentBox.querySelector(".send");
-      const input = commentBox.querySelector("input");
-      send.addEventListener("click", ()=>{
-        const v = input.value.trim();
-        if(!v) return toast("Пусто 🙂");
-        p.comments += 1;
-        input.value = "";
-        toast("Комментарий добавлен");
-        renderPosts(currentFiltered());
-      });
-
-      body.append(btnRow, counts, caption, commentBox);
-
-      card.append(header, media, body);
-      card.querySelector(".dots").addEventListener("click", ()=> toast("Меню поста"));
-      return card;
     }
 
-    function timeAgo(min){
-      if (min < 60) return `${min} мин назад`;
-      const h = Math.floor(min/60);
-      return `${h} ч назад`;
+    function escapeHtml(s){
+      return s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
     }
 
-    // ---- Search / filter ----
     function currentFiltered(){
       const q = $("#search").value.trim().toLowerCase();
       if(!q) return posts;
       return posts.filter(p =>
-        p.user.name.toLowerCase().includes(q) ||
-        p.user.city.toLowerCase().includes(q) ||
+        p.user.toLowerCase().includes(q) ||
         p.text.toLowerCase().includes(q) ||
-        p.badge.toLowerCase().includes(q)
+        p.tag.toLowerCase().includes(q)
       );
     }
 
-    $("#search").addEventListener("input", ()=> renderPosts(currentFiltered()));
+    // tabs
+    document.querySelectorAll(".tab").forEach(t=>{
+      t.onclick = ()=>{
+        document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+        t.classList.add("active");
+        const tab = t.dataset.tab;
 
-    // ---- Nav behavior ----
-    document.querySelectorAll(".navBtn").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        document.querySelectorAll(".navBtn").forEach(b=>b.classList.remove("active"));
-        btn.classList.add("active");
+        if(tab === "feed"){ render(currentFiltered()); toast("Новости"); return; }
 
-        const tab = btn.dataset.tab;
-        if(tab === "new") openModal();
-        else toast(tab === "feed" ? "Лента" :
-                   tab === "discover" ? "Поиск" :
-                   tab === "reels" ? "Клипы" : "Профиль");
-      });
+        // простые “режимы” как макет
+        if(tab === "reco"){
+          toast("Рекомендации");
+          render([
+            {...posts[0], id:1001, chip:"Подборка", tag:"#вдохновение", text:"Рекомендации: аккуратные карточки + фикс-меню + быстрый поиск."},
+            {...posts[2], id:1002, chip:"Вопрос", tag:"#дизайн", text:"Какие иконки оставить в нижнем меню? 5 штук — оптимально."},
+          ]);
+          return;
+        }
+        toast("Раздел: " + t.textContent);
+      };
     });
 
-    // ---- Modal create post ----
+    // bottom nav
+    document.querySelectorAll(".nav").forEach(n=>{
+      n.onclick = ()=>{
+        document.querySelectorAll(".nav").forEach(x=>x.classList.remove("active"));
+        n.classList.add("active");
+        if(n.dataset.nav === "add") openModal();
+        else toast("Раздел: " + n.dataset.nav);
+      };
+    });
+
+    // open composer
     const overlay = $("#overlay");
-    const openModal = ()=> { overlay.classList.add("show"); $("#newText").focus(); };
+    const openModal = ()=>{ overlay.classList.add("show"); $("#newText").focus(); };
     const closeModal = ()=> overlay.classList.remove("show");
 
-    $("#btnNew").addEventListener("click", openModal);
-    $("#closeModal").addEventListener("click", closeModal);
-    overlay.addEventListener("click", (e)=>{ if(e.target === overlay) closeModal(); });
+    $("#openComposer").onclick = openModal;
+    $("#navAdd").onclick = openModal;
+    $("#qPhoto").onclick = ()=>toast("Фото (макет)");
+    $("#qPost").onclick = openModal;
+    $("#qPoll").onclick = ()=>toast("Опрос (макет)");
+    $("#btnBell").onclick = ()=>toast("Уведомления");
 
-    $("#publish").addEventListener("click", ()=>{
+    $("#close").onclick = closeModal;
+    overlay.onclick = (e)=>{ if(e.target === overlay) closeModal(); };
+
+    $("#publish").onclick = ()=>{
       const text = $("#newText").value.trim();
-      if(!text) return toast("Напиши текст поста");
-      const mood = $("#newMood").value;
+      if(!text) return toast("Напиши текст записи");
       const tag = $("#newTag").value;
+      const chip = $("#newChip").value;
 
-      const newPost = {
+      posts.unshift({
         id: Date.now(),
-        user: {name:"Вы", city:"Онлайн", initial:"★"},
-        minutes: 1,
-        badge: tag,
+        user:"you",
+        init:"★",
+        time:"только что",
+        chip,
+        tag,
         text,
-        likes: 0,
-        comments: 0,
-        liked: false,
-        mood
-      };
+        likes:0, comments:0, shares:0, liked:false
+      });
 
-      posts = [newPost, ...posts].map((p,i)=> ({...p, minutes: p.minutes + (i===0?0:3)}));
       $("#newText").value = "";
       closeModal();
       toast("Опубликовано");
-      renderPosts(currentFiltered());
-      $("#feed").scrollTo({top:0, behavior:"smooth"});
-    });
+      render(currentFiltered());
+      window.scrollTo({top:0, behavior:"smooth"});
+    };
 
-    // ---- Top actions ----
-    $("#btnBell").addEventListener("click", ()=> toast("Уведомления"));
-    $("#btnMsg").addEventListener("click", ()=> toast("Сообщения"));
+    $("#search").addEventListener("input", ()=> render(currentFiltered()));
 
-    // ---- Clock ----
-    function setClock(){
-      const d = new Date();
-      const hh = String(d.getHours()).padStart(2,"0");
-      const mm = String(d.getMinutes()).padStart(2,"0");
-      $("#clock").textContent = `${hh}:${mm}`;
-    }
-
-    // Init
-    setClock();
-    setInterval(setClock, 1000 * 10);
-    renderStories();
-    renderPosts(posts);
+    // init
+    render(posts);
   </script>
 </body>
 </html>
