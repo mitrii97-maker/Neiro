@@ -3,23 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Красные vs Синие: обучение атаки и защиты</title>
+  <title>Красные vs Синие — обучение атаки и защиты</title>
   <style>
     :root { font-family: -apple-system, system-ui, Arial; }
     body { margin:0; background:#0b0d12; color:#e9eefc; }
-    .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 16px; }
     h1 { margin: 8px 0 6px; font-size: 20px; }
     .sub { margin: 0 0 12px; opacity:.85; line-height:1.35; }
     .card { background:#111626; border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:14px; }
-
-    .grid { display:grid; grid-template-columns: 1.2fr 1fr; gap:12px; }
-    @media (max-width: 920px){ .grid { grid-template-columns: 1fr; } }
+    .grid { display:grid; grid-template-columns: 1.25fr 1fr; gap:12px; }
+    @media (max-width: 980px){ .grid { grid-template-columns: 1fr; } }
 
     canvas { width:100%; height:auto; background:#0a0f1c; border-radius:14px; border:1px solid rgba(255,255,255,.12); }
 
     .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:10px 0; }
-    button {
-      border:0; border-radius:12px; padding:12px 14px; font-weight:800;
+    button{
+      border:0; border-radius:12px; padding:12px 14px; font-weight:900;
       background:#2a6bff; color:#fff;
     }
     button.ghost { background:transparent; border:1px solid rgba(255,255,255,.18); }
@@ -30,71 +29,97 @@
 
     .bar { height: 10px; background: rgba(255,255,255,.12); border-radius:999px; overflow:hidden; }
     .bar > div { height:100%; width:0%; background:#2a6bff; }
-
     .barRed > div { background:#ff3b30; }
     .barBlue > div { background:#2a6bff; }
 
+    .panelTitle { margin: 2px 0 8px; font-weight:900; }
+    .small { font-size: 12px; opacity:.8; }
     .legend { display:flex; gap:10px; flex-wrap:wrap; }
     .sw { display:inline-flex; gap:6px; align-items:center; }
-    .dot { width:12px; height:12px; border-radius:3px; display:inline-block; border:1px solid rgba(255,255,255,.18); }
+    .dot { width:12px; height:12px; border-radius:4px; display:inline-block; border:1px solid rgba(255,255,255,.18); }
+
+    .box {
+      padding: 10px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+    }
+    input[type="range"]{ width: 220px; }
   </style>
 </head>
 <body>
   <main class="wrap">
-    <h1>Красные vs Синие — “обучение” в бою</h1>
+    <h1>Красные vs Синие — обучение атаки и защиты</h1>
     <p class="sub">
-      Красные выбирают вход и учатся, какой вход приносит прорыв. Синие учатся, куда чаще атакуют, и ставят баррикады.
-      Это не “заранее написанный путь”: стратегии меняются во времени.
+      Красные учатся выбирать вход (какой чаще приводит к прорыву). Синие учатся, куда идёт давление, и усиливают эти входы баррикадами.
+      Баррикады можно ломать и чинить — поэтому стратегии “плавают” и это видно.
     </p>
 
     <section class="card">
       <div class="grid">
         <div>
-          <canvas id="cv" width="900" height="900"></canvas>
+          <canvas id="cv" width="980" height="980"></canvas>
+
           <div class="row">
             <button id="btnStart">▶ Старт</button>
             <button id="btnReset" class="ghost">🔄 Сброс</button>
             <button id="btnFast" class="ghost">⚡ Быстрее</button>
             <button id="btnSlow" class="ghost">🐢 Медленнее</button>
           </div>
+
           <div class="legend mono">
             <span class="sw"><span class="dot" style="background:#2b2f3f"></span> стены</span>
-            <span class="sw"><span class="dot" style="background:#2a6bff"></span> синие (защита)</span>
-            <span class="sw"><span class="dot" style="background:#ff3b30"></span> красные (атака)</span>
             <span class="sw"><span class="dot" style="background:#ffd60a"></span> входы</span>
-            <span class="sw"><span class="dot" style="background:#7c3aed"></span> ядро базы</span>
-            <span class="sw"><span class="dot" style="background:#a3a3a3"></span> баррикада</span>
+            <span class="sw"><span class="dot" style="background:#a3a3a3"></span> баррикады</span>
+            <span class="sw"><span class="dot" style="background:#2a6bff"></span> синие</span>
+            <span class="sw"><span class="dot" style="background:#ff3b30"></span> красные</span>
+            <span class="sw"><span class="dot" style="background:#7c3aed"></span> ядро</span>
           </div>
         </div>
 
         <div>
-          <div class="mono">Ум красных (прорывы): <b id="rPct">0%</b></div>
+          <div class="panelTitle">Прогресс</div>
+
+          <div class="mono">Красные (прорывы): <b id="rPct">0%</b></div>
           <div class="bar barRed"><div id="rBar"></div></div>
 
           <div style="height:10px"></div>
 
-          <div class="mono">Ум синих (блокировка): <b id="bPct">0%</b></div>
+          <div class="mono">Синие (сдерживание): <b id="bPct">0%</b></div>
           <div class="bar barBlue"><div id="bBar"></div></div>
 
           <div class="row mono">
             <span class="pill">Тик: <b id="tick">0</b></span>
             <span class="pill">Красных: <b id="rN">0</b></span>
             <span class="pill">Синих: <b id="bN">0</b></span>
-            <span class="pill">Баррикад: <b id="barrN">0</b></span>
+            <span class="pill">Баррикад: <b id="barN">0</b></span>
           </div>
 
           <div class="row mono">
             <span class="pill">Атаки (окно): <b id="attW">0</b></span>
             <span class="pill">Прорывы (окно): <b id="succW">0</b></span>
             <span class="pill">Блоки (окно): <b id="blockW">0</b></span>
+            <span class="pill">Ремонты (окно): <b id="repW">0</b></span>
           </div>
 
-          <div class="mono" style="opacity:.85; line-height:1.35;">
-            <b>Что тут “учится”:</b><br>
-            • Красные выбирают вход по “весу” (softmax) и обновляют веса по успехам/провалам.<br>
-            • Синие перераспределяют баррикады по “давлению атак” на входы.<br><br>
-            Хочешь ещё круче — добавим: “умные” патрули синих, разрушение баррикад, разные классы красных.
+          <div class="panelTitle">График (последние 80)</div>
+          <canvas id="spark" width="560" height="140" class="box"></canvas>
+          <div class="small mono">Красная линия = % прорывов, синяя линия = % сдерживания</div>
+
+          <div class="panelTitle" style="margin-top:14px;">Настройки</div>
+          <div class="box mono">
+            <div class="row" style="margin:0;">
+              <span>Сложность:</span>
+              <input id="diff" type="range" min="0" max="100" value="55" />
+              <span class="pill" id="diffLabel">55</span>
+            </div>
+            <div class="small" style="margin-top:8px; opacity:.85; line-height:1.35;">
+              Сложность влияет на скорость спавна красных, HP баррикад и количество синих ремонтников.
+            </div>
           </div>
+
+          <div class="panelTitle" style="margin-top:14px;">Куда лезут красные</div>
+          <div class="mono" id="prefLine">N/E/S/W: —</div>
         </div>
       </div>
     </section>
@@ -102,102 +127,107 @@
 
 <script>
 (() => {
-  // ---------- world ----------
-  const W = 33, H = 33;
-  const WALL = 1, EMPTY = 0;
+  // ===================== UI =====================
+  const $ = (id) => document.getElementById(id);
 
-  const cv = document.getElementById('cv');
+  const cv = $('cv');
   const ctx = cv.getContext('2d');
 
-  const btnStart = document.getElementById('btnStart');
-  const btnReset = document.getElementById('btnReset');
-  const btnFast = document.getElementById('btnFast');
-  const btnSlow = document.getElementById('btnSlow');
+  const spark = $('spark');
+  const sp = spark.getContext('2d');
 
-  const elTick = document.getElementById('tick');
-  const elRN = document.getElementById('rN');
-  const elBN = document.getElementById('bN');
-  const elBarrN = document.getElementById('barrN');
+  const btnStart = $('btnStart');
+  const btnReset = $('btnReset');
+  const btnFast  = $('btnFast');
+  const btnSlow  = $('btnSlow');
 
-  const elAttW = document.getElementById('attW');
-  const elSuccW = document.getElementById('succW');
-  const elBlockW = document.getElementById('blockW');
+  const elTick = $('tick');
+  const elRN = $('rN');
+  const elBN = $('bN');
+  const elBarN = $('barN');
 
-  const rBar = document.getElementById('rBar');
-  const bBar = document.getElementById('bBar');
-  const rPct = document.getElementById('rPct');
-  const bPct = document.getElementById('bPct');
+  const elAttW = $('attW');
+  const elSuccW = $('succW');
+  const elBlockW = $('blockW');
+  const elRepW = $('repW');
 
+  const rPct = $('rPct');
+  const bPct = $('bPct');
+  const rBar = $('rBar');
+  const bBar = $('bBar');
+
+  const diff = $('diff');
+  const diffLabel = $('diffLabel');
+  const prefLine = $('prefLine');
+
+  // ===================== Helpers =====================
   const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
   const randInt = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+  const key = (x,y)=>x+','+y;
 
-  // simulation speed
-  let stepsPerFrame = 2;
-  let playing = false;
+  // ===================== World =====================
+  const W = 41, H = 41;
+  const EMPTY = 0, WALL = 1;
 
-  // grid + base layout
-  let grid = [];
-  const base = {
-    x0: 11, y0: 11, x1: 21, y1: 21, // square base walls boundary
-  };
-  const core = { x: 16, y: 16 };
+  const base = { x0: 13, y0: 13, x1: 27, y1: 27 };
+  const core = { x: 20, y: 20 };
 
-  // entrances (4)
-  // each entrance is a gap in base wall and a tunnel to outside
   const entrances = [
-    { name:'N', ex:16, ey:11, tx:16, ty:2 },  // opening at top wall, tunnel goes upward
-    { name:'E', ex:21, ey:16, tx:30, ty:16 }, // right
-    { name:'S', ex:16, ey:21, tx:16, ty:30 }, // down
-    { name:'W', ex:11, ey:16, tx:2,  ty:16 }, // left
+    { name:'N', ex:20, ey:13, tx:20, ty:2  },
+    { name:'E', ex:27, ey:20, tx:38, ty:20 },
+    { name:'S', ex:20, ey:27, tx:20, ty:38 },
+    { name:'W', ex:13, ey:20, tx:2,  ty:20 },
   ];
 
-  // barricades: placed on entrance tile (ex,ey) to block
-  // each barricade has hp and ttl; reds can "damage" it by pushing
-  let barricades = new Map(); // key "x,y" -> {hp, ttl}
-
-  function key(x,y){ return x + ',' + y; }
+  let grid = [];
+  // barricades on entrance tiles only: key(ex,ey) -> {hp, hpMax}
+  let barricades = new Map();
 
   // agents
-  let reds = [];   // {x,y,targetEnt, path, stuck, life}
-  let blues = [];  // {x,y, role}
-  const BLUE_COUNT = 6;
+  let reds = [];   // {x,y, ent, path, life, stuck, cooldown}
+  let blues = [];  // {x,y, role, ent}
 
-  // learning state
-  // red entrance preferences (policy) updated by reward
-  let pref = [0,0,0,0]; // logits
-  let temperature = 0.9;
-  let lrRed = 0.12;
+  // ===================== Learning =====================
+  // red values for entrances
+  let Qent = [0,0,0,0];
+  let temperature = 1.0;
+  let lrRed = 0.10;
 
-  // blue pressure estimates for entrances (EMA of attacks)
-  let pressure = [0,0,0,0];
+  // blue pressure per entrance
+  let pressure = [0,0,0,0];  // EMA of attacks
+  let threat   = [0,0,0,0];  // EMA of hits on barricades
   let lrBlue = 0.08;
 
-  // windows for progress metrics
-  const WINDOW = 160;
-  let recentAttacks = [];
-  let recentSuccess = [];
-  let recentBlocks = [];
+  // ===================== Metrics =====================
+  const WIN = 220;
+  let wAtt=[], wSucc=[], wBlock=[], wRep=[];
+  const pushWin = (arr,v)=>{ arr.push(v); if(arr.length>WIN) arr.shift(); };
+  const sum = (arr)=>arr.reduce((a,b)=>a+b,0);
 
+  const HIST = 80;
+  let histR=[], histB=[];
+
+  // ===================== Simulation =====================
   let tick = 0;
+  let playing = false;
+  let stepsPerFrame = 2;
 
-  function pushWindow(arr, v){
-    arr.push(v);
-    if(arr.length > WINDOW) arr.shift();
-  }
-  function sum(arr){ return arr.reduce((a,b)=>a+b,0); }
+  function difficultyValue(){ return Number(diff.value); }
 
-  // ---------- build map ----------
+  // ===================== Map build =====================
   function makeEmpty(){
     grid = Array.from({length:H},()=>Array(W).fill(EMPTY));
     barricades.clear();
   }
 
-  function addWalls(){
+  function buildMap(){
+    makeEmpty();
+
     // border walls
     for(let x=0;x<W;x++){ grid[0][x]=WALL; grid[H-1][x]=WALL; }
     for(let y=0;y<H;y++){ grid[y][0]=WALL; grid[y][W-1]=WALL; }
 
-    // base walls (a hollow square)
+    // base walls square
     for(let x=base.x0; x<=base.x1; x++){
       grid[base.y0][x]=WALL;
       grid[base.y1][x]=WALL;
@@ -207,480 +237,558 @@
       grid[y][base.x1]=WALL;
     }
 
-    // carve entrances (gaps)
+    // carve entrances
     for(const e of entrances){
-      grid[e.ey][e.ex] = EMPTY;
+      grid[e.ey][e.ex]=EMPTY;
     }
 
-    // build tunnels from each entrance to outside
-    // tunnel is a 1-cell wide corridor
+    // tunnels
     for(const e of entrances){
       const dx = Math.sign(e.tx - e.ex);
       const dy = Math.sign(e.ty - e.ey);
-      let x = e.ex, y = e.ey;
-      while(x !== e.tx || y !== e.ty){
-        x += dx; y += dy;
+      let x=e.ex, y=e.ey;
+      while(x!==e.tx || y!==e.ty){
+        x+=dx; y+=dy;
         if(x<=0||x>=W-1||y<=0||y>=H-1) break;
-        grid[y][x] = EMPTY;
-        // add tunnel walls around (for look): optional
+        grid[y][x]=EMPTY;
       }
     }
 
-    // random interior obstacles inside base (but keep passable to core)
-    // make small blocks, not on core
-    const obstacles = 16;
-    for(let i=0;i<obstacles;i++){
-      const x = randInt(base.x0+1, base.x1-1);
-      const y = randInt(base.y0+1, base.y1-1);
-      if(Math.abs(x-core.x)+Math.abs(y-core.y) <= 1) continue;
-      grid[y][x] = WALL;
+    // interior obstacles (random, но не слишком)
+    const D = difficultyValue();
+    const obs = 10 + Math.floor(D/3); // 10..43
+    for(let i=0;i<obs;i++){
+      const x=randInt(base.x0+1, base.x1-1);
+      const y=randInt(base.y0+1, base.y1-1);
+      if(x===core.x && y===core.y) continue;
+      // не ставим прямо у входов внутри
+      let near=false;
+      for(const e of entrances){
+        const ix = clamp(e.ex + Math.sign(core.x - e.ex), base.x0+1, base.x1-1);
+        const iy = clamp(e.ey + Math.sign(core.y - e.ey), base.y0+1, base.y1-1);
+        if(Math.abs(x-ix)+Math.abs(y-iy)<=1){ near=true; break; }
+      }
+      if(near) continue;
+      grid[y][x]=WALL;
     }
 
-    // ensure core is empty
-    grid[core.y][core.x] = EMPTY;
+    grid[core.y][core.x]=EMPTY;
   }
 
-  function resetAgents(){
-    reds = [];
-    blues = [];
-    // place blues inside base
-    for(let i=0;i<BLUE_COUNT;i++){
-      blues.push({
-        x: randInt(base.x0+2, base.x1-2),
-        y: randInt(base.y0+2, base.y1-2),
-        role: 'def'
-      });
-    }
-  }
-
-  function resetLearning(){
-    pref = [0,0,0,0];
-    pressure = [0,0,0,0];
-    recentAttacks = [];
-    recentSuccess = [];
-    recentBlocks = [];
-    tick = 0;
-  }
-
-  function resetAll(){
-    playing = false;
-    btnStart.textContent = '▶ Старт';
-    makeEmpty();
-    addWalls();
-    resetAgents();
-    resetLearning();
-    updateUI();
-    draw();
-  }
-
-  // ---------- pathfinding (A*) ----------
-  function neighbors(x,y){
-    return [
-      {x:x+1,y}, {x:x-1,y}, {x,y:y+1}, {x,y:y-1},
-    ];
-  }
+  // ===================== Pathfinding (A*) =====================
   function isBlocked(x,y){
     if(x<0||x>=W||y<0||y>=H) return true;
     if(grid[y][x]===WALL) return true;
-    // barricade blocks on its tile
-    if(barricades.has(key(x,y))) return true;
+    if(barricades.has(key(x,y))) return true; // only entrance tile can have
     return false;
   }
 
-  function astar(sx,sy, gx,gy, maxIter=2500){
+  function astar(sx,sy,gx,gy, maxIter=7000){
     const startK = key(sx,sy);
-    const goalK = key(gx,gy);
-    const open = new Map(); // k -> f
+    const goalK  = key(gx,gy);
+
+    const open = new Map();  // k -> f
     const gScore = new Map();
     const came = new Map();
-
-    function h(x,y){ return Math.abs(x-gx)+Math.abs(y-gy); }
+    const h = (x,y)=>Math.abs(x-gx)+Math.abs(y-gy);
 
     open.set(startK, h(sx,sy));
     gScore.set(startK, 0);
 
     let iter=0;
-    while(open.size && iter++ < maxIter){
-      // pick min f
-      let curK=null, curF=Infinity;
+    while(open.size && iter++<maxIter){
+      let curK=null, bestF=Infinity;
       for(const [k,f] of open){
-        if(f<curF){ curF=f; curK=k; }
+        if(f<bestF){ bestF=f; curK=k; }
       }
       if(curK===goalK){
-        // reconstruct
-        const path = [];
-        let k = curK;
+        const path=[];
+        let k=curK;
         while(k!==startK){
-          const [x,y] = k.split(',').map(Number);
+          const [x,y]=k.split(',').map(Number);
           path.push({x,y});
-          k = came.get(k);
+          k=came.get(k);
           if(!k) break;
         }
         path.reverse();
         return path;
       }
+
       open.delete(curK);
-      const [cx,cy] = curK.split(',').map(Number);
+      const [cx,cy]=curK.split(',').map(Number);
       const cg = gScore.get(curK) ?? Infinity;
 
-      for(const nb of neighbors(cx,cy)){
-        if(isBlocked(nb.x, nb.y)) continue;
-        const nk = key(nb.x, nb.y);
+      const neigh = [
+        {x:cx+1,y:cy},{x:cx-1,y:cy},{x:cx,y:cy+1},{x:cx,y:cy-1}
+      ];
+      for(const n of neigh){
+        if(isBlocked(n.x,n.y)) continue;
+        const nk = key(n.x,n.y);
         const ng = cg + 1;
         const old = gScore.get(nk);
-        if(old===undefined || ng < old){
+        if(old===undefined || ng<old){
           came.set(nk, curK);
           gScore.set(nk, ng);
-          open.set(nk, ng + h(nb.x, nb.y));
+          open.set(nk, ng + h(n.x,n.y));
         }
       }
     }
     return null;
   }
 
-  // ---------- red policy ----------
-  function softmaxPick(logits){
+  // ===================== Red policy (softmax) =====================
+  function softmaxProbs(vals){
     const t = temperature;
-    const exps = logits.map(v => Math.exp(v / t));
-    const s = exps.reduce((a,b)=>a+b,0);
-    let r = Math.random()*s;
-    for(let i=0;i<exps.length;i++){
-      r -= exps[i];
+    const exps = vals.map(v => Math.exp(v / t));
+    const s = exps.reduce((a,b)=>a+b,0) || 1;
+    return exps.map(e => e/s);
+  }
+
+  function pickEntrance(){
+    const p = softmaxProbs(Qent);
+    let r = Math.random();
+    for(let i=0;i<p.length;i++){
+      r -= p[i];
       if(r<=0) return i;
     }
-    return exps.length-1;
+    return p.length-1;
   }
 
+  function updateRed(ent, reward){
+    // EMA update: fast adaptation
+    Qent[ent] = Qent[ent] + lrRed * (reward - Qent[ent]);
+    // keep bounded
+    Qent[ent] = clamp(Qent[ent], -2.5, 2.5);
+  }
+
+  // ===================== Spawning =====================
   function spawnRed(){
-    const ent = softmaxPick(pref);
-
-    // spawn near tunnel outer end
+    const D = difficultyValue();
+    const ent = pickEntrance();
     const e = entrances[ent];
-    // spawn around tunnel end with small randomness
-    let sx = e.tx, sy = e.ty;
-    sx = clamp(sx + randInt(-1,1), 1, W-2);
-    sy = clamp(sy + randInt(-1,1), 1, H-2);
-    // ensure not blocked
-    if(grid[sy][sx]===WALL) return;
 
-    // attack begins: count pressure
+    // record attack & pressure
     pressure[ent] = (1-lrBlue)*pressure[ent] + lrBlue*1;
 
-    const p = astar(sx,sy, core.x, core.y);
+    let sx = clamp(e.tx + randInt(-1,1), 1, W-2);
+    let sy = clamp(e.ty + randInt(-1,1), 1, H-2);
+    if(grid[sy][sx]===WALL) return;
+
+    const path = astar(sx,sy, core.x,core.y) || [];
     reds.push({
-      x:sx, y:sy,
-      targetEnt: ent,
-      path: p ?? [],
+      x:sx, y:sy, ent,
+      path,
+      life: 230 + randInt(0,90) - Math.floor(D/5),
       stuck: 0,
-      life: randInt(220, 320), // time to try before dying
+      cooldown: 0
     });
 
-    pushWindow(recentAttacks, 1);
-    pushWindow(recentSuccess, 0);
-    pushWindow(recentBlocks, 0);
+    pushWin(wAtt,1);
+    pushWin(wSucc,0);
+    pushWin(wBlock,0);
+    pushWin(wRep,0);
   }
 
-  // ---------- blue defense ----------
-  // Blue place limited barricades at entrances with highest pressure
-  const MAX_BARRICADES = 3;
-  function blueDefend(){
-    // decay pressure slowly
-    for(let i=0;i<pressure.length;i++){
-      pressure[i] *= 0.995;
+  function resetAgents(){
+    reds=[];
+    blues=[];
+    const D = difficultyValue();
+    const blueCount = 6 + Math.floor(D/20);
+    for(let i=0;i<blueCount;i++){
+      blues.push({
+        x: randInt(base.x0+2, base.x1-2),
+        y: randInt(base.y0+2, base.y1-2),
+        role: (i%3===0 ? 'repair' : 'patrol'),
+        ent: randInt(0,3)
+      });
+    }
+  }
+
+  // ===================== Blue defense =====================
+  function ensureBarricade(entIdx){
+    const D = difficultyValue();
+    const e = entrances[entIdx];
+    const k = key(e.ex,e.ey);
+
+    const baseHp = 10 + Math.floor(D/8); // 10..22
+    if(!barricades.has(k)){
+      barricades.set(k, { hp: baseHp, hpMax: baseHp });
+      return;
+    }
+    // refresh a bit (soft reinforce)
+    const b = barricades.get(k);
+    b.hpMax = Math.max(b.hpMax, baseHp);
+  }
+
+  function blueStep(){
+    const D = difficultyValue();
+
+    // decay
+    for(let i=0;i<4;i++){
+      pressure[i]*=0.995;
+      threat[i]*=0.994;
     }
 
-    // choose entrances to barricade
-    const order = [0,1,2,3].sort((a,b)=>pressure[b]-pressure[a]);
+    // choose entrance scores
+    const score = [0,1,2,3].map(i => ({
+      i,
+      s: pressure[i]*1.0 + threat[i]*1.5
+    })).sort((a,b)=>b.s-a.s);
 
-    // remove expired barricades
-    for(const [k,v] of barricades){
-      v.ttl -= 1;
-      if(v.ttl <= 0) barricades.delete(k);
+    // budget of barricades
+    const budget = 2 + Math.floor(D/35); // 2..4
+    for(let j=0;j<budget;j++){
+      ensureBarricade(score[j].i);
     }
 
-    // ensure barricades on top entrances
-    let placed = 0;
-    for(const idx of order){
-      if(placed >= MAX_BARRICADES) break;
-      const e = entrances[idx];
-      const k = key(e.ex, e.ey);
-      if(!barricades.has(k)){
-        barricades.set(k, { hp: 6, ttl: 360 }); // lasts for a while
-      }
-      placed++;
-    }
-
-    // also: small chance to relocate blue agents to threatened entrance (for visuals)
+    // blue movement + repairs
     for(const b of blues){
-      // pick most pressured entrance
-      const idx = order[0];
-      const e = entrances[idx];
-      // move a bit toward core side near entrance
-      const tx = clamp(e.ex + (e.ex < core.x ? 1 : e.ex > core.x ? -1 : 0), base.x0+1, base.x1-1);
-      const ty = clamp(e.ey + (e.ey < core.y ? 1 : e.ey > core.y ? -1 : 0), base.y0+1, base.y1-1);
-      // simple greedy step
+      // sometimes retarget to most threatened
+      if(Math.random()<0.05) b.ent = score[0].i;
+
+      const e = entrances[b.ent];
+      const ix = clamp(e.ex + Math.sign(core.x - e.ex), base.x0+1, base.x1-1);
+      const iy = clamp(e.ey + Math.sign(core.y - e.ey), base.y0+1, base.y1-1);
+
+      // move one step toward target
+      const tx = (b.role==='patrol') ? core.x : ix;
+      const ty = (b.role==='patrol') ? core.y : iy;
+
       const dx = Math.sign(tx - b.x);
       const dy = Math.sign(ty - b.y);
-      const nx = b.x + (Math.random()<0.6 ? dx : 0);
-      const ny = b.y + (Math.random()<0.6 ? dy : 0);
+      const chooseX = Math.random()<0.55;
+
+      let nx = b.x + (chooseX ? dx : 0);
+      let ny = b.y + (!chooseX ? dy : 0);
+
       if(!isBlocked(nx,ny) && !(nx===core.x && ny===core.y)){
-        b.x = nx; b.y = ny;
+        b.x=nx; b.y=ny;
+      } else {
+        // try other axis
+        if(!isBlocked(b.x+dx,b.y) && !((b.x+dx)===core.x && b.y===core.y)) b.x += dx;
+        else if(!isBlocked(b.x,b.y+dy) && !(b.x===core.x && (b.y+dy)===core.y)) b.y += dy;
+      }
+
+      // repair if near entrance inner cell and barricade exists
+      if(b.role==='repair'){
+        const bk = key(e.ex,e.ey);
+        const barr = barricades.get(bk);
+        if(barr && (Math.abs(b.x-ix)+Math.abs(b.y-iy)<=1) && barr.hp < barr.hpMax){
+          const rep = 1 + Math.floor(D/60);
+          barr.hp = Math.min(barr.hpMax, barr.hp + rep);
+          pushWin(wRep,1);
+        } else {
+          pushWin(wRep,0);
+        }
+      } else {
+        pushWin(wRep,0);
+      }
+    }
+
+    // slowly regenerate weak barricades a tiny bit (passive maintenance)
+    for(const [k,b] of barricades){
+      if(b.hp < b.hpMax && Math.random()<0.05){
+        b.hp = Math.min(b.hpMax, b.hp + 1);
       }
     }
   }
 
-  // ---------- red behavior ----------
+  // ===================== Red step =====================
   function redStep(r){
+    const D = difficultyValue();
     r.life--;
-    if(r.life <= 0) return 'dead';
-
-    // reached core => success
-    if(r.x===core.x && r.y===core.y) return 'success';
-
-    // if no path or path empty => recalc
-    if(!r.path || r.path.length===0){
-      const p = astar(r.x, r.y, core.x, core.y);
-      r.path = p ?? [];
-      if(!r.path.length){
-        // wander randomly
-        const dirs = [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
-        const d = dirs[randInt(0,3)];
-        const nx=r.x+d.x, ny=r.y+d.y;
-        if(!isBlocked(nx,ny)){ r.x=nx; r.y=ny; }
-        r.stuck++;
-        return 'ok';
-      }
-    }
-
-    const next = r.path[0];
-    // if next blocked by barricade => attack it a bit (simulate pushing)
-    if(barricades.has(key(next.x,next.y))){
-      const b = barricades.get(key(next.x,next.y));
-      b.hp -= 1; // red damages barricade
-      pushWindow(recentBlocks, 1); // blue successfully blocked a step
-      if(b.hp <= 0){
-        barricades.delete(key(next.x,next.y)); // broken
-      } else {
-        // remain in place
-      }
-      r.stuck++;
-      // negative reward for this entrance
-      pref[r.targetEnt] -= lrRed*0.25;
-      return 'ok';
-    }
-
-    // if next is wall/border => recalc
-    if(isBlocked(next.x,next.y)){
-      r.path = [];
-      r.stuck++;
-      pref[r.targetEnt] -= lrRed*0.15;
-      return 'ok';
-    }
-
-    // move
-    r.x = next.x; r.y = next.y;
-    r.path.shift();
-
-    // small shaping: if makes progress toward core, reward slightly
-    const dist = Math.abs(r.x-core.x)+Math.abs(r.y-core.y);
-    const reward = dist < 10 ? 0.01 : 0.003;
-    pref[r.targetEnt] += lrRed*reward;
-
-    // if too stuck, maybe switch entrance preference (implicit: die soon and learn)
-    if(r.stuck > 22){
-      pref[r.targetEnt] -= lrRed*0.35;
+    if(r.life<=0){
+      updateRed(r.ent, -0.6);
       return 'dead';
     }
 
+    if(r.x===core.x && r.y===core.y){
+      updateRed(r.ent, +1.0);
+      return 'success';
+    }
+
+    if(!r.path || r.path.length===0 || Math.random()<0.04){
+      r.path = astar(r.x,r.y, core.x,core.y) || [];
+    }
+
+    if(r.path.length){
+      const n = r.path[0];
+
+      // barricade hit
+      const bk = key(n.x,n.y);
+      if(barricades.has(bk)){
+        pushWin(wBlock,1);
+        threat[r.ent] = (1-lrBlue)*threat[r.ent] + lrBlue*1;
+
+        updateRed(r.ent, -0.12);
+
+        const barr = barricades.get(bk);
+        if(r.cooldown<=0){
+          const dmg = 1 + Math.floor(D/70);
+          barr.hp -= dmg;
+          r.cooldown = 2;
+          if(barr.hp <= 0){
+            barricades.delete(bk);
+            updateRed(r.ent, +0.10); // broke through
+          }
+        } else {
+          r.cooldown--;
+        }
+
+        r.stuck++;
+        return 'ok';
+      }
+
+      if(isBlocked(n.x,n.y)){
+        r.path = [];
+        r.stuck++;
+        updateRed(r.ent, -0.06);
+        pushWin(wBlock,0);
+        return 'ok';
+      }
+
+      // move
+      r.x = n.x; r.y = n.y;
+      r.path.shift();
+      pushWin(wBlock,0);
+
+      // shaping reward: closer to core
+      const dist = Math.abs(r.x-core.x)+Math.abs(r.y-core.y);
+      updateRed(r.ent, dist<10 ? +0.02 : +0.005);
+
+      r.stuck = Math.max(0, r.stuck - 1);
+      return 'ok';
+    }
+
+    // wander fallback
+    const ds=[{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+    const d=ds[randInt(0,3)];
+    const nx=r.x+d.x, ny=r.y+d.y;
+    if(!isBlocked(nx,ny)){ r.x=nx; r.y=ny; }
+    r.stuck++;
+    updateRed(r.ent, -0.02);
+    pushWin(wBlock,0);
     return 'ok';
   }
 
-  function resolveRedOutcome(ent, outcome){
-    // update red preference by outcome
-    if(outcome==='success'){
-      pref[ent] += lrRed * 1.8; // big reward
-    } else if(outcome==='dead'){
-      pref[ent] -= lrRed * 0.9; // penalty
-    }
+  // ===================== Draw =====================
+  function roundRect(x,y,w,h,r){
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr,y);
+    ctx.arcTo(x+w,y,x+w,y+h,rr);
+    ctx.arcTo(x+w,y+h,x,y+h,rr);
+    ctx.arcTo(x,y+h,x,y,rr);
+    ctx.arcTo(x,y,x+w,y,rr);
+    ctx.closePath();
   }
 
-  // ---------- main sim ----------
+  function draw(){
+    const cw=cv.width, ch=cv.height;
+    ctx.clearRect(0,0,cw,ch);
+
+    const pad=20;
+    const size=Math.min(cw,ch)-pad*2;
+    const cell=size/W;
+
+    // background
+    ctx.fillStyle='#0a0f1c';
+    ctx.fillRect(0,0,cw,ch);
+
+    // walls
+    for(let y=0;y<H;y++){
+      for(let x=0;x<W;x++){
+        if(grid[y][x]!==WALL) continue;
+        const px=pad+x*cell;
+        const py=pad+y*cell;
+        ctx.fillStyle='#2b2f3f';
+        roundRect(px+cell*0.08,py+cell*0.08,cell*0.84,cell*0.84,cell*0.18);
+        ctx.fill();
+      }
+    }
+
+    // entrances
+    for(const e of entrances){
+      const px=pad+e.ex*cell;
+      const py=pad+e.ey*cell;
+      ctx.fillStyle='#ffd60a';
+      roundRect(px+cell*0.16,py+cell*0.16,cell*0.68,cell*0.68,cell*0.22);
+      ctx.fill();
+    }
+
+    // barricades
+    for(const [k,b] of barricades){
+      const [x,y]=k.split(',').map(Number);
+      const px=pad+x*cell;
+      const py=pad+y*cell;
+      ctx.fillStyle='#a3a3a3';
+      roundRect(px+cell*0.12,py+cell*0.12,cell*0.76,cell*0.76,cell*0.18);
+      ctx.fill();
+
+      // hp bar
+      ctx.fillStyle='rgba(0,0,0,0.35)';
+      ctx.fillRect(px+cell*0.12, py+cell*0.06, cell*0.76, cell*0.07);
+      ctx.fillStyle='#ffffff';
+      ctx.fillRect(px+cell*0.12, py+cell*0.06, cell*0.76*(b.hp/Math.max(1,b.hpMax)), cell*0.07);
+    }
+
+    // core
+    {
+      const px=pad+core.x*cell;
+      const py=pad+core.y*cell;
+      ctx.fillStyle='#7c3aed';
+      roundRect(px+cell*0.18,py+cell*0.18,cell*0.64,cell*0.64,cell*0.22);
+      ctx.fill();
+    }
+
+    // blues (triangle shield)
+    for(const b of blues){
+      const cx=pad+b.x*cell+cell/2;
+      const cy=pad+b.y*cell+cell/2;
+      ctx.fillStyle='#2a6bff';
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - cell*0.26);
+      ctx.lineTo(cx + cell*0.22, cy + cell*0.18);
+      ctx.lineTo(cx - cell*0.22, cy + cell*0.18);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // reds (arrow)
+    for(const r of reds){
+      const cx=pad+r.x*cell+cell/2;
+      const cy=pad+r.y*cell+cell/2;
+      ctx.fillStyle='#ff3b30';
+      ctx.beginPath();
+      ctx.moveTo(cx + cell*0.26, cy);
+      ctx.lineTo(cx - cell*0.18, cy - cell*0.18);
+      ctx.lineTo(cx - cell*0.18, cy + cell*0.18);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // overlay text
+    ctx.fillStyle='rgba(233,238,252,0.86)';
+    ctx.font='14px ui-monospace, Menlo, monospace';
+    ctx.fillText(`steps/frame: ${stepsPerFrame}   temp: ${temperature.toFixed(2)}`, 18, 22);
+  }
+
+  // ===================== Sparkline =====================
+  function drawSpark(){
+    const w=spark.width, h=spark.height;
+    sp.clearRect(0,0,w,h);
+    sp.fillStyle='rgba(255,255,255,0.02)';
+    sp.fillRect(0,0,w,h);
+
+    sp.strokeStyle='rgba(255,255,255,0.10)';
+    for(let i=1;i<4;i++){
+      const y=(h*i)/4;
+      sp.beginPath(); sp.moveTo(0,y); sp.lineTo(w,y); sp.stroke();
+    }
+
+    const drawLine=(arr, color)=>{
+      if(arr.length<2) return;
+      sp.strokeStyle=color;
+      sp.lineWidth=2;
+      sp.beginPath();
+      for(let i=0;i<arr.length;i++){
+        const x=(i/(HIST-1))*w;
+        const y=h - (arr[i]/100)*h;
+        if(i===0) sp.moveTo(x,y); else sp.lineTo(x,y);
+      }
+      sp.stroke();
+    };
+
+    drawLine(histR,'#ff3b30');
+    drawLine(histB,'#2a6bff');
+  }
+
+  // ===================== UI update =====================
+  function updateUI(){
+    diffLabel.textContent = String(difficultyValue());
+
+    elTick.textContent = String(tick);
+    elRN.textContent = String(reds.length);
+    elBN.textContent = String(blues.length);
+    elBarN.textContent = String(barricades.size);
+
+    const att = sum(wAtt);
+    const suc = sum(wSucc);
+    const blk = sum(wBlock);
+    const rep = sum(wRep);
+
+    elAttW.textContent = String(att);
+    elSuccW.textContent = String(suc);
+    elBlockW.textContent = String(blk);
+    elRepW.textContent = String(rep);
+
+    const redRate = att>0 ? (suc/att) : 0;
+    const rP = Math.round(redRate*100);
+
+    // blue proxy: blocks+repairs relative to attacks
+    const blueRate = att>0 ? clamp((blk*0.30 + rep*0.80)/(att*2.2), 0, 1) : 0;
+    const bP = Math.round(blueRate*100);
+
+    rPct.textContent = rP + '%';
+    bPct.textContent = bP + '%';
+    rBar.style.width = rP + '%';
+    bBar.style.width = bP + '%';
+
+    // history
+    histR.push(rP); if(histR.length>HIST) histR.shift();
+    histB.push(bP); if(histB.length>HIST) histB.shift();
+    drawSpark();
+
+    // show entrance probs
+    const p = softmaxProbs(Qent);
+    prefLine.textContent = `N/E/S/W: ${p.map(x => (x*100).toFixed(0)+'%').join('  ')}   |  Q: ${Qent.map(v=>v.toFixed(2)).join('  ')}`;
+  }
+
+  // ===================== Main loop =====================
   function simStep(){
     tick++;
+    const D = difficultyValue();
 
-    // spawn reds occasionally
-    // frequency increases slightly over time (pressure)
-    const spawnChance = 0.22 + 0.10*Math.min(1, tick/2000);
-    if(Math.random() < spawnChance){
+    // spawn control
+    const spawnRate = 0.16 + (D/100)*0.24; // 0.16..0.40
+    const maxR = 34 + Math.floor(D/8);
+    if(reds.length < maxR && Math.random() < spawnRate){
       spawnRed();
     }
 
-    // blue defense update
-    blueDefend();
+    // blue
+    blueStep();
 
-    // red update
-    const alive = [];
+    // red
+    const alive=[];
     for(const r of reds){
       const res = redStep(r);
       if(res==='success'){
-        // record success
-        pushWindow(recentSuccess, 1);
-        resolveRedOutcome(r.targetEnt, 'success');
+        pushWin(wSucc,1);
+        // remove on success
       } else if(res==='dead'){
-        resolveRedOutcome(r.targetEnt, 'dead');
-        // (no success)
+        // remove
       } else {
         alive.push(r);
       }
     }
     reds = alive;
 
-    // small decay of prefs so it doesn't explode
-    for(let i=0;i<pref.length;i++){
-      pref[i] *= 0.999;
-      pref[i] = clamp(pref[i], -4, 4);
-    }
+    // temperature cool -> more “уверенная” стратегия
+    temperature = clamp(temperature * 0.9996, 0.55, 1.15);
+
+    updateUI();
+    draw();
   }
 
-  // ---------- metrics/progress ----------
-  function updateUI(){
-    elTick.textContent = String(tick);
-    elRN.textContent = String(reds.length);
-    elBN.textContent = String(blues.length);
-    elBarrN.textContent = String(barricades.size);
-
-    const att = sum(recentAttacks);
-    const suc = sum(recentSuccess);
-    const blk = sum(recentBlocks);
-
-    elAttW.textContent = String(att);
-    elSuccW.textContent = String(suc);
-    elBlockW.textContent = String(blk);
-
-    // Red "intelligence": success rate among attacks (window)
-    const redRate = att > 0 ? (suc/att) : 0;
-    const rP = Math.round(redRate*100);
-    rPct.textContent = rP + '%';
-    rBar.style.width = rP + '%';
-
-    // Blue "intelligence": how much of attacks were blocked (proxy)
-    // blocked steps is not same as blocked attacks, but gives a “defense pressure” feel.
-    const blueRate = att > 0 ? clamp(blk / (att*6), 0, 1) : 0;
-    const bP = Math.round(blueRate*100);
-    bPct.textContent = bP + '%';
-    bBar.style.width = bP + '%';
-  }
-
-  // ---------- draw ----------
-  function draw(){
-    const cw=cv.width, ch=cv.height;
-    ctx.clearRect(0,0,cw,ch);
-
-    const pad = 18;
-    const size = Math.min(cw,ch) - pad*2;
-    const cell = size / W;
-
-    // bg
-    ctx.fillStyle = '#0a0f1c';
-    ctx.fillRect(0,0,cw,ch);
-
-    // cells
-    for(let y=0;y<H;y++){
-      for(let x=0;x<W;x++){
-        const px = pad + x*cell;
-        const py = pad + y*cell;
-
-        // walls
-        if(grid[y][x]===WALL){
-          ctx.fillStyle = '#2b2f3f';
-          ctx.fillRect(px,py,cell,cell);
-        }
-
-        // light grid
-        ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-        ctx.strokeRect(px,py,cell,cell);
-      }
-    }
-
-    // entrances
-    for(const e of entrances){
-      const px = pad + e.ex*cell;
-      const py = pad + e.ey*cell;
-      ctx.fillStyle = '#ffd60a';
-      ctx.fillRect(px+cell*0.2, py+cell*0.2, cell*0.6, cell*0.6);
-    }
-
-    // barricades
-    for(const [k,v] of barricades){
-      const [x,y]=k.split(',').map(Number);
-      const px = pad + x*cell;
-      const py = pad + y*cell;
-      ctx.fillStyle = '#a3a3a3';
-      ctx.fillRect(px+cell*0.12, py+cell*0.12, cell*0.76, cell*0.76);
-
-      // hp bar
-      ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      ctx.fillRect(px+cell*0.12, py+cell*0.06, cell*0.76, cell*0.08);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(px+cell*0.12, py+cell*0.06, cell*0.76*(v.hp/6), cell*0.08);
-    }
-
-    // core
-    {
-      const px = pad + core.x*cell;
-      const py = pad + core.y*cell;
-      ctx.fillStyle = '#7c3aed';
-      ctx.fillRect(px+cell*0.18, py+cell*0.18, cell*0.64, cell*0.64);
-    }
-
-    // blues
-    for(const b of blues){
-      const px = pad + b.x*cell + cell/2;
-      const py = pad + b.y*cell + cell/2;
-      ctx.fillStyle = '#2a6bff';
-      ctx.beginPath();
-      ctx.arc(px,py,cell*0.22,0,Math.PI*2);
-      ctx.fill();
-    }
-
-    // reds
-    for(const r of reds){
-      const px = pad + r.x*cell + cell/2;
-      const py = pad + r.y*cell + cell/2;
-      ctx.fillStyle = '#ff3b30';
-      ctx.beginPath();
-      ctx.arc(px,py,cell*0.20,0,Math.PI*2);
-      ctx.fill();
-    }
-
-    // tiny overlay: entrance weights
-    // show which entrance reds prefer
-    const probs = softmaxProbs(pref);
-    ctx.fillStyle = 'rgba(233,238,252,0.85)';
-    ctx.font = '14px ui-monospace, Menlo, monospace';
-    ctx.fillText(`Red pref N/E/S/W: ${probs.map(p => (p*100).toFixed(0)+'%').join(' ')}`, 18, 22);
-  }
-
-  function softmaxProbs(logits){
-    const t = temperature;
-    const exps = logits.map(v => Math.exp(v/t));
-    const s = exps.reduce((a,b)=>a+b,0) || 1;
-    return exps.map(e => e/s);
-  }
-
-  // ---------- loop ----------
   function frame(){
     if(playing){
-      for(let i=0;i<stepsPerFrame;i++){
-        simStep();
-      }
-      updateUI();
-      draw();
+      for(let i=0;i<stepsPerFrame;i++) simStep();
     }
     requestAnimationFrame(frame);
   }
 
-  // ---------- controls ----------
+  // ===================== Controls =====================
   btnStart.addEventListener('click', ()=>{
     playing = !playing;
     btnStart.textContent = playing ? '⏸ Пауза' : '▶ Старт';
@@ -691,11 +799,40 @@
   });
 
   btnFast.addEventListener('click', ()=>{
-    stepsPerFrame = Math.min(60, stepsPerFrame * 2);
+    stepsPerFrame = Math.min(80, stepsPerFrame*2);
   });
+
   btnSlow.addEventListener('click', ()=>{
-    stepsPerFrame = Math.max(1, Math.floor(stepsPerFrame / 2));
+    stepsPerFrame = Math.max(1, Math.floor(stepsPerFrame/2));
   });
+
+  diff.addEventListener('input', ()=>{
+    diffLabel.textContent = String(difficultyValue());
+  });
+
+  // ===================== Reset =====================
+  function resetLearning(){
+    Qent=[0,0,0,0];
+    pressure=[0,0,0,0];
+    threat=[0,0,0,0];
+    temperature=1.0;
+
+    wAtt=[]; wSucc=[]; wBlock=[]; wRep=[];
+    histR=[]; histB=[];
+    tick=0;
+  }
+
+  function resetAll(){
+    playing=false;
+    btnStart.textContent='▶ Старт';
+
+    buildMap();
+    resetLearning();
+    resetAgents();
+
+    updateUI();
+    draw();
+  }
 
   // init
   resetAll();
