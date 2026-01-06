@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>VK-like Mobile — макет</title>
+  <title>VK-like (Aqua palette)</title>
   <style>
     :root{
       --apricot:#FBCEB1;
@@ -15,12 +15,13 @@
       --bg:#ffffff;
       --text:#111111;
 
-      --muted: rgba(17,17,17,.65);
+      --muted: rgba(17,17,17,.62);
       --line: rgba(181,184,177,.55);
-      --card: rgba(255,255,255,.92);
-      --shadow: 0 10px 24px rgba(17,17,17,.10);
+      --card: rgba(255,255,255,.96);
+      --shadow: 0 8px 18px rgba(17,17,17,.10);
 
-      --radius: 14px;
+      --r: 14px;
+      --tap: 44px;
     }
 
     *{box-sizing:border-box}
@@ -28,81 +29,93 @@
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
-      background: var(--bg);
-      color: var(--text);
+      background: #f7f8fa;
+      color:var(--text);
     }
 
-    /* top bar (VK mobile vibe) */
-    .topbar{
+    /* ====== VK-ish topbar ====== */
+    .top{
       position:sticky;
       top:0;
       z-index:50;
       background: linear-gradient(180deg, var(--aqua2), var(--aqua));
-      border-bottom: 1px solid rgba(17,17,17,.08);
-      padding: 10px 12px 10px;
+      border-bottom: 1px solid rgba(17,17,17,.10);
     }
-    .toprow{
+
+    .topRow{
       display:flex;
       align-items:center;
       gap:10px;
+      padding: 10px 12px 10px;
+      max-width: 740px;
+      margin: 0 auto;
     }
-    .brand{
-      font-weight:900;
-      letter-spacing:.2px;
-      white-space:nowrap;
-      padding: 8px 10px;
-      border-radius: 999px;
+
+    .vkLogo{
+      width:40px; height:40px;
+      border-radius: 14px;
       background: rgba(255,255,255,.55);
       border:1px solid rgba(17,17,17,.10);
+      display:grid; place-items:center;
+      font-weight:900;
+      letter-spacing:.2px;
       user-select:none;
     }
+
     .search{
       flex:1;
+      height: 40px;
       display:flex;
       align-items:center;
       gap:8px;
+      padding: 0 12px;
+      border-radius: 999px;
       background: rgba(255,255,255,.78);
       border:1px solid rgba(17,17,17,.10);
-      border-radius: 999px;
-      padding: 10px 12px;
       min-width:0;
     }
     .search input{
       border:none; outline:none; background:transparent;
       width:100%;
-      font-size:14px;
+      font-size:15px;
       color:var(--text);
     }
     .search input::placeholder{ color: rgba(17,17,17,.55); }
-    .iconBtn{
+
+    .topBtn{
       width:40px;height:40px;
-      border-radius: 12px;
+      border-radius: 14px;
       border:1px solid rgba(17,17,17,.10);
       background: rgba(255,255,255,.55);
       display:grid;place-items:center;
       cursor:pointer;
       user-select:none;
-      font-weight:900;
+      font-size:18px;
     }
-    .iconBtn:active{ transform: scale(.98); }
+    .topBtn:active{ transform: scale(.98); }
 
-    /* tabs under top bar */
+    /* ====== VK-ish tabs ====== */
+    .tabsWrap{
+      max-width: 740px;
+      margin: 0 auto;
+      padding: 0 6px 10px;
+    }
     .tabs{
       display:flex;
       gap:8px;
-      padding-top: 10px;
       overflow:auto;
+      padding: 0 6px;
       scrollbar-width:none;
     }
     .tabs::-webkit-scrollbar{height:0}
     .tab{
       flex:0 0 auto;
-      padding: 9px 12px;
+      padding: 10px 12px;
       border-radius: 999px;
       border:1px solid rgba(17,17,17,.10);
       background: rgba(255,255,255,.55);
       font-size:13px;
-      font-weight:800;
+      font-weight:900;
       cursor:pointer;
       user-select:none;
       white-space:nowrap;
@@ -111,21 +124,21 @@
       background: linear-gradient(135deg, rgba(253,217,181,.85), rgba(255,255,255,.55));
     }
 
-    /* layout */
+    /* ====== page ====== */
     .page{
-      max-width: 680px;
+      max-width: 740px;
       margin: 0 auto;
-      padding-bottom: 74px; /* bottom nav */
+      padding: 10px 12px 84px;
     }
 
-    /* quick actions (like VK “что у вас нового?” block) */
+    /* ====== composer (Что у вас нового) ====== */
     .composer{
-      margin: 12px 12px 0;
       background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
+      border:1px solid var(--line);
+      border-radius: var(--r);
       box-shadow: var(--shadow);
       overflow:hidden;
+      margin-bottom: 10px;
     }
     .composerTop{
       display:flex;
@@ -134,62 +147,66 @@
       padding: 12px;
     }
     .ava{
-      width:38px;height:38px;border-radius: 12px;
+      width:40px;height:40px;
+      border-radius: 14px;
       background: linear-gradient(135deg, var(--apricot2), var(--aqua2));
       border:1px solid rgba(17,17,17,.10);
-      display:grid;place-items:center;
+      display:grid; place-items:center;
       font-weight:900;
+      user-select:none;
     }
-    .composerInput{
+    .fakeInput{
       flex:1;
-      padding: 11px 12px;
-      border-radius: 12px;
+      height: 40px;
+      border-radius: 999px;
       border:1px solid rgba(17,17,17,.10);
-      background: rgba(255,255,255,.75);
+      background: rgba(247,248,250,.9);
+      display:flex; align-items:center;
+      padding: 0 12px;
       color: rgba(17,17,17,.55);
       font-size:14px;
-      user-select:none;
       cursor:pointer;
+      user-select:none;
     }
     .composerActions{
       display:flex;
       gap:8px;
       padding: 0 12px 12px;
     }
-    .qbtn{
+    .act{
       flex:1;
-      border:none;
+      height: 38px;
       border-radius: 12px;
-      padding: 10px 10px;
+      border:1px solid rgba(17,17,17,.10);
+      background: rgba(120,219,226,.35);
       font-weight:900;
       cursor:pointer;
-      background: rgba(120,219,226,.55);
-      border:1px solid rgba(17,17,17,.10);
+      user-select:none;
     }
-    .qbtn.secondary{ background: rgba(253,217,181,.65); }
-    .qbtn:active{ transform: scale(.99); }
+    .act.secondary{ background: rgba(253,217,181,.55); }
+    .act:active{ transform: scale(.99); }
 
-    /* feed cards */
+    /* ====== feed cards ====== */
     .feed{
-      padding: 12px;
       display:flex;
       flex-direction:column;
-      gap: 12px;
+      gap:10px;
     }
 
     .card{
       background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
+      border:1px solid var(--line);
+      border-radius: var(--r);
       box-shadow: var(--shadow);
       overflow:hidden;
     }
-    .cardHead{
+
+    .head{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:10px;
       padding: 12px 12px 10px;
+      gap:10px;
     }
     .u{
       display:flex;
@@ -197,23 +214,25 @@
       gap:10px;
       min-width:0;
     }
-    .miniAva{
-      width:40px;height:40px;border-radius: 14px;
+    .mini{
+      width:40px;height:40px;
+      border-radius: 14px;
       background: linear-gradient(135deg, var(--aqua), var(--apricot));
       border:1px solid rgba(17,17,17,.10);
-      display:grid;place-items:center;
+      display:grid; place-items:center;
       font-weight:900;
       flex:0 0 auto;
+      user-select:none;
     }
-    .uMeta{ min-width:0; }
-    .uMeta b{
+    .meta{ min-width:0; }
+    .meta b{
       display:block;
       font-size:14px;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
     }
-    .uMeta small{
+    .meta small{
       display:block;
       font-size:12px;
       color: var(--muted);
@@ -226,21 +245,19 @@
       width:38px;height:38px;
       border-radius: 12px;
       border:1px solid rgba(17,17,17,.10);
-      background: rgba(255,255,255,.75);
-      display:grid;place-items:center;
+      background: rgba(247,248,250,.9);
+      display:grid; place-items:center;
       cursor:pointer;
       user-select:none;
       font-size:20px;
-      line-height:1;
     }
-    .dots:active{ transform: scale(.98); }
 
     .text{
       padding: 0 12px 10px;
       font-size:14px;
       line-height:1.35;
     }
-    .text .tag{ color: rgba(17,17,17,.70); font-weight:900; }
+    .tag{ color: rgba(17,17,17,.70); font-weight:900; }
 
     .media{
       height: 220px;
@@ -251,7 +268,6 @@
       border-top:1px solid rgba(17,17,17,.06);
       border-bottom:1px solid rgba(17,17,17,.06);
       position:relative;
-      overflow:hidden;
     }
     .chip{
       position:absolute;
@@ -262,7 +278,7 @@
       padding: 6px 10px;
       font-size:12px;
       font-weight:900;
-      box-shadow: 0 10px 22px rgba(17,17,17,.08);
+      box-shadow: 0 8px 18px rgba(17,17,17,.08);
     }
 
     .stats{
@@ -277,64 +293,63 @@
       background: rgba(181,184,177,.45);
       margin: 10px 12px;
     }
-
     .actions{
       display:flex;
       gap:8px;
       padding: 0 12px 12px;
     }
-    .abtn{
+    .btn{
       flex:1;
-      border:none;
-      cursor:pointer;
+      height: 38px;
       border-radius: 12px;
-      padding: 10px 10px;
-      font-weight:900;
       border:1px solid rgba(17,17,17,.10);
-      background: rgba(255,255,255,.78);
+      background: rgba(247,248,250,.92);
+      font-weight:900;
+      cursor:pointer;
       display:flex;
       align-items:center;
       justify-content:center;
       gap:8px;
+      user-select:none;
     }
-    .abtn.like.on{
-      background: rgba(253,217,181,.75);
-    }
-    .abtn:active{ transform: scale(.99); }
+    .btn.like.on{ background: rgba(253,217,181,.65); }
+    .btn:active{ transform: scale(.99); }
 
-    /* bottom nav (VK vibe) */
-    .bottomNav{
+    /* ====== bottom nav ====== */
+    .bottom{
       position:fixed;
       left:0; right:0; bottom:0;
-      background: rgba(255,255,255,.92);
+      background: rgba(255,255,255,.94);
       border-top:1px solid rgba(181,184,177,.55);
       backdrop-filter: blur(12px);
       padding: 8px 10px 10px;
+      z-index:60;
     }
-    .bottomNav .wrap{
-      max-width: 680px;
+    .bottom .wrap{
+      max-width: 740px;
       margin: 0 auto;
       display:flex;
-      justify-content:space-between;
       gap:8px;
+      justify-content:space-between;
     }
     .nav{
       flex:1;
-      height:46px;
+      height: 46px;
       border-radius: 14px;
       border:1px solid rgba(17,17,17,.10);
-      background: rgba(120,219,226,.25);
-      display:grid;place-items:center;
+      background: rgba(120,219,226,.18);
+      display:grid; place-items:center;
       cursor:pointer;
       user-select:none;
       font-weight:900;
       color: rgba(17,17,17,.80);
     }
     .nav.active{
-      background: linear-gradient(135deg, rgba(120,219,226,.65), rgba(127,255,212,.45));
+      background: linear-gradient(135deg, rgba(120,219,226,.55), rgba(127,255,212,.38));
     }
+    .nav:active{ transform: scale(.99); }
 
-    /* modal (create post) */
+    /* ====== modal create post ====== */
     .overlay{
       position:fixed;
       inset:0;
@@ -346,9 +361,10 @@
       z-index:100;
     }
     .overlay.show{ display:flex; }
+
     .sheet{
-      width:min(680px, 100%);
-      background: rgba(255,255,255,.95);
+      width:min(740px, 100%);
+      background: rgba(255,255,255,.96);
       border:1px solid rgba(181,184,177,.55);
       border-radius: 18px;
       box-shadow: 0 30px 70px rgba(17,17,17,.25);
@@ -364,24 +380,26 @@
       font-weight:900;
     }
     .close{
-      width:36px;height:36px;
-      border-radius:12px;
+      width:38px;height:38px;
+      border-radius: 14px;
       border:1px solid rgba(17,17,17,.10);
-      background: rgba(255,255,255,.75);
+      background: rgba(255,255,255,.80);
       cursor:pointer;
-      display:grid;place-items:center;
+      display:grid; place-items:center;
       font-weight:900;
+      user-select:none;
     }
     .sheetBody{ padding: 12px; display:grid; gap:10px; }
     textarea{
       width:100%;
-      min-height:90px;
+      min-height:100px;
       resize:none;
       border-radius: 14px;
       border:1px solid rgba(181,184,177,.55);
       padding: 10px 12px;
       outline:none;
       font:inherit;
+      background: rgba(247,248,250,.9);
     }
     .row{ display:flex; gap:10px; }
     select, .pub{
@@ -389,7 +407,7 @@
       border-radius: 14px;
       border:1px solid rgba(181,184,177,.55);
       padding: 10px 12px;
-      background: rgba(255,255,255,.9);
+      background: rgba(255,255,255,.96);
       font-weight:900;
       outline:none;
     }
@@ -399,6 +417,8 @@
       background: linear-gradient(135deg, var(--aqua2), var(--apricot2));
       border:1px solid rgba(17,17,17,.10);
     }
+
+    /* toast */
     .toast{
       position:fixed;
       left:50%;
@@ -423,45 +443,48 @@
 </head>
 <body>
 
-  <header class="topbar">
-    <div class="toprow">
-      <div class="brand">VK-ish</div>
+  <header class="top">
+    <div class="topRow">
+      <div class="vkLogo">VK</div>
       <div class="search">
         <span aria-hidden="true">🔎</span>
         <input id="search" placeholder="Поиск" />
       </div>
-      <div class="iconBtn" id="btnBell" title="Уведомления">🔔</div>
+      <div class="topBtn" id="btnBell" title="Уведомления">🔔</div>
+      <div class="topBtn" id="btnMsg" title="Сообщения">💬</div>
     </div>
 
-    <nav class="tabs" id="tabs">
-      <div class="tab active" data-tab="feed">Новости</div>
-      <div class="tab" data-tab="reco">Рекомендации</div>
-      <div class="tab" data-tab="friends">Друзья</div>
-      <div class="tab" data-tab="groups">Сообщества</div>
-      <div class="tab" data-tab="videos">Видео</div>
-    </nav>
+    <div class="tabsWrap">
+      <nav class="tabs" id="tabs">
+        <div class="tab active" data-tab="feed">Новости</div>
+        <div class="tab" data-tab="reco">Рекомендации</div>
+        <div class="tab" data-tab="friends">Друзья</div>
+        <div class="tab" data-tab="groups">Сообщества</div>
+        <div class="tab" data-tab="videos">Видео</div>
+      </nav>
+    </div>
   </header>
 
   <main class="page">
-    <section class="composer" id="composer">
+    <section class="composer">
       <div class="composerTop">
         <div class="ava">★</div>
-        <div class="composerInput" id="openComposer">Что у вас нового?</div>
+        <div class="fakeInput" id="openComposer">Что у вас нового?</div>
       </div>
       <div class="composerActions">
-        <button class="qbtn" id="qPhoto">Фото</button>
-        <button class="qbtn secondary" id="qPost">Запись</button>
-        <button class="qbtn" id="qPoll">Опрос</button>
+        <button class="act" id="qPhoto">Фото</button>
+        <button class="act secondary" id="qPost">Запись</button>
+        <button class="act" id="qPoll">Опрос</button>
       </div>
     </section>
 
     <section class="feed" id="feed"></section>
   </main>
 
-  <footer class="bottomNav">
+  <footer class="bottom">
     <div class="wrap">
       <div class="nav active" data-nav="home">🏠</div>
-      <div class="nav" data-nav="msg">💬</div>
+      <div class="nav" data-nav="services">🧩</div>
       <div class="nav" data-nav="add" id="navAdd">＋</div>
       <div class="nav" data-nav="notif">🔔</div>
       <div class="nav" data-nav="me">👤</div>
@@ -502,13 +525,13 @@
 
     let posts = [
       {id:1, user:"natalia.lab", init:"Н", time:"2 ч назад", chip:"Подборка", tag:"#дизайн",
-       text:"Собрала палитру для интерфейса: аквамарин + абрикос, серый агат для линий. Хочу, чтобы выглядело как реальная соцсеть." ,
+       text:"Собрала палитру: аквамарин + абрикос, серый агат для линий. Хочу, чтобы было как настоящая соцсеть.",
        likes:128, comments:34, shares:9, liked:false},
       {id:2, user:"dima_ivanov", init:"Д", time:"вчера", chip:"Обновление", tag:"#новости",
-       text:"Сделал макет мобильной версии «как ВК»: шапка, вкладки, лента, фикс-меню снизу. Без «нарисованного телефона» 🙂",
+       text:"Сделал VK-style мобильный макет: шапка+поиск, вкладки, композер, карточки постов и нижнее меню.",
        likes:76, comments:18, shares:4, liked:true},
       {id:3, user:"ui.mockups", init:"U", time:"3 д назад", chip:"Вопрос", tag:"#вдохновение",
-       text:"Какой блок важнее в ленте: «что у вас нового» или сразу посты? Я за быстрый композер сверху.",
+       text:"Что важнее сверху: композер «Что нового?» или сразу лента? Я за быстрый композер.",
        likes:210, comments:52, shares:21, liked:false},
     ];
 
@@ -520,6 +543,10 @@
       window.__tt = setTimeout(()=>t.classList.remove("show"), 1200);
     }
 
+    function escapeHtml(s){
+      return s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+    }
+
     function render(list){
       const feed = $("#feed");
       feed.innerHTML = "";
@@ -527,10 +554,10 @@
         const card = document.createElement("article");
         card.className = "card";
         card.innerHTML = `
-          <div class="cardHead">
+          <div class="head">
             <div class="u">
-              <div class="miniAva">${p.init}</div>
-              <div class="uMeta">
+              <div class="mini">${p.init}</div>
+              <div class="meta">
                 <b>@${p.user}</b>
                 <small>${p.time} • ${p.tag}</small>
               </div>
@@ -552,16 +579,16 @@
           <div class="divider"></div>
 
           <div class="actions">
-            <button class="abtn like ${p.liked ? "on":""}">❤ Лайк</button>
-            <button class="abtn">💬 Коммент</button>
-            <button class="abtn">↗ Репост</button>
+            <button class="btn like ${p.liked ? "on":""}">❤ Лайк</button>
+            <button class="btn">💬 Коммент</button>
+            <button class="btn">↗ Репост</button>
           </div>
         `;
 
         card.querySelector(".dots").onclick = ()=>toast("Меню поста");
         card.querySelector(".media").onclick = ()=>toast("Открыть медиа");
-        card.querySelector(".abtn:nth-child(2)").onclick = ()=>toast("Комментарии (макет)");
-        card.querySelector(".abtn:nth-child(3)").onclick = ()=>toast("Поделиться (макет)");
+        card.querySelector(".btn:nth-child(2)").onclick = ()=>toast("Комментарии (макет)");
+        card.querySelector(".btn:nth-child(3)").onclick = ()=>toast("Поделиться (макет)");
 
         const likeBtn = card.querySelector(".like");
         likeBtn.onclick = ()=>{
@@ -573,10 +600,6 @@
 
         feed.appendChild(card);
       });
-    }
-
-    function escapeHtml(s){
-      return s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
     }
 
     function currentFiltered(){
@@ -596,14 +619,12 @@
         t.classList.add("active");
         const tab = t.dataset.tab;
 
-        if(tab === "feed"){ render(currentFiltered()); toast("Новости"); return; }
-
-        // простые “режимы” как макет
+        if(tab === "feed"){ toast("Новости"); render(currentFiltered()); return; }
         if(tab === "reco"){
           toast("Рекомендации");
           render([
-            {...posts[0], id:1001, chip:"Подборка", tag:"#вдохновение", text:"Рекомендации: аккуратные карточки + фикс-меню + быстрый поиск."},
-            {...posts[2], id:1002, chip:"Вопрос", tag:"#дизайн", text:"Какие иконки оставить в нижнем меню? 5 штук — оптимально."},
+            {...posts[0], id:1001, chip:"Подборка", tag:"#вдохновение", text:"Рекомендации: карточки + фикс-меню + быстрый поиск."},
+            {...posts[2], id:1002, chip:"Вопрос", tag:"#дизайн", text:"5 кнопок в нижнем меню — удобный максимум на мобильном."},
           ]);
           return;
         }
@@ -621,7 +642,7 @@
       };
     });
 
-    // open composer
+    // modal
     const overlay = $("#overlay");
     const openModal = ()=>{ overlay.classList.add("show"); $("#newText").focus(); };
     const closeModal = ()=> overlay.classList.remove("show");
@@ -632,6 +653,7 @@
     $("#qPost").onclick = openModal;
     $("#qPoll").onclick = ()=>toast("Опрос (макет)");
     $("#btnBell").onclick = ()=>toast("Уведомления");
+    $("#btnMsg").onclick = ()=>toast("Сообщения (макет)");
 
     $("#close").onclick = closeModal;
     overlay.onclick = (e)=>{ if(e.target === overlay) closeModal(); };
@@ -662,7 +684,6 @@
 
     $("#search").addEventListener("input", ()=> render(currentFiltered()));
 
-    // init
     render(posts);
   </script>
 </body>
