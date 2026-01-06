@@ -3,499 +3,480 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>ИИ, которого ты обучаешь</title>
+  <title>ИИ учится обходить препятствия (Q-learning)</title>
   <style>
     :root { font-family: -apple-system, system-ui, Arial; }
     body { margin:0; background:#0b0d12; color:#e9eefc; }
     .wrap { max-width: 980px; margin: 0 auto; padding: 16px; }
-    h1 { margin: 8px 0 6px; font-size: 22px; }
-    .sub { margin: 0 0 12px; opacity:.8; line-height: 1.35; }
+    h1 { margin: 8px 0 6px; font-size: 20px; }
+    .sub { margin: 0 0 12px; opacity: .85; line-height: 1.35; }
     .card { background:#111626; border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:14px; }
     .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:10px 0; }
-    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-    @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
-
-    .chat {
-      height: 52vh;
-      overflow: auto;
-      padding: 10px;
-      background: #0a0f1c;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.08);
-    }
-    .msg { max-width: 85%; padding: 10px 12px; border-radius: 14px; margin: 8px 0; white-space: pre-wrap; }
-    .me { background:#2a6bff; margin-left:auto; }
-    .ai { background:#1c2238; }
-    .meta { font-size: 12px; opacity: .8; margin-top: 4px; }
-
-    input, textarea {
-      width: 100%;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: #0a0f1c;
-      color: #e9eefc;
-      outline: none;
-    }
-    textarea { min-height: 90px; resize: vertical; }
-
     button {
-      border: 0;
-      border-radius: 12px;
-      padding: 12px 14px;
-      font-weight: 800;
-      background: #2a6bff;
-      color: #fff;
+      border:0; border-radius:12px; padding:12px 14px; font-weight:800;
+      background:#2a6bff; color:#fff;
     }
-    button.ghost { background: transparent; border: 1px solid rgba(255,255,255,.18); }
-    button:disabled { opacity: .45; }
+    button.ghost { background:transparent; border:1px solid rgba(255,255,255,.18); }
+    button:disabled { opacity:.45; }
 
-    .progressBox { margin: 10px 0 14px; }
-    .bar { height: 10px; background: rgba(255,255,255,.12); border-radius: 999px; overflow:hidden; }
-    .bar > div { height: 100%; width: 0%; background: #2a6bff; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; opacity:.9; }
+    .grid { display:grid; grid-template-columns: 1.2fr 1fr; gap: 12px; }
+    @media (max-width: 860px){ .grid{ grid-template-columns: 1fr; } }
+
+    canvas { width:100%; height:auto; background:#0a0f1c; border-radius:14px; border:1px solid rgba(255,255,255,.12); touch-action:none; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; opacity:.92; }
     .pill { display:inline-block; padding:6px 10px; border:1px solid rgba(255,255,255,.15); border-radius:999px; }
-    details { margin-top: 8px; opacity: .9; }
-    summary { cursor: pointer; }
+    .bar { height: 10px; background: rgba(255,255,255,.12); border-radius:999px; overflow:hidden; }
+    .bar > div { height:100%; width:0%; background:#2a6bff; }
+    .legend { display:flex; gap:10px; flex-wrap:wrap; }
+    .sw { display:inline-flex; gap:6px; align-items:center; }
+    .dot { width:12px; height:12px; border-radius:3px; display:inline-block; border:1px solid rgba(255,255,255,.18); }
   </style>
 </head>
 <body>
   <main class="wrap">
-    <h1>ИИ, которого ты обучаешь</h1>
+    <h1>Визуализация: ИИ учится обходить препятствия</h1>
     <p class="sub">
-      Ты учишь: <b>“что ты говоришь” → “как он должен отвечать”</b>.
-      Он использует это в чате, а прогресс показывает, насколько он стал стабильнее и точнее.
+      Это реальное обучение с подкреплением (Q-learning): агент сначала тыкается в стены, потом начинает понимать,
+      куда лучше идти. Прогресс-бар растёт, когда средняя длина успешного пути приближается к кратчайшему.
     </p>
 
     <section class="card">
-      <div class="progressBox">
-        <div class="row" style="justify-content: space-between;">
-          <div>Уровень “интеллекта”: <b id="lvl">0%</b></div>
-          <div class="mono" id="status">загрузка модели…</div>
-        </div>
-        <div class="bar"><div id="bar"></div></div>
-        <div class="row">
-          <span class="pill mono">Примеров: <b id="n">0</b></span>
-          <span class="pill mono">Самопроверка: <b id="acc">—</b></span>
-          <span class="pill mono">Порог ответа: <b id="thrLabel">0.45</b></span>
-          <button id="btnRecalc" class="ghost">🔄 Пересчитать прогресс</button>
-          <button id="btnWipe" class="ghost">🧨 Сбросить всё</button>
-        </div>
-      </div>
-
       <div class="grid">
         <div>
-          <div class="mono" style="margin-bottom:8px;">Чат</div>
-          <div class="chat" id="chat"></div>
-
+          <canvas id="cv" width="720" height="720"></canvas>
           <div class="row">
-            <input id="msg" placeholder="Напиши сообщение…" />
-            <button id="send">▶</button>
+            <button id="btnStart">▶ Старт</button>
+            <button id="btnStep" class="ghost">⏭ Шаг</button>
+            <button id="btnReset" class="ghost">🔄 Сброс</button>
+            <button id="btnRandom" class="ghost">🎲 Новый лабиринт</button>
           </div>
-
-          <div class="row">
-            <button id="btnRight" disabled>👍 правильно</button>
-            <button id="btnWrong" class="ghost" disabled>👎 исправить</button>
+          <div class="legend mono">
+            <span class="sw"><span class="dot" style="background:#0a0f1c"></span> пусто</span>
+            <span class="sw"><span class="dot" style="background:#2b2f3f"></span> стена</span>
+            <span class="sw"><span class="dot" style="background:#2a6bff"></span> агент</span>
+            <span class="sw"><span class="dot" style="background:#2bd67b"></span> цель</span>
+            <span class="sw"><span class="dot" style="background:#ffcc00"></span> старт</span>
           </div>
-
-          <div class="mono" id="lastInfo">—</div>
         </div>
 
         <div>
-          <div class="mono" style="margin-bottom:8px;">Научить (вопрос → ответ)</div>
-          <div class="row">
-            <textarea id="teachQ" placeholder="Что ты говоришь (пример):&#10;“Сделай честно и коротко”&#10;“Если я пишу ‘жёстко’ — не смягчай”"></textarea>
-          </div>
-          <div class="row">
-            <textarea id="teachA" placeholder="Как ИИ должен отвечать"></textarea>
-          </div>
-          <div class="row">
-            <button id="btnTeach" disabled>➕ Добавить и обучить</button>
-            <button id="btnExport" class="ghost">📤 Экспорт</button>
-            <button id="btnImport" class="ghost">📥 Импорт</button>
+          <div class="mono">Уровень “умнения”: <b id="lvl">0%</b></div>
+          <div class="bar"><div id="barFill"></div></div>
+
+          <div class="row mono">
+            <span class="pill">Эпизод: <b id="ep">0</b></span>
+            <span class="pill">Шаг в эпизоде: <b id="st">0</b></span>
+            <span class="pill">Успехов: <b id="wins">0</b></span>
           </div>
 
-          <details>
-            <summary>Как это “учится”</summary>
-            <ul>
-              <li>ИИ преобразует твою фразу в “смысловой вектор”.</li>
-              <li>Ищет самый похожий вопрос из того, чему ты его учил.</li>
-              <li>Если похожесть высокая — отвечает соответствующим ответом.</li>
-              <li>Прогресс растёт, когда примеров больше и самопроверка выше.</li>
-            </ul>
-          </details>
-
-          <details>
-            <summary>Что делать, если он отвечает “не знаю”</summary>
-            <ul>
-              <li>Нажми <b>“👎 исправить”</b> и дай правильный ответ — это будет новый пример.</li>
-              <li>Или добавь правило/пример в блоке “Научить”.</li>
-            </ul>
-          </details>
+          <div class="row mono">
+            <span class="pill">ε (исследование): <b id="eps">1.00</b></span>
+            <span class="pill">Средн. шагов: <b id="avg">—</b></span>
+            <span class="pill">Оптимум: <b id="opt">—</b></span>
+          </div>
 
           <div class="row">
-            <label class="mono">Порог похожести:
-              <input id="thr" type="range" min="0.20" max="0.80" step="0.01" value="0.45" />
-            </label>
+            <button id="btnFast" class="ghost">⚡ Быстрее</button>
+            <button id="btnSlow" class="ghost">🐢 Медленнее</button>
+          </div>
+
+          <div class="mono" style="opacity:.85; line-height:1.35;">
+            <b>Как читать прогресс:</b><br/>
+            • 0% = почти не доходит до цели или ходит очень долго.<br/>
+            • 100% = обычно доходит и путь близок к кратчайшему.<br/><br/>
+            <b>Подсказка:</b> нажми “⚡ Быстрее”, чтобы увидеть “умнение” быстрее.
           </div>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- TFJS + Universal Sentence Encoder -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/universal-sentence-encoder@1.3.3"></script>
+<script>
+(() => {
+  // ======== Grid world settings ========
+  const W = 10, H = 10;
+  const ACTIONS = 4; // 0 up,1 right,2 down,3 left
+  const dirs = [
+    {dx:0, dy:-1},
+    {dx:1, dy:0},
+    {dx:0, dy:1},
+    {dx:-1, dy:0}
+  ];
 
-  <script>
-    // ================== state ==================
-    const LS_KEY = "personal_ai_pairs_v1";
+  // Rewards
+  const R_STEP = -0.04;
+  const R_WALL = -1.0;
+  const R_GOAL = +10.0;
 
-    let useModel = null;
-    let pairs = [];        // {q: string, a: string}
-    let qEmb = [];         // Float32Array embeddings for q
+  // Q-learning hyperparams
+  let alpha = 0.25;
+  let gamma = 0.95;
+  let epsilon = 1.0;
+  let epsilonMin = 0.05;
+  let epsilonDecay = 0.995;
 
-    let lastUserText = "";
-    let lastAiText = "";
-    let lastMatch = { idx: -1, sim: 0 };
+  // Simulation speed
+  let stepsPerFrame = 1;   // can increase
+  let playing = false;
 
-    // ================== ui ==================
-    const $ = (id) => document.getElementById(id);
+  // UI
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
 
-    const chat = $("chat");
-    const msg = $("msg");
-    const send = $("send");
+  const btnStart = document.getElementById('btnStart');
+  const btnStep = document.getElementById('btnStep');
+  const btnReset = document.getElementById('btnReset');
+  const btnRandom = document.getElementById('btnRandom');
+  const btnFast = document.getElementById('btnFast');
+  const btnSlow = document.getElementById('btnSlow');
 
-    const btnRight = $("btnRight");
-    const btnWrong = $("btnWrong");
+  const elLvl = document.getElementById('lvl');
+  const elFill = document.getElementById('barFill');
+  const elEp = document.getElementById('ep');
+  const elSt = document.getElementById('st');
+  const elWins = document.getElementById('wins');
+  const elEps = document.getElementById('eps');
+  const elAvg = document.getElementById('avg');
+  const elOpt = document.getElementById('opt');
 
-    const teachQ = $("teachQ");
-    const teachA = $("teachA");
-    const btnTeach = $("btnTeach");
+  // ======== Environment state ========
+  let grid = []; // 0 empty, 1 wall
+  let start = {x:1, y:8};
+  let goal  = {x:8, y:1};
 
-    const lvl = $("lvl");
-    const bar = $("bar");
-    const status = $("status");
-    const nEl = $("n");
-    const accEl = $("acc");
-    const lastInfo = $("lastInfo");
+  let agent = {x:start.x, y:start.y};
+  let episode = 0;
+  let stepInEp = 0;
+  let wins = 0;
+  let maxSteps = 200;
 
-    const btnRecalc = $("btnRecalc");
-    const btnWipe = $("btnWipe");
+  // Progress tracking
+  const successSteps = []; // store steps to goal for last N successes
+  const SUCCESS_WINDOW = 30;
+  let optimalSteps = null;
 
-    const btnExport = $("btnExport");
-    const btnImport = $("btnImport");
+  // Q-table: [H][W][A]
+  let Q = null;
 
-    const thr = $("thr");
-    const thrLabel = $("thrLabel");
+  // ======== Helpers ========
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const randInt = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
 
-    function setStatus(s){ status.textContent = s; }
+  function makeEmptyGrid(){
+    grid = Array.from({length:H}, () => Array(W).fill(0));
+  }
 
-    function addMsg(text, who, meta){
-      const div = document.createElement("div");
-      div.className = "msg " + (who === "me" ? "me" : "ai");
-      div.textContent = text;
-      chat.appendChild(div);
-
-      if (meta){
-        const m = document.createElement("div");
-        m.className = "meta";
-        m.textContent = meta;
-        chat.appendChild(m);
+  // Simple maze generator: random walls but keep connectivity (retry)
+  function randomMaze(){
+    for (let tries=0; tries<50; tries++){
+      makeEmptyGrid();
+      // outer border optional: keep edges open for simplicity
+      const wallCount = randInt(14, 24);
+      for (let i=0;i<wallCount;i++){
+        const x = randInt(0, W-1);
+        const y = randInt(0, H-1);
+        if ((x===start.x && y===start.y) || (x===goal.x && y===goal.y)) continue;
+        grid[y][x] = 1;
       }
-
-      chat.scrollTop = chat.scrollHeight;
-    }
-
-    // ================== utils ==================
-    function savePairs(){
-      localStorage.setItem(LS_KEY, JSON.stringify(pairs));
-    }
-
-    function loadPairs(){
-      try {
-        pairs = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
-        if (!Array.isArray(pairs)) pairs = [];
-      } catch {
-        pairs = [];
-      }
-    }
-
-    async function embedOne(text){
-      // returns Float32Array
-      const t = await useModel.embed([text]);
-      const arr = await t.array();
-      t.dispose();
-      return new Float32Array(arr[0]);
-    }
-
-    function cosine(a, b){
-      let dot = 0, na = 0, nb = 0;
-      for (let i=0;i<a.length;i++){
-        const x = a[i], y = b[i];
-        dot += x*y;
-        na += x*x;
-        nb += y*y;
-      }
-      return dot / (Math.sqrt(na)*Math.sqrt(nb) + 1e-8);
-    }
-
-    async function rebuildEmbeddings(){
-      qEmb = [];
-      for (let i=0;i<pairs.length;i++){
-        qEmb.push(await embedOne(pairs[i].q));
+      const opt = bfsShortest(start, goal);
+      if (opt != null && opt <= 40){
+        optimalSteps = opt;
+        return;
       }
     }
+    // fallback: fixed walls if random fails
+    fixedMaze();
+  }
 
-    // nearest neighbor retrieval
-    function retrieve(queryEmb, excludeIdx = -1){
-      let bestIdx = -1;
-      let bestSim = -1;
-      for (let i=0;i<qEmb.length;i++){
-        if (i === excludeIdx) continue;
-        const s = cosine(queryEmb, qEmb[i]);
-        if (s > bestSim){
-          bestSim = s;
-          bestIdx = i;
+  function fixedMaze(){
+    makeEmptyGrid();
+    // some walls
+    const walls = [
+      // vertical-ish
+      [3,0],[3,1],[3,2],[3,3],[3,4],
+      [6,2],[6,3],[6,4],[6,5],[6,6],
+      // horizontal-ish
+      [1,6],[2,6],[3,6],[4,6],[5,6],
+      [4,8],[5,8],[6,8],[7,8],
+      // extra
+      [7,3],[8,3],
+      [1,2],[2,2]
+    ];
+    for (const [x,y] of walls){
+      if ((x===start.x && y===start.y) || (x===goal.x && y===goal.y)) continue;
+      if (x>=0 && x<W && y>=0 && y<H) grid[y][x] = 1;
+    }
+    optimalSteps = bfsShortest(start, goal);
+  }
+
+  function bfsShortest(s, g){
+    // returns shortest path length in steps (Manhattan moves), or null
+    const q = [];
+    const dist = Array.from({length:H},()=>Array(W).fill(-1));
+    dist[s.y][s.x]=0;
+    q.push(s);
+    while(q.length){
+      const cur = q.shift();
+      if (cur.x===g.x && cur.y===g.y) return dist[cur.y][cur.x];
+      for (const d of dirs){
+        const nx=cur.x+d.dx, ny=cur.y+d.dy;
+        if(nx<0||nx>=W||ny<0||ny>=H) continue;
+        if(grid[ny][nx]===1) continue;
+        if(dist[ny][nx]!==-1) continue;
+        dist[ny][nx]=dist[cur.y][cur.x]+1;
+        q.push({x:nx,y:ny});
+      }
+    }
+    return null;
+  }
+
+  function resetQ(){
+    Q = Array.from({length:H}, () =>
+      Array.from({length:W}, () => Array(ACTIONS).fill(0))
+    );
+  }
+
+  function resetAll(keepMaze=false){
+    playing=false;
+    btnStart.textContent = '▶ Старт';
+
+    episode = 0;
+    stepInEp = 0;
+    wins = 0;
+
+    epsilon = 1.0;
+    successSteps.length = 0;
+
+    agent = {x:start.x, y:start.y};
+
+    if (!keepMaze){
+      fixedMaze();
+    } else {
+      optimalSteps = bfsShortest(start, goal);
+    }
+
+    resetQ();
+    updateUI();
+    draw();
+  }
+
+  function stateKey(x,y){ return y*W+x; }
+
+  function chooseAction(x,y){
+    if (Math.random() < epsilon){
+      return randInt(0, ACTIONS-1);
+    }
+    // greedy with random tie-break
+    let best = -Infinity;
+    let bestActions = [];
+    for (let a=0;a<ACTIONS;a++){
+      const v = Q[y][x][a];
+      if (v > best + 1e-9){
+        best = v;
+        bestActions = [a];
+      } else if (Math.abs(v - best) <= 1e-9){
+        bestActions.push(a);
+      }
+    }
+    return bestActions[randInt(0, bestActions.length-1)];
+  }
+
+  function step(){
+    // one RL step
+    const ax = agent.x, ay = agent.y;
+    const a = chooseAction(ax, ay);
+    const d = dirs[a];
+    const nx = ax + d.dx, ny = ay + d.dy;
+
+    let reward = R_STEP;
+    let nextX = ax, nextY = ay;
+    let done = false;
+
+    if (nx < 0 || nx >= W || ny < 0 || ny >= H || grid[ny][nx] === 1){
+      // hit wall / boundary: stay
+      reward = R_WALL;
+    } else {
+      nextX = nx; nextY = ny;
+      if (nextX === goal.x && nextY === goal.y){
+        reward = R_GOAL;
+        done = true;
+      }
+    }
+
+    // Q update: Q(s,a) ← Q(s,a)+α[r+γ max_a' Q(s',a') - Q(s,a)]
+    const oldQ = Q[ay][ax][a];
+    let maxNext = -Infinity;
+    for (let a2=0;a2<ACTIONS;a2++){
+      maxNext = Math.max(maxNext, Q[nextY][nextX][a2]);
+    }
+    const target = reward + (done ? 0 : gamma * maxNext);
+    Q[ay][ax][a] = oldQ + alpha * (target - oldQ);
+
+    // move agent
+    agent.x = nextX; agent.y = nextY;
+    stepInEp++;
+
+    // episode termination
+    if (done || stepInEp >= maxSteps){
+      episode++;
+      if (done){
+        wins++;
+        successSteps.push(stepInEp);
+        if (successSteps.length > SUCCESS_WINDOW) successSteps.shift();
+      }
+      // decay epsilon
+      epsilon = Math.max(epsilonMin, epsilon * epsilonDecay);
+      // reset agent
+      agent.x = start.x; agent.y = start.y;
+      stepInEp = 0;
+    }
+  }
+
+  function avg(arr){
+    if (!arr.length) return null;
+    return arr.reduce((a,b)=>a+b,0)/arr.length;
+  }
+
+  function progressPercent(){
+    // Based on how close avg successful steps is to optimal.
+    // If no successes yet => 0.
+    const a = avg(successSteps);
+    if (a == null || optimalSteps == null) return 0;
+
+    // map: optimalSteps => 100, maxSteps => ~0
+    const worst = Math.max(optimalSteps + 1, Math.min(maxSteps, optimalSteps + 60));
+    const p = 1 - ((a - optimalSteps) / (worst - optimalSteps));
+    return Math.round(clamp(p, 0, 1) * 100);
+  }
+
+  function updateUI(){
+    elEp.textContent = String(episode);
+    elSt.textContent = String(stepInEp);
+    elWins.textContent = String(wins);
+    elEps.textContent = epsilon.toFixed(2);
+
+    const a = avg(successSteps);
+    elAvg.textContent = a == null ? '—' : a.toFixed(1);
+    elOpt.textContent = optimalSteps == null ? '—' : String(optimalSteps);
+
+    const p = progressPercent();
+    elLvl.textContent = p + '%';
+    elFill.style.width = p + '%';
+  }
+
+  function draw(){
+    const cw = cv.width, ch = cv.height;
+    ctx.clearRect(0,0,cw,ch);
+
+    const pad = 18;
+    const size = Math.min(cw, ch) - pad*2;
+    const cell = size / W;
+
+    // background
+    ctx.fillStyle = '#0a0f1c';
+    ctx.fillRect(0,0,cw,ch);
+
+    // grid cells
+    for (let y=0;y<H;y++){
+      for (let x=0;x<W;x++){
+        const px = pad + x*cell;
+        const py = pad + y*cell;
+
+        // cell base
+        ctx.fillStyle = '#0a0f1c';
+        ctx.fillRect(px,py,cell,cell);
+
+        // walls
+        if (grid[y][x] === 1){
+          ctx.fillStyle = '#2b2f3f';
+          ctx.fillRect(px,py,cell,cell);
         }
+
+        // border lines
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctx.strokeRect(px,py,cell,cell);
       }
-      return { idx: bestIdx, sim: bestSim };
     }
 
-    function currentThreshold(){
-      return Number(thr.value);
+    // start & goal
+    {
+      const sx = pad + start.x*cell, sy = pad + start.y*cell;
+      ctx.fillStyle = '#ffcc00';
+      ctx.fillRect(sx+cell*0.18, sy+cell*0.18, cell*0.64, cell*0.64);
+    }
+    {
+      const gx = pad + goal.x*cell, gy = pad + goal.y*cell;
+      ctx.fillStyle = '#2bd67b';
+      ctx.fillRect(gx+cell*0.18, gy+cell*0.18, cell*0.64, cell*0.64);
     }
 
-    function formatSim(s){
-      return (Math.max(0, Math.min(1, s)) * 100).toFixed(1) + "%";
+    // agent
+    {
+      const ax = pad + agent.x*cell, ay = pad + agent.y*cell;
+      ctx.fillStyle = '#2a6bff';
+      ctx.beginPath();
+      ctx.arc(ax + cell/2, ay + cell/2, cell*0.28, 0, Math.PI*2);
+      ctx.fill();
     }
 
-    // ================== "learning" metrics ==================
-    async function selfCheckAccuracy(){
-      if (pairs.length < 3) return null;
+    // title overlay
+    ctx.fillStyle = 'rgba(233,238,252,0.8)';
+    ctx.font = '16px -apple-system, system-ui, Arial';
+    ctx.fillText(`steps/frame: ${stepsPerFrame}`, 18, 22);
+  }
 
-      let correct = 0;
-      for (let i=0;i<pairs.length;i++){
-        const q = pairs[i].q;
-        const trueA = pairs[i].a;
-
-        // embed q
-        const qe = await embedOne(q);
-        const { idx } = retrieve(qe, i);
-
-        if (idx >= 0 && pairs[idx].a === trueA) correct++;
-      }
-      return correct / pairs.length;
+  function tick(){
+    if (playing){
+      for (let i=0;i<stepsPerFrame;i++) step();
+      updateUI();
+      draw();
     }
+    requestAnimationFrame(tick);
+  }
 
-    function computeLevel(acc){
-      // level = mix of accuracy + knowledge volume
-      const maxN = 60;
-      const knowledge = Math.min(1, pairs.length / maxN);
+  // ======== UI handlers ========
+  btnStart.addEventListener('click', () => {
+    playing = !playing;
+    btnStart.textContent = playing ? '⏸ Пауза' : '▶ Старт';
+  });
 
-      const accPart = acc == null ? 0 : acc; // 0..1
-      const lvl01 = 0.65*accPart + 0.35*knowledge;
-      return Math.round(lvl01 * 100);
-    }
+  btnStep.addEventListener('click', () => {
+    // do a little burst so it's visible
+    for (let i=0;i<20;i++) step();
+    updateUI();
+    draw();
+  });
 
-    async function updateProgress(){
-      nEl.textContent = String(pairs.length);
-      thrLabel.textContent = currentThreshold().toFixed(2);
+  btnReset.addEventListener('click', () => {
+    resetAll(true); // keep maze, reset learning
+  });
 
-      setStatus("самопроверка…");
-      let acc = null;
-      try {
-        acc = await selfCheckAccuracy();
-      } catch(e){
-        acc = null;
-      }
+  btnRandom.addEventListener('click', () => {
+    playing = false;
+    btnStart.textContent = '▶ Старт';
+    randomMaze();
+    resetQ();
+    agent = {x:start.x, y:start.y};
+    episode = 0; stepInEp = 0; wins = 0; epsilon = 1.0; successSteps.length = 0;
+    updateUI();
+    draw();
+  });
 
-      if (acc == null){
-        accEl.textContent = "— (мало данных)";
-      } else {
-        accEl.textContent = (acc*100).toFixed(1) + "%";
-      }
+  btnFast.addEventListener('click', () => {
+    stepsPerFrame = Math.min(500, stepsPerFrame * 2);
+    draw();
+  });
 
-      const level = computeLevel(acc);
-      lvl.textContent = level + "%";
-      bar.style.width = level + "%";
+  btnSlow.addEventListener('click', () => {
+    stepsPerFrame = Math.max(1, Math.floor(stepsPerFrame / 2));
+    draw();
+  });
 
-      setStatus("готово");
-    }
-
-    function enableChatFeedback(enabled){
-      btnRight.disabled = !enabled;
-      btnWrong.disabled = !enabled;
-    }
-
-    // ================== core behavior ==================
-    async function answerUser(text){
-      lastUserText = text;
-
-      if (pairs.length === 0){
-        lastAiText = "Я пока пустой. Научи меня: справа добавь пример (вопрос → ответ).";
-        lastMatch = { idx:-1, sim:0 };
-        return { text: lastAiText, meta: "нет базы знаний" };
-      }
-
-      const qe = await embedOne(text);
-      const { idx, sim } = retrieve(qe);
-
-      lastMatch = { idx, sim };
-
-      if (idx < 0 || sim < currentThreshold()){
-        lastAiText = "Я не уверен. Исправь меня: нажми «👎 исправить» и напиши правильный ответ — я запомню.";
-        return { text: lastAiText, meta: `похожесть: ${formatSim(sim)} (ниже порога)` };
-      }
-
-      lastAiText = pairs[idx].a;
-      return { text: lastAiText, meta: `использую урок #${idx+1}, похожесть: ${formatSim(sim)}` };
-    }
-
-    async function teachPair(q, a){
-      pairs.push({ q, a });
-      savePairs();
-      qEmb.push(await embedOne(q));
-    }
-
-    // ================== handlers ==================
-    send.addEventListener("click", async () => {
-      const text = msg.value.trim();
-      if (!text) return;
-      msg.value = "";
-
-      addMsg(text, "me");
-      setStatus("думаю…");
-      enableChatFeedback(false);
-
-      try {
-        const res = await answerUser(text);
-        addMsg(res.text, "ai", res.meta);
-        lastInfo.textContent = `Последний матч: ${lastMatch.idx >= 0 ? ("#"+(lastMatch.idx+1)) : "нет"} | похожесть ${formatSim(lastMatch.sim)}`;
-        enableChatFeedback(true);
-      } catch(e){
-        addMsg("У меня ошибка. Попробуй ещё раз.", "ai");
-        setStatus("ошибка: " + (e?.message || e));
-      } finally {
-        setStatus("готово");
-      }
-    });
-
-    msg.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") send.click();
-    });
-
-    btnRight.addEventListener("click", () => {
-      // просто подтверждение, можно позже использовать как "confidence"
-      setStatus("принял ✅");
-      enableChatFeedback(false);
-      setTimeout(()=>setStatus("готово"), 300);
-    });
-
-    btnWrong.addEventListener("click", async () => {
-      const correct = prompt("Какой должен быть правильный ответ? (я запомню и буду использовать)");
-      if (!correct) return;
-
-      setStatus("учусь на твоей правке…");
-      enableChatFeedback(false);
-
-      try {
-        await teachPair(lastUserText, correct.trim());
-        addMsg("Окей. Я запомнил твою правку и буду отвечать так дальше.", "ai", "добавлен новый урок");
-        await updateProgress();
-      } catch(e){
-        setStatus("ошибка обучения: " + (e?.message || e));
-      } finally {
-        setStatus("готово");
-      }
-    });
-
-    function updateTeachButton(){
-      btnTeach.disabled = !(teachQ.value.trim() && teachA.value.trim() && useModel);
-    }
-    teachQ.addEventListener("input", updateTeachButton);
-    teachA.addEventListener("input", updateTeachButton);
-
-    btnTeach.addEventListener("click", async () => {
-      const q = teachQ.value.trim();
-      const a = teachA.value.trim();
-      if (!q || !a) return;
-
-      setStatus("добавляю урок…");
-      btnTeach.disabled = true;
-
-      try {
-        await teachPair(q, a);
-        teachQ.value = "";
-        teachA.value = "";
-        addMsg("Я получил новый урок. Можешь проверить в чате.", "ai", "обучение: вопрос→ответ");
-        await updateProgress();
-      } catch(e){
-        setStatus("ошибка обучения: " + (e?.message || e));
-      } finally {
-        setStatus("готово");
-        updateTeachButton();
-      }
-    });
-
-    btnRecalc.addEventListener("click", updateProgress);
-
-    btnWipe.addEventListener("click", async () => {
-      if (!confirm("Точно сбросить все знания?")) return;
-      pairs = [];
-      qEmb = [];
-      localStorage.removeItem(LS_KEY);
-      addMsg("Я всё забыл. Можешь учить меня заново.", "ai");
-      await updateProgress();
-    });
-
-    btnExport.addEventListener("click", async () => {
-      const payload = JSON.stringify({ pairs }, null, 2);
-      // покажем в prompt чтобы можно было копировать
-      prompt("Скопируй JSON (экспорт знаний):", payload);
-    });
-
-    btnImport.addEventListener("click", async () => {
-      const raw = prompt("Вставь JSON для импорта знаний:");
-      if (!raw) return;
-
-      try {
-        const obj = JSON.parse(raw);
-        if (!obj || !Array.isArray(obj.pairs)) throw new Error("Неверный формат");
-        pairs = obj.pairs.filter(x => x && typeof x.q === "string" && typeof x.a === "string");
-        savePairs();
-        setStatus("пересобираю эмбеддинги…");
-        await rebuildEmbeddings();
-        addMsg("Импорт завершён ✅", "ai");
-        await updateProgress();
-      } catch(e){
-        alert("Импорт не удался: " + (e?.message || e));
-      }
-    });
-
-    thr.addEventListener("input", async () => {
-      thrLabel.textContent = currentThreshold().toFixed(2);
-    });
-
-    // ================== init ==================
-    (async () => {
-      try {
-        loadPairs();
-        addMsg("Я готов. Научи меня справа (вопрос→ответ) или исправляй мои ответы в чате.", "ai");
-
-        setStatus("загружаю языковую модель…");
-        useModel = await use.load(); // Universal Sentence Encoder
-        setStatus("строю память…");
-        await rebuildEmbeddings();
-
-        updateTeachButton();
-        await updateProgress();
-        setStatus("готово");
-      } catch(e){
-        setStatus("ошибка загрузки: " + (e?.message || e));
-        addMsg("Не получилось загрузить модель. Проверь интернет и обнови страницу.", "ai");
-      }
-    })();
-  </script>
+  // ======== Init ========
+  fixedMaze();
+  resetAll(true);
+  tick();
+})();
+</script>
 </body>
 </html>
