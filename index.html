@@ -3,442 +3,684 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Runner Auto-Shooter Demo</title>
+  <title>Runner Auto-Shooter — Balanced 2026</title>
   <style>
-    html, body { margin:0; height:100%; background:#0b0f14; overflow:hidden; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    html, body { margin:0; height:100%; background:#070a0f; overflow:hidden; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
     canvas { display:block; width:100vw; height:100vh; touch-action:none; }
-    .hud {
-      position:fixed; left:12px; top:12px; color:#cfe6ff; font-size:14px; line-height:1.25;
-      background: rgba(16,22,30,.55); border:1px solid rgba(160,200,255,.15);
-      padding:10px 12px; border-radius:12px; backdrop-filter: blur(8px);
+    .hud{
+      position:fixed; left:12px; top:12px; color:#d7f0ff; font-size:13px; line-height:1.25;
+      background: rgba(10,14,20,.55);
+      border: 1px solid rgba(160,200,255,.14);
+      padding:10px 12px; border-radius:14px; backdrop-filter: blur(10px);
       user-select:none;
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
     }
-    .hint { opacity:.8; font-size:12px; margin-top:6px; }
+    .bar{ height:6px; border-radius:999px; background: rgba(215,240,255,.12); overflow:hidden; margin-top:6px; }
+    .bar > i{ display:block; height:100%; width:50%; background: rgba(120,220,255,.65); }
+    .hint{ opacity:.78; font-size:12px; margin-top:6px; max-width:340px;}
   </style>
 </head>
 <body>
-  <canvas id="c"></canvas>
-  <div class="hud" id="hud">
-    <div><b>Auto Shooter Runner</b></div>
-    <div>Юниты: <span id="units">1</span> · HP: <span id="hp">10</span> · Счёт: <span id="score">0</span></div>
-    <div class="hint">Двигай пальцем/мышью влево-вправо. Стрельба — автоматом. Проходи через ворота + / x.</div>
+<canvas id="c"></canvas>
+<div class="hud" id="hud">
+  <div><b>Balanced Auto-Shooter (2026 vibe)</b></div>
+  <div>Юниты: <span id="units">1</span> · HP: <span id="hp">10</span> · Счёт: <span id="score">0</span> · Мин: <span id="time">0</span></div>
+  <div>Дебафы: <span id="debuffs">—</span></div>
+  <div class="bar" title="Прогресс сложности"><i id="diffbar"></i></div>
+  <div class="hint">
+    Двигайся влево/вправо. Стрельба авто.
+    ⚠️ Плохие экраны (− / ÷) можно <b>расстрелять</b>, чтобы сделать их хорошими и только потом подобрать.
+    Красные поля дают дебафы.
   </div>
+</div>
 
 <script>
 (() => {
   const canvas = document.getElementById('c');
-  const ctx = canvas.getContext('2d', { alpha: false });
+  const ctx = canvas.getContext('2d', { alpha:false });
 
   const hudUnits = document.getElementById('units');
   const hudHP = document.getElementById('hp');
   const hudScore = document.getElementById('score');
+  const hudTime = document.getElementById('time');
+  const hudDebuffs = document.getElementById('debuffs');
+  const diffbar = document.getElementById('diffbar');
 
-  // ----- Resize (HiDPI)
-  function resize() {
-    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-    canvas.width = Math.floor(innerWidth * dpr);
-    canvas.height = Math.floor(innerHeight * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // HiDPI
+  function resize(){
+    const dpr = Math.max(1, Math.min(2, devicePixelRatio||1));
+    canvas.width = Math.floor(innerWidth*dpr);
+    canvas.height = Math.floor(innerHeight*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
   }
-  addEventListener('resize', resize, { passive: true });
+  addEventListener('resize', resize, {passive:true});
   resize();
 
-  // ----- World
   const W = () => innerWidth;
   const H = () => innerHeight;
+  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+  const lerp = (a,b,t)=>a+(b-a)*t;
+  const rand = (a,b)=>a+Math.random()*(b-a);
 
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const rand = (a, b) => a + Math.random() * (b - a);
+  // Balance knobs
+  const BAL = {
+    baseUnits: 6,
+    unitsCapSoft: 220,     // после этого рост "дороже"
+    unitsHardCap: 999,
+    baseHP: 10,
+    worldSpeed: 230,
 
-  const state = {
-    t: 0,
-    running: true,
-    score: 0,
+    // gates
+    gateEvery: [1.0, 1.8],
+    gateBadChance0: 0.55,  // шанс плохого экрана в начале
+    gateBadChance1: 0.75,  // шанс плохого экрана позже
+    gateShieldBase: 18,    // сколько урона надо влить чтобы сделать экран хорошим
+    gateShieldScale: 0.8,  // масштаб со сложностью
 
-    // player lane
-    playerX: W() * 0.5,
-    playerY: H() * 0.78,
-    speedY: 220, // "бег" вверх по экрану (мир едет вниз)
-    units: 6,    // количество "персонажей" (сила стрельбы)
-    hp: 10,
+    // enemies
+    enemyEvery: [0.55, 1.0],
+    enemyHPScale: 0.25,
 
-    bullets: [],
-    enemies: [],
-    gates: [],
-    particles: [],
+    // debuff fields
+    fieldEvery: [2.3, 3.6],
+    fieldDur: [1.4, 2.4],
 
-    shootCooldown: 0,
-    spawnCooldown: 0,
-    gateCooldown: 0,
-
-    targetX: W() * 0.5,
+    // shooting
+    minRate: 0.085,
+    maxRate: 0.28,
   };
 
-  // ----- Input
-  function setTargetFromEvent(e) {
-    const x = (e.touches ? e.touches[0].clientX : e.clientX);
+  const state = {
+    t:0,
+    running:true,
+    score:0,
+
+    playerX: W()*0.5,
+    playerY: H()*0.78,
+    targetX: W()*0.5,
+
+    units: BAL.baseUnits,
+    hp: BAL.baseHP,
+
+    bullets:[],
+    enemies:[],
+    gates:[],
+    fields:[],
+    particles:[],
+
+    shootCd:0,
+    enemyCd:0.3,
+    gateCd:0.9,
+    fieldCd:1.6,
+
+    // debuffs (timers)
+    debuffSlowFire: 0,
+    debuffWeak: 0,
+    debuffDrain: 0,
+  };
+
+  function setTarget(e){
+    const x = (e.touches?e.touches[0].clientX:e.clientX);
     state.targetX = x;
   }
-  canvas.addEventListener('pointerdown', setTargetFromEvent);
-  canvas.addEventListener('pointermove', setTargetFromEvent);
-  canvas.addEventListener('touchstart', setTargetFromEvent, { passive: true });
-  canvas.addEventListener('touchmove', setTargetFromEvent, { passive: true });
+  canvas.addEventListener('pointerdown', setTarget);
+  canvas.addEventListener('pointermove', setTarget);
+  canvas.addEventListener('touchstart', setTarget, {passive:true});
+  canvas.addEventListener('touchmove', setTarget, {passive:true});
 
-  // ----- Helpers: particles
-  function puff(x, y, n, spd, lifeMin=0.2, lifeMax=0.6) {
-    for (let i=0;i<n;i++) {
+  // Particles + glow dots
+  function puff(x,y,n,spd,lifeMin=0.18,lifeMax=0.55){
+    for(let i=0;i<n;i++){
       const a = rand(0, Math.PI*2);
-      const s = rand(spd*0.4, spd);
-      state.particles.push({
-        x, y,
-        vx: Math.cos(a)*s,
-        vy: Math.sin(a)*s,
-        life: rand(lifeMin, lifeMax),
-        max: 0
-      });
+      const s = rand(spd*0.35, spd);
+      state.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rand(lifeMin,lifeMax),max:0});
     }
   }
 
-  // ----- Gates
-  // gate types: add (+N) or mul (x2/x3)
-  function spawnGate() {
-    const x = rand(W()*0.18, W()*0.82);
-    const y = -60;
-    const isMul = Math.random() < 0.45;
-    let val, label;
-    if (isMul) {
-      val = Math.random() < 0.7 ? 2 : 3;
-      label = "x" + val;
-    } else {
-      val = Math.random() < 0.7 ? 10 : 20;
-      label = "+" + val;
+  function difficulty01(){
+    // плавный рост сложности по времени (0..1 примерно за 3-4 минуты)
+    return clamp(state.t / 220, 0, 1);
+  }
+
+  // --- Mechanics: soft cap units
+  function addUnits(rawAdd){
+    // после soft cap прирост уменьшается
+    let add = rawAdd;
+    if (state.units > BAL.unitsCapSoft) {
+      const over = state.units - BAL.unitsCapSoft;
+      const factor = 1 / (1 + over / 140); // чем больше — тем меньше прирост
+      add = Math.max(1, Math.floor(add * factor));
     }
+    state.units = clamp(state.units + add, 1, BAL.unitsHardCap);
+  }
+  function mulUnits(m){
+    // умножение тоже "смягчается"
+    const before = state.units;
+    const target = clamp(Math.floor(before * m), 1, BAL.unitsHardCap);
+    let gain = target - before;
+    addUnits(gain);
+  }
+  function subUnits(n){
+    state.units = clamp(state.units - n, 1, BAL.unitsHardCap);
+    puff(state.playerX, state.playerY, 10, 320);
+  }
+  function divUnits(d){
+    state.units = clamp(Math.floor(state.units / d), 1, BAL.unitsHardCap);
+    puff(state.playerX, state.playerY, 12, 380);
+  }
+
+  // --- Gates (“screens”)
+  function spawnGate(){
+    const d = difficulty01();
+    const badChance = lerp(BAL.gateBadChance0, BAL.gateBadChance1, d);
+
+    const x = rand(W()*0.20, W()*0.80);
+    const y = -70;
+    const w = 160, h = 54;
+
+    const isBad = Math.random() < badChance;
+
+    // define effect
+    let kind, val, labelGood, labelBad;
+
+    if (Math.random() < 0.55) {
+      // additive gate
+      const add = Math.random() < 0.7 ? 10 : 20;
+      kind = "add";
+      val = add;
+      labelGood = `+${add}`;
+      labelBad = `-${Math.floor(add/2)}`;
+    } else {
+      // multiplicative gate
+      const mul = Math.random() < 0.75 ? 2 : 3;
+      kind = "mul";
+      val = mul;
+      labelGood = `×${mul}`;
+      labelBad = `÷${mul}`;
+    }
+
+    const shield = Math.ceil((BAL.gateShieldBase + d*18) * BAL.gateShieldScale);
+
     state.gates.push({
-      x, y,
-      w: 140, h: 46,
-      isMul,
-      val,
-      label,
-      taken: false
+      x,y,w,h,
+      kind,val,
+      // status
+      bad: isBad,          // если bad=true — при подборе применится минус/деление
+      shield: isBad ? shield : 0, // bad gate можно "вылечить" стрельбой (shield -> 0)
+      taken:false,
+      labelGood,labelBad
     });
   }
 
-  // ----- Enemies
-  function spawnEnemyWave() {
-    // формируем "линию" врагов сверху
-    const cols = Math.floor(rand(4, 9));
-    for (let i=0;i<cols;i++) {
-      const x = (W()/(cols+1))*(i+1) + rand(-16, 16);
-      const y = rand(-180, -60);
+  function healGate(g, dmg){
+    if (!g.bad) return false;
+    g.shield -= dmg;
+    if (g.shield <= 0){
+      g.bad = false;
+      g.shield = 0;
+      puff(g.x, g.y, 26, 520);
+      return true;
+    }
+    return false;
+  }
+
+  // --- Debuff fields
+  // types: slowFire, weak, drain
+  function spawnField(){
+    const d = difficulty01();
+    const x = rand(W()*0.18, W()*0.82);
+    const y = -90;
+    const r = rand(42, 68);
+    const type = (Math.random() < 0.34) ? "slowFire" : (Math.random()<0.5 ? "weak" : "drain");
+    const dur = rand(BAL.fieldDur[0], BAL.fieldDur[1]) + d*0.6;
+    state.fields.push({x,y,r,type,dur,alive:true});
+  }
+
+  function applyField(type, dur){
+    if (type === "slowFire") state.debuffSlowFire = Math.max(state.debuffSlowFire, dur);
+    if (type === "weak") state.debuffWeak = Math.max(state.debuffWeak, dur);
+    if (type === "drain") state.debuffDrain = Math.max(state.debuffDrain, dur);
+  }
+
+  // --- Enemies
+  function spawnEnemyWave(){
+    const d = difficulty01();
+    const cols = Math.floor(rand(4, 8 + d*4));
+    for (let i=0;i<cols;i++){
+      const x = (W()/(cols+1))*(i+1) + rand(-18,18);
+      const y = rand(-220, -60);
       const r = rand(14, 22);
-      state.enemies.push({
-        x, y, r,
-        hp: Math.ceil(r/6),
-        vx: rand(-20, 20),
-        vy: rand(40, 70) // доп. скорость вниз (мир тоже движется)
-      });
+      const baseHP = Math.ceil(r/6);
+      const hp = Math.ceil(baseHP * (1 + d*2.0) + state.t*BAL.enemyHPScale/60);
+      state.enemies.push({x,y,r,hp,vx:rand(-25,25),vy:rand(35,70)+d*30});
     }
   }
 
-  // ----- Shooting
-  function shoot(dt) {
-    state.shootCooldown -= dt;
-    if (state.shootCooldown > 0) return;
+  // --- Shooting (affected by debuffs)
+  function shoot(dt){
+    state.shootCd -= dt;
+    if (state.shootCd > 0) return;
 
-    // rate depends on units
-    const rate = clamp(0.28 - Math.log10(state.units+1)*0.06, 0.08, 0.28);
-    state.shootCooldown = rate;
+    const d = difficulty01();
 
-    // spread: shoot multiple bullets based on units (but limit)
-    const bulletsCount = clamp(Math.floor(state.units/3), 1, 10);
-    const spread = clamp(0.18 + bulletsCount*0.03, 0.18, 0.55);
+    // fire rate increases with units, but capped; debuff slowFire makes it slower
+    const baseRate = clamp(0.28 - Math.log10(state.units+1)*0.07, BAL.minRate, BAL.maxRate);
+    const slowMul = state.debuffSlowFire > 0 ? 1.65 : 1.0;
+    state.shootCd = baseRate * slowMul;
 
-    for (let i=0;i<bulletsCount;i++) {
-      const k = bulletsCount===1 ? 0 : (i/(bulletsCount-1))*2-1; // -1..1
-      const angle = k * spread;
-      const speed = 820;
+    // bullets count: scale gently
+    const bulletsCount = clamp(1 + Math.floor(Math.sqrt(state.units)/4), 1, 10);
+    const spread = clamp(0.22 + bulletsCount*0.03, 0.20, 0.60);
+
+    // damage scales but debuff weak reduces
+    const dmgBase = 1 + Math.floor(Math.log2(state.units+1)/2);
+    const dmg = Math.max(1, Math.floor(dmgBase * (state.debuffWeak>0 ? 0.6 : 1)));
+
+    const speed = 860;
+
+    for (let i=0;i<bulletsCount;i++){
+      const k = bulletsCount===1 ? 0 : (i/(bulletsCount-1))*2-1;
+      const angle = k*spread;
       state.bullets.push({
-        x: state.playerX,
-        y: state.playerY - 24,
-        vx: Math.sin(angle) * speed,
-        vy: -Math.cos(angle) * speed,
+        x: state.playerX + k*6,
+        y: state.playerY - 26,
+        vx: Math.sin(angle)*speed,
+        vy: -Math.cos(angle)*speed,
         r: 4,
-        dmg: 1 + Math.floor(Math.log2(state.units+1)/2),
+        dmg
       });
     }
   }
 
-  // ----- Collisions
-  function circleHit(ax, ay, ar, bx, by, br) {
-    const dx = ax - bx, dy = ay - by;
-    const rr = ar + br;
-    return dx*dx + dy*dy <= rr*rr;
+  function circleHit(ax,ay,ar,bx,by,br){
+    const dx=ax-bx, dy=ay-by;
+    const rr=ar+br;
+    return dx*dx+dy*dy<=rr*rr;
   }
 
-  // ----- Game loop
+  // --- Render utilities
+  function roundRect(x,y,w,h,r){
+    const rr = Math.min(r,w/2,h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr,y);
+    ctx.arcTo(x+w,y,x+w,y+h,rr);
+    ctx.arcTo(x+w,y+h,x,y+h,rr);
+    ctx.arcTo(x,y+h,x,y,rr);
+    ctx.arcTo(x,y,x+w,y,rr);
+    ctx.closePath();
+  }
+
+  function drawGlowCircle(x,y,r,fill){
+    // simple glow: 2 layers
+    ctx.globalAlpha = 0.18;
+    ctx.beginPath(); ctx.fillStyle = fill;
+    ctx.arc(x,y,r*2.2,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.beginPath(); ctx.fillStyle = fill;
+    ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  }
+
+  // --- Loop
   let last = performance.now();
-  function tick(now) {
-    const dt = Math.min(0.033, (now - last) / 1000);
+  function tick(now){
+    const dt = Math.min(0.033, (now-last)/1000);
     last = now;
     state.t += dt;
 
-    // update player
-    const smooth = 12;
-    state.playerX += (state.targetX - state.playerX) * (1 - Math.exp(-smooth*dt));
+    // update debuffs
+    state.debuffSlowFire = Math.max(0, state.debuffSlowFire - dt);
+    state.debuffWeak = Math.max(0, state.debuffWeak - dt);
+    state.debuffDrain = Math.max(0, state.debuffDrain - dt);
+
+    // drain effect: slowly lose units while active
+    if (state.debuffDrain > 0) {
+      if (Math.random() < dt*2.8) subUnits(1);
+    }
+
+    // player smoothing
+    state.playerX += (state.targetX - state.playerX) * (1 - Math.exp(-12*dt));
     state.playerX = clamp(state.playerX, 28, W()-28);
 
-    // auto shoot
-    if (state.running) shoot(dt);
+    const d = difficulty01();
+    const worldDown = (BAL.worldSpeed + d*90) * dt;
 
-    // spawn enemies
-    state.spawnCooldown -= dt;
-    if (state.spawnCooldown <= 0) {
-      state.spawnCooldown = rand(0.55, 1.05);
+    // spawn
+    state.enemyCd -= dt;
+    if (state.enemyCd <= 0){
+      state.enemyCd = rand(BAL.enemyEvery[0], BAL.enemyEvery[1]) * (1 - d*0.15);
       spawnEnemyWave();
     }
-
-    // spawn gates
-    state.gateCooldown -= dt;
-    if (state.gateCooldown <= 0) {
-      state.gateCooldown = rand(1.2, 2.0);
+    state.gateCd -= dt;
+    if (state.gateCd <= 0){
+      state.gateCd = rand(BAL.gateEvery[0], BAL.gateEvery[1]);
       spawnGate();
     }
-
-    // move world objects down (as if player runs forward)
-    const worldDown = state.speedY * dt;
-
-    // bullets
-    for (const b of state.bullets) {
-      b.x += b.vx * dt;
-      b.y += b.vy * dt + worldDown * 0.2; // чуть компенсируем "движение мира"
+    state.fieldCd -= dt;
+    if (state.fieldCd <= 0){
+      state.fieldCd = rand(BAL.fieldEvery[0], BAL.fieldEvery[1]) * (1 - d*0.12);
+      spawnField();
     }
-    state.bullets = state.bullets.filter(b => b.y > -80 && b.y < H()+80 && b.x > -80 && b.x < W()+80);
 
-    // enemies
-    for (const e of state.enemies) {
-      e.x += e.vx * dt;
-      e.y += (e.vy * dt) + worldDown;
+    // shoot
+    if (state.running) shoot(dt);
+
+    // move bullets
+    for (const b of state.bullets){
+      b.x += b.vx*dt;
+      b.y += b.vy*dt + worldDown*0.18;
+    }
+    state.bullets = state.bullets.filter(b => b.y>-120 && b.y<H()+120 && b.x>-120 && b.x<W()+120);
+
+    // move enemies
+    for (const e of state.enemies){
+      e.x += e.vx*dt;
+      e.y += e.vy*dt + worldDown;
       if (e.x < e.r || e.x > W()-e.r) e.vx *= -1;
     }
 
-    // gates
+    // move gates/fields
     for (const g of state.gates) g.y += worldDown;
+    for (const f of state.fields) f.y += worldDown;
 
     // particles
-    for (const p of state.particles) {
-      p.x += p.vx * dt;
-      p.y += p.vy * dt + worldDown * 0.15;
+    for (const p of state.particles){
+      p.x += p.vx*dt;
+      p.y += p.vy*dt + worldDown*0.12;
       p.life -= dt;
     }
-    state.particles = state.particles.filter(p => p.life > 0);
+    state.particles = state.particles.filter(p=>p.life>0);
 
-    // bullet vs enemy
-    for (const b of state.bullets) {
-      for (const e of state.enemies) {
-        if (e.hp <= 0) continue;
-        if (circleHit(b.x, b.y, b.r, e.x, e.y, e.r)) {
+    // collisions: bullets with enemies AND bad gates (heal)
+    for (const b of state.bullets){
+      // gates first: shooting a bad screen heals it
+      for (const g of state.gates){
+        if (g.taken) continue;
+        if (!g.bad) continue;
+        const hitGate = (Math.abs(b.x - g.x) < g.w*0.5) && (Math.abs(b.y - g.y) < g.h*0.5);
+        if (hitGate){
+          b.y = -9999;
+          puff(b.x,b.y,4,220);
+          healGate(g, b.dmg);
+          break;
+        }
+      }
+      if (b.y < -2000) continue;
+
+      // enemies
+      for (const e of state.enemies){
+        if (e.hp<=0) continue;
+        if (circleHit(b.x,b.y,b.r,e.x,e.y,e.r)){
           e.hp -= b.dmg;
-          b.y = -9999; // mark remove
-          puff(e.x, e.y, 8, 240);
-          if (e.hp <= 0) {
-            state.score += 10;
-            puff(e.x, e.y, 14, 420);
+          b.y = -9999;
+          puff(e.x,e.y,8,260);
+          if (e.hp<=0){
+            state.score += 10 + Math.floor(difficulty01()*10);
+            puff(e.x,e.y,16,420);
           }
           break;
         }
       }
     }
-    state.bullets = state.bullets.filter(b => b.y > -2000);
+    state.bullets = state.bullets.filter(b=>b.y>-2000);
 
     // enemy hits player
-    for (const e of state.enemies) {
-      if (e.hp <= 0) continue;
-      if (circleHit(state.playerX, state.playerY, 18, e.x, e.y, e.r)) {
+    for (const e of state.enemies){
+      if (e.hp<=0) continue;
+      if (circleHit(state.playerX,state.playerY,18,e.x,e.y,e.r)){
         e.hp = 0;
         state.hp -= 1;
-        puff(e.x, e.y, 18, 520);
-        if (state.hp <= 0) state.running = false;
+        puff(e.x,e.y,18,540);
+        if (state.hp<=0) state.running=false;
+      }
+    }
+
+    // fields collision
+    for (const f of state.fields){
+      if (!f.alive) continue;
+      if (circleHit(state.playerX,state.playerY,18,f.x,f.y,f.r)){
+        f.alive=false;
+        applyField(f.type, f.dur);
+        puff(f.x,f.y,22,520);
       }
     }
 
     // gate pickup
-    for (const g of state.gates) {
+    for (const g of state.gates){
       if (g.taken) continue;
-      // treat gate as capsule collision
-      const dx = Math.abs(state.playerX - g.x);
-      const dy = Math.abs(state.playerY - g.y);
-      if (dx < g.w*0.5 && dy < g.h*0.7) {
-        g.taken = true;
-        if (g.isMul) state.units = Math.min(999, state.units * g.val);
-        else state.units = Math.min(999, state.units + g.val);
-        puff(g.x, g.y, 22, 500);
+      const inGate = (Math.abs(state.playerX-g.x) < g.w*0.5) && (Math.abs(state.playerY-g.y) < g.h*0.7);
+      if (!inGate) continue;
+
+      g.taken = true;
+
+      if (g.bad){
+        // apply negative
+        if (g.kind==="add") subUnits(Math.max(5, Math.floor(g.val/2)));
+        else divUnits(g.val);
+        puff(g.x,g.y,18,520);
+      } else {
+        // apply positive
+        if (g.kind==="add") addUnits(g.val);
+        else mulUnits(g.val);
+        puff(g.x,g.y,22,560);
       }
     }
 
     // cleanup
-    state.enemies = state.enemies.filter(e => e.y < H()+120 && e.hp > 0);
-    state.gates = state.gates.filter(g => g.y < H()+120 && !g.taken);
+    state.enemies = state.enemies.filter(e=>e.y<H()+140 && e.hp>0);
+    state.gates = state.gates.filter(g=>g.y<H()+140 && !g.taken);
+    state.fields = state.fields.filter(f=>f.y<H()+160 && f.alive);
 
-    // render
     render();
 
     // HUD
     hudUnits.textContent = state.units;
     hudHP.textContent = state.hp;
     hudScore.textContent = state.score;
+    hudTime.textContent = Math.floor(state.t/60);
 
-    // game over text
-    if (!state.running) {
-      drawGameOver();
-    } else {
-      requestAnimationFrame(tick);
-    }
+    const debuffs = [];
+    if (state.debuffSlowFire>0) debuffs.push(`скорострельность↓ ${state.debuffSlowFire.toFixed(1)}с`);
+    if (state.debuffWeak>0) debuffs.push(`урон↓ ${state.debuffWeak.toFixed(1)}с`);
+    if (state.debuffDrain>0) debuffs.push(`утечка юнитов ${state.debuffDrain.toFixed(1)}с`);
+    hudDebuffs.textContent = debuffs.length ? debuffs.join(" · ") : "—";
+
+    diffbar.style.width = (difficulty01()*100).toFixed(0) + "%";
+
+    if (!state.running) drawGameOver();
+    else requestAnimationFrame(tick);
   }
 
-  function render() {
-    // background
-    ctx.fillStyle = '#0b0f14';
-    ctx.fillRect(0, 0, W(), H());
+  function render(){
+    // background gradient + grid
+    const g = ctx.createLinearGradient(0,0,0,H());
+    g.addColorStop(0, "#05070c");
+    g.addColorStop(1, "#0a1020");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W(),H());
 
-    // subtle lanes
-    ctx.globalAlpha = 0.16;
-    ctx.strokeStyle = '#87bfff';
+    // neon grid
+    ctx.globalAlpha = 0.12;
+    ctx.strokeStyle = "#87bfff";
     ctx.lineWidth = 1;
-    for (let i=1;i<5;i++) {
-      const x = (W()/5)*i;
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, H());
-      ctx.stroke();
+    const step = 56;
+    for (let y = (state.t*90)%step; y < H(); y += step){
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W(),y); ctx.stroke();
+    }
+    ctx.globalAlpha = 0.16;
+    for (let i=1;i<6;i++){
+      const x = (W()/6)*i;
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H()); ctx.stroke();
     }
     ctx.globalAlpha = 1;
 
-    // gates
-    for (const g of state.gates) {
+    // debuff fields
+    for (const f of state.fields){
       ctx.save();
-      ctx.translate(g.x, g.y);
-      ctx.fillStyle = g.isMul ? 'rgba(120,220,255,0.18)' : 'rgba(140,255,170,0.16)';
-      ctx.strokeStyle = g.isMul ? 'rgba(120,220,255,0.65)' : 'rgba(140,255,170,0.65)';
-      roundRect(-g.w/2, -g.h/2, g.w, g.h, 14);
+      const col = (f.type==="slowFire") ? "rgba(255,110,110,0.92)" :
+                  (f.type==="weak") ? "rgba(255,160,110,0.92)" :
+                                     "rgba(255,90,140,0.92)";
+      ctx.globalAlpha = 0.10;
+      ctx.beginPath(); ctx.fillStyle = col;
+      ctx.arc(f.x,f.y,f.r*1.9,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha = 0.20;
+      ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
       ctx.fill();
+      ctx.globalAlpha = 0.85;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2); ctx.stroke();
+
+      ctx.fillStyle = "rgba(255,235,235,0.95)";
+      ctx.font = "800 12px system-ui";
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      const txt = (f.type==="slowFire")?"FIRE↓":(f.type==="weak")?"DMG↓":"DRAIN";
+      ctx.fillText(txt, f.x, f.y);
+      ctx.restore();
+    }
+
+    // gates (screens)
+    for (const gate of state.gates){
+      ctx.save();
+      ctx.translate(gate.x, gate.y);
+
+      const isBad = gate.bad;
+      const col = isBad ? "rgba(255,100,120,0.95)" : "rgba(120,220,255,0.95)";
+      const fill = isBad ? "rgba(255,100,120,0.12)" : "rgba(120,220,255,0.10)";
+
+      // glow
+      ctx.globalAlpha = 0.12;
+      roundRect(-gate.w*0.62, -gate.h*0.9, gate.w*1.24, gate.h*1.8, 18);
+      ctx.fillStyle = col; ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // screen body
+      roundRect(-gate.w/2, -gate.h/2, gate.w, gate.h, 16);
+      ctx.fillStyle = fill; ctx.fill();
+      ctx.strokeStyle = col;
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      ctx.fillStyle = 'rgba(215,240,255,0.95)';
-      ctx.font = '700 18px system-ui';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(g.label, 0, 1);
+      // label
+      ctx.fillStyle = "rgba(230,250,255,0.95)";
+      ctx.font = "900 18px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(isBad ? gate.labelBad : gate.labelGood, 0, 1);
+
+      // shield bar if bad
+      if (isBad){
+        const maxShield = 28; // visual normalize
+        const p = clamp(gate.shield / maxShield, 0, 1);
+        ctx.globalAlpha = 0.95;
+        ctx.fillStyle = "rgba(255,220,225,0.20)";
+        roundRect(-gate.w/2+10, gate.h/2-12, gate.w-20, 6, 999);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,140,160,0.75)";
+        roundRect(-gate.w/2+10, gate.h/2-12, (gate.w-20)*p, 6, 999);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        ctx.font = "700 11px system-ui";
+        ctx.fillStyle = "rgba(255,235,235,0.9)";
+        ctx.fillText("расстреляй → станет +", 0, -gate.h/2-10);
+      }
+
       ctx.restore();
     }
 
     // enemies
-    for (const e of state.enemies) {
-      ctx.beginPath();
-      ctx.fillStyle = 'rgba(255,90,90,0.92)';
-      ctx.arc(e.x, e.y, e.r, 0, Math.PI*2);
-      ctx.fill();
+    for (const e of state.enemies){
+      // body
+      drawGlowCircle(e.x,e.y,e.r,"rgba(255,90,90,0.95)");
 
-      // small hp ring
-      ctx.globalAlpha = 0.5;
-      ctx.strokeStyle = 'rgba(255,220,220,0.9)';
+      // hp ring
+      ctx.globalAlpha = 0.55;
+      ctx.strokeStyle = "rgba(255,230,230,0.95)";
       ctx.lineWidth = 2;
+      const p = clamp(e.hp/12,0,1);
       ctx.beginPath();
-      ctx.arc(e.x, e.y, e.r+4, -Math.PI/2, -Math.PI/2 + (Math.PI*2)*clamp(e.hp/4,0,1));
+      ctx.arc(e.x,e.y,e.r+5,-Math.PI/2,-Math.PI/2+Math.PI*2*p);
       ctx.stroke();
       ctx.globalAlpha = 1;
     }
 
     // bullets
-    for (const b of state.bullets) {
-      ctx.beginPath();
-      ctx.fillStyle = 'rgba(200,240,255,0.95)';
-      ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
-      ctx.fill();
+    for (const b of state.bullets){
+      drawGlowCircle(b.x,b.y,b.r,"rgba(200,240,255,0.95)");
     }
 
     // particles
-    ctx.globalAlpha = 0.9;
-    ctx.fillStyle = 'rgba(200,240,255,0.55)';
-    for (const p of state.particles) {
-      const r = 2.2 * clamp(p.life/0.6, 0.2, 1);
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, r, 0, Math.PI*2);
-      ctx.fill();
+    ctx.globalAlpha = 0.85;
+    ctx.fillStyle = "rgba(200,240,255,0.55)";
+    for (const p of state.particles){
+      const r = 2.0 * clamp(p.life/0.55,0.2,1);
+      ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2); ctx.fill();
     }
     ctx.globalAlpha = 1;
 
-    // player (core + aura showing "units")
-    const aura = clamp(16 + Math.log(state.units+1)*6, 18, 60);
+    // player aura indicates "power" but not crazy
+    const aura = clamp(18 + Math.log(state.units+1)*6, 18, 62);
+    ctx.globalAlpha = 0.18;
     ctx.beginPath();
-    ctx.fillStyle = 'rgba(90,170,255,0.18)';
-    ctx.arc(state.playerX, state.playerY, aura, 0, Math.PI*2);
+    ctx.fillStyle = "rgba(120,220,255,0.95)";
+    ctx.arc(state.playerX,state.playerY,aura,0,Math.PI*2);
     ctx.fill();
+    ctx.globalAlpha = 1;
 
-    ctx.beginPath();
-    ctx.fillStyle = 'rgba(120,220,255,0.95)';
-    ctx.arc(state.playerX, state.playerY, 18, 0, Math.PI*2);
-    ctx.fill();
+    drawGlowCircle(state.playerX,state.playerY,18,"rgba(120,220,255,0.95)");
 
-    // "count" label
-    ctx.fillStyle = 'rgba(10,15,20,0.9)';
-    ctx.font = '800 12px system-ui';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    // count label
+    ctx.fillStyle = "rgba(10,15,22,0.92)";
+    ctx.font = "900 12px system-ui";
+    ctx.textAlign="center"; ctx.textBaseline="middle";
     ctx.fillText(String(state.units), state.playerX, state.playerY+1);
   }
 
-  function drawGameOver() {
-    // overlay
-    ctx.fillStyle = 'rgba(0,0,0,0.55)';
-    ctx.fillRect(0, 0, W(), H());
+  function drawGameOver(){
+    ctx.fillStyle = "rgba(0,0,0,0.56)";
+    ctx.fillRect(0,0,W(),H());
 
-    ctx.fillStyle = 'rgba(220,245,255,0.95)';
-    ctx.font = '800 34px system-ui';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('GAME OVER', W()/2, H()*0.42);
+    ctx.fillStyle = "rgba(230,250,255,0.96)";
+    ctx.font = "900 34px system-ui";
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText("GAME OVER", W()/2, H()*0.42);
 
-    ctx.font = '600 16px system-ui';
+    ctx.font = "700 16px system-ui";
     ctx.fillText(`Счёт: ${state.score}`, W()/2, H()*0.49);
 
-    ctx.font = '600 14px system-ui';
     ctx.globalAlpha = 0.85;
-    ctx.fillText('Нажми/тапни чтобы перезапустить', W()/2, H()*0.56);
+    ctx.font = "600 14px system-ui";
+    ctx.fillText("Тапни/кликни чтобы перезапустить", W()/2, H()*0.56);
     ctx.globalAlpha = 1;
 
     const restart = () => {
-      // reset
       state.running = true;
+      state.t = 0;
       state.score = 0;
-      state.units = 6;
-      state.hp = 10;
-      state.bullets.length = 0;
-      state.enemies.length = 0;
-      state.gates.length = 0;
-      state.particles.length = 0;
-      state.shootCooldown = 0;
-      state.spawnCooldown = 0.2;
-      state.gateCooldown = 0.8;
+      state.units = BAL.baseUnits;
+      state.hp = BAL.baseHP;
+      state.bullets.length=0;
+      state.enemies.length=0;
+      state.gates.length=0;
+      state.fields.length=0;
+      state.particles.length=0;
+
+      state.debuffSlowFire=0;
+      state.debuffWeak=0;
+      state.debuffDrain=0;
+
+      state.shootCd=0;
+      state.enemyCd=0.25;
+      state.gateCd=0.7;
+      state.fieldCd=1.4;
+
       last = performance.now();
-      canvas.removeEventListener('pointerdown', restart);
+      canvas.removeEventListener("pointerdown", restart);
       requestAnimationFrame(tick);
     };
-    canvas.addEventListener('pointerdown', restart, { once: true });
+    canvas.addEventListener("pointerdown", restart, {once:true});
   }
 
-  function roundRect(x, y, w, h, r) {
-    const rr = Math.min(r, w/2, h/2);
-    ctx.beginPath();
-    ctx.moveTo(x+rr, y);
-    ctx.arcTo(x+w, y, x+w, y+h, rr);
-    ctx.arcTo(x+w, y+h, x, y+h, rr);
-    ctx.arcTo(x, y+h, x, y, rr);
-    ctx.arcTo(x, y, x+w, y, rr);
-    ctx.closePath();
-  }
-
-  // start
   requestAnimationFrame(tick);
 })();
 </script>
