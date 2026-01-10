@@ -1,48 +1,70 @@
-
- <!doctype html>
- <html lang="ru">
- <head>
-   <meta charset="utf-8"/>
-   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-   <title>Lane Runner Shooter — рекламный вайб</title>
-   <style>
-     html,body{margin:0;height:100%;background:#06080d;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
-     canvas{display:block;width:100vw;height:100vh;touch-action:none}
-     .hud{
-       position:fixed;left:12px;top:12px;color:#d7f0ff;font-size:13px;line-height:1.25;
-       background:rgba(10,14,20,.55);border:1px solid rgba(160,200,255,.14);
-       padding:10px 12px;border-radius:14px;backdrop-filter:blur(10px);
-       user-select:none;box-shadow:0 10px 40px rgba(0,0,0,.35);
-       max-width:420px;
-     }
-     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-     .bar{height:7px;width:220px;border-radius:999px;background:rgba(215,240,255,.12);overflow:hidden}
-     .bar>i{display:block;height:100%;width:50%;background:rgba(120,220,255,.70)}
-     .bar.red>i{background:rgba(255,110,130,.70)}
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/index.html b/index.html
+index 49785670bd2bf90aa73f8301f97f6b7804e146c4..9bf9e20fb3bea95cbc8b5e4c8265e3f1c7bc6c9f 100644
+--- a/index.html
++++ b/index.html
+@@ -1,921 +1,900 @@
+ 
+  <!doctype html>
+  <html lang="ru">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+    <title>Lane Runner Shooter — рекламный вайб</title>
+    <style>
+      html,body{margin:0;height:100%;background:#06080d;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+      canvas{display:block;width:100vw;height:100vh;touch-action:none}
+      .hud{
+        position:fixed;left:12px;top:12px;color:#d7f0ff;font-size:13px;line-height:1.25;
+        background:rgba(10,14,20,.55);border:1px solid rgba(160,200,255,.14);
+        padding:10px 12px;border-radius:14px;backdrop-filter:blur(10px);
+        user-select:none;box-shadow:0 10px 40px rgba(0,0,0,.35);
+        max-width:420px;
+      }
+      .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+      .bar{height:7px;width:220px;border-radius:999px;background:rgba(215,240,255,.12);overflow:hidden}
+      .bar>i{display:block;height:100%;width:50%;background:rgba(120,220,255,.70)}
+      .bar.red>i{background:rgba(255,110,130,.70)}
+-+    .meter{height:8px;width:180px;border-radius:999px;background:rgba(215,240,255,.16);overflow:hidden;box-shadow:0 0 12px rgba(120,220,255,.2) inset}
+-+    .meter>i{display:block;height:100%;width:0;background:linear-gradient(90deg,rgba(120,220,255,.75),rgba(170,255,245,.95))}
+-+    .chip{padding:2px 8px;border-radius:999px;font-size:11px;letter-spacing:.2px;background:rgba(120,220,255,.12);border:1px solid rgba(120,220,255,.3);text-transform:uppercase}
+-+    .chip.hot{background:rgba(255,120,140,.16);border-color:rgba(255,140,160,.4)}
+-+    .chip.done{background:rgba(120,255,200,.16);border-color:rgba(120,255,200,.45)}
 +    .meter{height:8px;width:180px;border-radius:999px;background:rgba(215,240,255,.16);overflow:hidden;box-shadow:0 0 12px rgba(120,220,255,.2) inset}
 +    .meter>i{display:block;height:100%;width:0;background:linear-gradient(90deg,rgba(120,220,255,.75),rgba(170,255,245,.95))}
 +    .chip{padding:2px 8px;border-radius:999px;font-size:11px;letter-spacing:.2px;background:rgba(120,220,255,.12);border:1px solid rgba(120,220,255,.3);text-transform:uppercase}
 +    .chip.hot{background:rgba(255,120,140,.16);border-color:rgba(255,140,160,.4)}
 +    .chip.done{background:rgba(120,255,200,.16);border-color:rgba(120,255,200,.45)}
-     .hint{opacity:.78;font-size:12px;margin-top:6px}
-     kbd{padding:1px 6px;border:1px solid rgba(200,240,255,.22);border-bottom-color:rgba(200,240,255,.10);border-radius:8px;background:rgba(200,240,255,.06)}
-   </style>
- </head>
- <body>
- <canvas id="c"></canvas>
- <div class="hud">
-   <div><b>Lane Runner Shooter (похоже на рекламу)</b></div>
-   <div class="row" style="margin-top:6px">
-     <div>Юниты: <b id="units">8</b></div>
-     <div>HP: <b id="hp">10</b></div>
-     <div>Счёт: <b id="score">0</b></div>
-   </div>
-   <div class="row" style="margin-top:6px">
-     <div>Энергия</div>
-     <div class="bar"><i id="energy"></i></div>
-     <div>Перегрев</div>
-     <div class="bar red"><i id="heat"></i></div>
-   </div>
+      .hint{opacity:.78;font-size:12px;margin-top:6px}
+      kbd{padding:1px 6px;border:1px solid rgba(200,240,255,.22);border-bottom-color:rgba(200,240,255,.10);border-radius:8px;background:rgba(200,240,255,.06)}
+    </style>
+  </head>
+  <body>
+  <canvas id="c"></canvas>
+  <div class="hud">
+    <div><b>Lane Runner Shooter (похоже на рекламу)</b></div>
+    <div class="row" style="margin-top:6px">
+      <div>Юниты: <b id="units">8</b></div>
+      <div>HP: <b id="hp">10</b></div>
+      <div>Счёт: <b id="score">0</b></div>
+    </div>
+    <div class="row" style="margin-top:6px">
+      <div>Энергия</div>
+      <div class="bar"><i id="energy"></i></div>
+      <div>Перегрев</div>
+      <div class="bar red"><i id="heat"></i></div>
+    </div>
+-+  <div class="row" style="margin-top:6px">
+-+    <div>Овердрайв</div>
+-+    <div class="meter"><i id="overdrive"></i></div>
+-+    <div class="chip" id="overdriveState">готов</div>
+-+    <div>Множитель: <b id="mult">x1</b></div>
+-+  </div>
+-+  <div class="row" style="margin-top:6px">
+-+    <div>Прогресс</div>
+-+    <div class="meter"><i id="progress"></i></div>
+-+    <div class="chip" id="phase">старт</div>
+-+  </div>
 +  <div class="row" style="margin-top:6px">
 +    <div>Овердрайв</div>
 +    <div class="meter"><i id="overdrive"></i></div>
@@ -54,99 +76,119 @@
 +    <div class="meter"><i id="progress"></i></div>
 +    <div class="chip" id="phase">старт</div>
 +  </div>
-   <div class="hint">
-     Полосы: <kbd>←</kbd>/<kbd>→</kbd> или <kbd>A</kbd>/<kbd>D</kbd>. Стрелять: <kbd>Space</kbd> / удержание пальца.<br/>
+    <div class="hint">
+      Полосы: <kbd>←</kbd>/<kbd>→</kbd> или <kbd>A</kbd>/<kbd>D</kbd>. Стрелять: <kbd>Space</kbd> / удержание пальца.<br/>
+-+    ⚡ Серия попаданий заряжает овердрайв (урон, скорострельность и очки растут).<br/>
+-+    💥 Если долго не менять полосу — появится блокировка, и вы потеряете HP.<br/>
 +    ⚡ Серия попаданий заряжает овердрайв (урон, скорострельность и очки растут).<br/>
 +    💥 Если долго не менять полосу — появится блокировка, и вы потеряете HP.<br/>
-     ⚠️ Плохие экраны (− / ÷) надо <b>расстрелять</b> (сбить щит), чтобы превратить в + / × и только потом влетать.
-   </div>
- </div>
- 
- <script>
- (() => {
-   const canvas = document.getElementById('c');
-   const ctx = canvas.getContext('2d', {alpha:false});
-   const hudUnits = document.getElementById('units');
-   const hudHP = document.getElementById('hp');
-   const hudScore = document.getElementById('score');
-   const energyBar = document.getElementById('energy');
-   const heatBar = document.getElementById('heat');
+      ⚠️ Плохие экраны (− / ÷) надо <b>расстрелять</b> (сбить щит), чтобы превратить в + / × и только потом влетать.
+    </div>
+  </div>
+  
+  <script>
+  (() => {
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d', {alpha:false});
+    const hudUnits = document.getElementById('units');
+    const hudHP = document.getElementById('hp');
+    const hudScore = document.getElementById('score');
+    const energyBar = document.getElementById('energy');
+    const heatBar = document.getElementById('heat');
+-+  const overdriveBar = document.getElementById('overdrive');
+-+  const overdriveState = document.getElementById('overdriveState');
+-+  const multEl = document.getElementById('mult');
+-+  const progressBar = document.getElementById('progress');
+-+  const phaseEl = document.getElementById('phase');
 +  const overdriveBar = document.getElementById('overdrive');
 +  const overdriveState = document.getElementById('overdriveState');
 +  const multEl = document.getElementById('mult');
 +  const progressBar = document.getElementById('progress');
 +  const phaseEl = document.getElementById('phase');
- 
-   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-   const lerp=(a,b,t)=>a+(b-a)*t;
-   const rand=(a,b)=>a+Math.random()*(b-a);
- 
-   function resize(){
-     const dpr=Math.max(1,Math.min(2,devicePixelRatio||1));
-     canvas.width=Math.floor(innerWidth*dpr);
-     canvas.height=Math.floor(innerHeight*dpr);
-     ctx.setTransform(dpr,0,0,dpr,0,0);
+  
+    const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+    const lerp=(a,b,t)=>a+(b-a)*t;
+    const rand=(a,b)=>a+Math.random()*(b-a);
+  
+    function resize(){
+      const dpr=Math.max(1,Math.min(2,devicePixelRatio||1));
+      canvas.width=Math.floor(innerWidth*dpr);
+      canvas.height=Math.floor(innerHeight*dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+-+    initStars();
 +    initStars();
-   }
-   addEventListener('resize', resize, {passive:true});
-   resize();
- 
-   const W=()=>innerWidth, H=()=>innerHeight;
- 
-   // --- Perspective lane mapping
-   // z: distance ahead (0 near player, maxZ far)
-   const maxZ = 2200;
-   const horizonY = () => H()*0.22;
-   const roadBottomY = () => H()*0.93;
- 
-   function proj(z){
-     // 0..maxZ => t 0..1
-     const t = clamp(z/maxZ, 0, 1);
-     // perspective scale: near is big, far is small
-     const p = 1 - t;
-     const y = lerp(roadBottomY(), horizonY(), t);
-     const halfRoad = lerp(W()*0.46, W()*0.10, t);
-     return {y, halfRoad, p};
-   }
- 
-   function laneCenterX(lane, z){
-     // lane: -1,0,1
-     const {halfRoad} = proj(z);
-     const laneW = (halfRoad*2)/3;
-     return W()*0.5 + lane*laneW;
-   }
- 
-   // --- Game state
-   const S = {
-     t:0,
-     score:0,
-     hp:10,
-     units:8,
- 
-     lane:0,        // -1 0 1
-     laneTarget:0,
-     laneBlend:0,   // smooth
- 
-     // movement
-     speedZ: 820,   // how fast objects come towards player (bigger => faster)
-     difficulty:0,
- 
-     // shooting resources
-     energy: 1.0,   // 0..1
-     heat: 0.0,     // 0..1
+    }
+    addEventListener('resize', resize, {passive:true});
+    resize();
+  
+    const W=()=>innerWidth, H=()=>innerHeight;
+  
+    // --- Perspective lane mapping
+    // z: distance ahead (0 near player, maxZ far)
+    const maxZ = 2200;
+    const horizonY = () => H()*0.22;
+    const roadBottomY = () => H()*0.93;
+  
+    function proj(z){
+      // 0..maxZ => t 0..1
+      const t = clamp(z/maxZ, 0, 1);
+      // perspective scale: near is big, far is small
+      const p = 1 - t;
+      const y = lerp(roadBottomY(), horizonY(), t);
+      const halfRoad = lerp(W()*0.46, W()*0.10, t);
+      return {y, halfRoad, p};
+    }
+  
+    function laneCenterX(lane, z){
+      // lane: -1,0,1
+      const {halfRoad} = proj(z);
+      const laneW = (halfRoad*2)/3;
+      return W()*0.5 + lane*laneW;
+    }
+  
+    // --- Game state
+    const S = {
+      t:0,
+      score:0,
+      hp:10,
+      units:8,
+  
+      lane:0,        // -1 0 1
+      laneTarget:0,
+      laneBlend:0,   // smooth
+  
+      // movement
+      speedZ: 820,   // how fast objects come towards player (bigger => faster)
+      difficulty:0,
+  
+      // shooting resources
+      energy: 1.0,   // 0..1
+      heat: 0.0,     // 0..1
+-+    overdrive: 0.0,
+-+    overdriveActive: false,
+-+    overdriveTimer: 0,
 +    overdrive: 0.0,
 +    overdriveActive: false,
 +    overdriveTimer: 0,
-     shootHeld:false,
-     shootCd:0,
- 
-     bullets:[],
-     things:[],     // gates, enemies, obstacles
+      shootHeld:false,
+      shootCd:0,
+  
+      bullets:[],
+      things:[],     // gates, enemies, obstacles
+-+    particles:[],
+-+    stars:[],
 +    particles:[],
 +    stars:[],
-     spawnCd:0.3,
- 
-     gameOver:false,
+      spawnCd:0.3,
+  
+      gameOver:false,
+-+    finished:false,
+-+    shake:0,
+-+    levelTime:0,
+-+    levelDuration:190,
+-+    laneIdle:0,
+-+    laneIdleLimit:2.6,
+-+    lastLane:0,
 +    finished:false,
 +    shake:0,
 +    levelTime:0,
@@ -154,173 +196,232 @@
 +    laneIdle:0,
 +    laneIdleLimit:2.6,
 +    lastLane:0,
-   };
- 
-   // --- Inputs
-   function laneLeft(){ S.laneTarget = clamp(S.laneTarget-1, -1, 1); }
-   function laneRight(){ S.laneTarget = clamp(S.laneTarget+1, -1, 1); }
- 
-   addEventListener('keydown', (e)=>{
--    if (S.gameOver && (e.key===" " || e.key==="Enter")) restart();
+    };
+  
+    // --- Inputs
+    function laneLeft(){ S.laneTarget = clamp(S.laneTarget-1, -1, 1); }
+    function laneRight(){ S.laneTarget = clamp(S.laneTarget+1, -1, 1); }
+  
+    addEventListener('keydown', (e)=>{
+--    if (S.gameOver && (e.key===" " || e.key==="Enter")) restart();
+-+    if ((S.gameOver || S.finished) && (e.key===" " || e.key==="Enter")) restart();
 +    if ((S.gameOver || S.finished) && (e.key===" " || e.key==="Enter")) restart();
-     if (e.key==="ArrowLeft"||e.key==="a"||e.key==="A") laneLeft();
-     if (e.key==="ArrowRight"||e.key==="d"||e.key==="D") laneRight();
-     if (e.key===" ") S.shootHeld=true;
-   });
-   addEventListener('keyup', (e)=>{
-     if (e.key===" ") S.shootHeld=false;
-   });
- 
-   // mobile: tap left/right to change lane, hold to shoot
-   let touchStartX=null, touchHoldTimer=null;
-   canvas.addEventListener('pointerdown', (e)=>{
--    if (S.gameOver){ restart(); return; }
+      if (e.key==="ArrowLeft"||e.key==="a"||e.key==="A") laneLeft();
+      if (e.key==="ArrowRight"||e.key==="d"||e.key==="D") laneRight();
+      if (e.key===" ") S.shootHeld=true;
+    });
+    addEventListener('keyup', (e)=>{
+      if (e.key===" ") S.shootHeld=false;
+    });
+  
+    // mobile: tap left/right to change lane, hold to shoot
+    let touchStartX=null, touchHoldTimer=null;
+    canvas.addEventListener('pointerdown', (e)=>{
+--    if (S.gameOver){ restart(); return; }
+-+    if (S.gameOver || S.finished){ restart(); return; }
 +    if (S.gameOver || S.finished){ restart(); return; }
-     const x=e.clientX;
-     touchStartX=x;
-     // quick tap chooses lane, hold starts shooting
-     touchHoldTimer=setTimeout(()=>{ S.shootHeld=true; }, 140);
-   });
-   canvas.addEventListener('pointerup', (e)=>{
-     clearTimeout(touchHoldTimer);
-     if (S.shootHeld){ S.shootHeld=false; return; }
-     if (touchStartX==null) return;
-     const x=e.clientX;
-     if (x < W()*0.5) laneLeft(); else laneRight();
-     touchStartX=null;
-   });
- 
-   // --- Spawning
-   // Thing types:
-   // gate: needs shield if bad; once healed becomes good
-   // enemy: needs damage; if reaches player hits hp
-   // obstacle: always bad (avoid)
-   function spawnWave(){
-     const d = S.difficulty;
-     const r = Math.random();
- 
-     // gate-focused design like ads: 1-2 gates, sometimes combined with enemy/obstacle
+      const x=e.clientX;
+      touchStartX=x;
+      // quick tap chooses lane, hold starts shooting
+      touchHoldTimer=setTimeout(()=>{ S.shootHeld=true; }, 140);
+    });
+    canvas.addEventListener('pointerup', (e)=>{
+      clearTimeout(touchHoldTimer);
+      if (S.shootHeld){ S.shootHeld=false; return; }
+      if (touchStartX==null) return;
+      const x=e.clientX;
+      if (x < W()*0.5) laneLeft(); else laneRight();
+      touchStartX=null;
+    });
+  
+    // --- Spawning
+    // Thing types:
+    // gate: needs shield if bad; once healed becomes good
+    // enemy: needs damage; if reaches player hits hp
+    // obstacle: always bad (avoid)
+    function spawnWave(){
+      const d = S.difficulty;
+      const r = Math.random();
+  
+      // gate-focused design like ads: 1-2 gates, sometimes combined with enemy/obstacle
+-+    const obstacleChance = 0.16 + d*0.22;
 +    const obstacleChance = 0.16 + d*0.22;
-     if (r < 0.55) {
-       // One gate in random lane
-       S.things.push(makeGate(choiceLane(), maxZ*0.92, d));
-       if (Math.random() < 0.28 + d*0.15) S.things.push(makeEnemy(choiceLane(), maxZ*0.98, d));
+      if (r < 0.55) {
+        // One gate in random lane
+        S.things.push(makeGate(choiceLane(), maxZ*0.92, d));
+        if (Math.random() < 0.28 + d*0.15) S.things.push(makeEnemy(choiceLane(), maxZ*0.98, d));
+-+      if (Math.random() < obstacleChance*0.6) S.things.push(makeObstacle(choiceLane(), maxZ*0.99, d));
 +      if (Math.random() < obstacleChance*0.6) S.things.push(makeObstacle(choiceLane(), maxZ*0.99, d));
-     } else if (r < 0.80) {
-       // Two gates choose-left/right (core choice)
-       const lanes = shuffle([-1,0,1]).slice(0,2);
-       S.things.push(makeGate(lanes[0], maxZ*0.95, d));
-       S.things.push(makeGate(lanes[1], maxZ*0.95, d));
--      if (Math.random() < 0.22 + d*0.18) S.things.push(makeObstacle(choiceLane(), maxZ*0.99, d));
+      } else if (r < 0.80) {
+        // Two gates choose-left/right (core choice)
+        const lanes = shuffle([-1,0,1]).slice(0,2);
+        S.things.push(makeGate(lanes[0], maxZ*0.95, d));
+        S.things.push(makeGate(lanes[1], maxZ*0.95, d));
+--      if (Math.random() < 0.22 + d*0.18) S.things.push(makeObstacle(choiceLane(), maxZ*0.99, d));
+-+      if (Math.random() < obstacleChance) S.things.push(makeObstacle(choiceLane(), maxZ*0.99, d));
+-+      if (Math.random() < 0.24 + d*0.12) S.things.push(makeEnemy(choiceLane(), maxZ*0.98, d));
 +      if (Math.random() < obstacleChance) S.things.push(makeObstacle(choiceLane(), maxZ*0.99, d));
 +      if (Math.random() < 0.24 + d*0.12) S.things.push(makeEnemy(choiceLane(), maxZ*0.98, d));
-     } else {
-       // hazard wave: enemy + obstacle, less gates
-       S.things.push(makeEnemy(choiceLane(), maxZ*0.96, d));
--      if (Math.random() < 0.6) S.things.push(makeObstacle(choiceLane(), maxZ*0.98, d));
+      } else {
+        // hazard wave: enemy + obstacle, less gates
+        S.things.push(makeEnemy(choiceLane(), maxZ*0.96, d));
+--      if (Math.random() < 0.6) S.things.push(makeObstacle(choiceLane(), maxZ*0.98, d));
+-+      if (Math.random() < 0.6 + d*0.2) S.things.push(makeObstacle(choiceLane(), maxZ*0.98, d));
 +      if (Math.random() < 0.6 + d*0.2) S.things.push(makeObstacle(choiceLane(), maxZ*0.98, d));
-       if (Math.random() < 0.45) S.things.push(makeGate(choiceLane(), maxZ*0.90, d));
-     }
-   }
- 
-   function choiceLane(){
-     const r=Math.random();
-     return r<0.33?-1:r<0.66?0:1;
-   }
-   function shuffle(a){
-     a=a.slice();
-     for(let i=a.length-1;i>0;i--){
-       const j=Math.floor(Math.random()*(i+1));
-       [a[i],a[j]]=[a[j],a[i]];
-     }
-     return a;
-   }
- 
-   function makeGate(lane, z, d){
-     // bad gates are common; must shoot to heal
-     const badChance = lerp(0.55, 0.78, d);
-     const bad = Math.random() < badChance;
- 
-     let kind, val, goodLabel, badLabel;
- 
-     if (Math.random() < 0.58){
-       kind="add";
-       val = Math.random()<0.7? 10 : 20;
-       goodLabel=`+${val}`;
-       badLabel=`-${Math.max(6, Math.floor(val/2))}`;
-     } else {
-       kind="mul";
-       val = Math.random()<0.75? 2 : 3;
-       goodLabel=`×${val}`;
-       badLabel=`÷${val}`;
-     }
- 
-     // shield makes it a “screen”: must be shot
--    const shield = bad ? Math.ceil(24 + d*22) : 0;
+        if (Math.random() < 0.45) S.things.push(makeGate(choiceLane(), maxZ*0.90, d));
+      }
+    }
+  
+    function choiceLane(){
+      const r=Math.random();
+      return r<0.33?-1:r<0.66?0:1;
+    }
+    function shuffle(a){
+      a=a.slice();
+      for(let i=a.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+      }
+      return a;
+    }
+  
+    function makeGate(lane, z, d){
+      // bad gates are common; must shoot to heal
+      const badChance = lerp(0.55, 0.78, d);
+      const bad = Math.random() < badChance;
+  
+      let kind, val, goodLabel, badLabel;
+  
+      if (Math.random() < 0.58){
+        kind="add";
+        val = Math.random()<0.7? 10 : 20;
+        goodLabel=`+${val}`;
+        badLabel=`-${Math.max(6, Math.floor(val/2))}`;
+      } else {
+        kind="mul";
+        val = Math.random()<0.75? 2 : 3;
+        goodLabel=`×${val}`;
+        badLabel=`÷${val}`;
+      }
+  
+      // shield makes it a “screen”: must be shot
+--    const shield = bad ? Math.ceil(24 + d*22) : 0;
+-+    const shield = bad ? Math.ceil(26 + d*28) : 0;
 +    const shield = bad ? Math.ceil(26 + d*28) : 0;
- 
-     return {
-       type:"gate",
-       lane, z,
-       w: 1.05, h: 0.22, // normalized in lane space (rendered via proj)
-       bad,
-       shield,
-       kind,val,
-       goodLabel,badLabel,
-       taken:false
-     };
-   }
- 
-   function makeEnemy(lane, z, d){
-     return {
-       type:"enemy",
-       lane, z,
--      hp: Math.ceil(10 + d*16),
+  
+      return {
+        type:"gate",
+        lane, z,
+        w: 1.05, h: 0.22, // normalized in lane space (rendered via proj)
+        bad,
+        shield,
+        kind,val,
+        goodLabel,badLabel,
+        taken:false
+      };
+    }
+  
+    function makeEnemy(lane, z, d){
+      return {
+        type:"enemy",
+        lane, z,
+--      hp: Math.ceil(10 + d*16),
+-+      hp: Math.ceil(10 + d*22),
 +      hp: Math.ceil(10 + d*22),
-       r: 0.11,
-       taken:false
-     };
-   }
- 
-   function makeObstacle(lane, z, d){
-     return {
-       type:"obstacle",
-       lane, z,
-       r: 0.13,
-       taken:false
-     };
-   }
- 
-   // --- Balance helpers
-   function addUnits(n){
-     // hard anti-999: diminishing returns after ~120
-     const soft=120;
-     let add=n;
-     if (S.units > soft){
-       const over=S.units-soft;
-       const factor=1/(1+over/120);
-       add=Math.max(1, Math.floor(n*factor));
-     }
-     S.units = clamp(S.units + add, 1, 999);
-   }
-   function subUnits(n){
-     S.units = clamp(S.units - n, 1, 999);
-   }
-   function mulUnits(m){
-     const target = clamp(Math.floor(S.units*m), 1, 999);
-     addUnits(target - S.units);
-   }
-   function divUnits(d){
-     S.units = clamp(Math.floor(S.units/d), 1, 999);
-   }
- 
-   // --- Shooting
-   function canShoot(){
-     if (S.energy <= 0.04) return false;
-     if (S.heat >= 0.98) return false;
-     return true;
-   }
- 
+        r: 0.11,
+        taken:false
+      };
+    }
+  
+    function makeObstacle(lane, z, d){
+      return {
+        type:"obstacle",
+        lane, z,
+        r: 0.13,
+        taken:false
+      };
+    }
+  
+    // --- Balance helpers
+    function addUnits(n){
+      // hard anti-999: diminishing returns after ~120
+      const soft=120;
+      let add=n;
+      if (S.units > soft){
+        const over=S.units-soft;
+        const factor=1/(1+over/120);
+        add=Math.max(1, Math.floor(n*factor));
+      }
+      S.units = clamp(S.units + add, 1, 999);
+    }
+    function subUnits(n){
+      S.units = clamp(S.units - n, 1, 999);
+    }
+    function mulUnits(m){
+      const target = clamp(Math.floor(S.units*m), 1, 999);
+      addUnits(target - S.units);
+    }
+    function divUnits(d){
+      S.units = clamp(Math.floor(S.units/d), 1, 999);
+    }
+  
+    // --- Shooting
+    function canShoot(){
+      if (S.energy <= 0.04) return false;
+      if (S.heat >= 0.98) return false;
+      return true;
+    }
+  
+-+  function activateOverdrive(){
+-+    S.overdriveActive = true;
+-+    S.overdriveTimer = 6.5;
+-+    S.overdrive = 1;
+-+  }
+-+
+-+  function addOverdrive(amount){
+-+    if (S.overdriveActive) return;
+-+    S.overdrive = clamp(S.overdrive + amount, 0, 1);
+-+    if (S.overdrive >= 1) activateOverdrive();
+-+  }
+-+
+-+  function spendOverdrive(amount){
+-+    if (S.overdriveActive) return;
+-+    S.overdrive = clamp(S.overdrive - amount, 0, 1);
+-+  }
+-+
+-+  function addScore(base){
+-+    const mult = S.overdriveActive ? 1.6 : 1;
+-+    S.score += Math.floor(base * mult);
+-+  }
+-+
+-+  function spawnParticles(x, y, color, count){
+-+    for (let i=0;i<count;i++){
+-+      const ang = rand(0, Math.PI*2);
+-+      const spd = rand(40, 140);
+-+      S.particles.push({
+-+        x, y,
+-+        vx: Math.cos(ang)*spd,
+-+        vy: Math.sin(ang)*spd,
+-+        life: rand(0.4, 0.9),
+-+        size: rand(2,4),
+-+        color
+-+      });
+-+    }
+-+  }
+-+
+-+  function initStars(){
+-+    S.stars = [];
+-+    const count = Math.floor((W()*H())/18000);
+-+    for (let i=0;i<count;i++){
+-+      S.stars.push({
+-+        x: rand(0, W()),
+-+        y: rand(0, H()),
+-+        r: rand(0.6, 1.6),
+-+        speed: rand(8, 30)
+-+      });
+-+    }
+-+  }
+-+
 +  function activateOverdrive(){
 +    S.overdriveActive = true;
 +    S.overdriveTimer = 6.5;
@@ -371,59 +472,80 @@
 +    }
 +  }
 +
-   function shoot(dt){
-     // fire rate depends on units BUT throttled by energy/heat
-     S.shootCd -= dt;
-     if (S.shootCd > 0) return;
-     if (!S.shootHeld) return;
-     if (!canShoot()) return;
- 
--    const rate = clamp(0.18 - Math.log10(S.units+1)*0.05, 0.07, 0.18);
+    function shoot(dt){
+      // fire rate depends on units BUT throttled by energy/heat
+      S.shootCd -= dt;
+      if (S.shootCd > 0) return;
+      if (!S.shootHeld) return;
+      if (!canShoot()) return;
+  
+--    const rate = clamp(0.18 - Math.log10(S.units+1)*0.05, 0.07, 0.18);
+-+    const rateBase = clamp(0.18 - Math.log10(S.units+1)*0.05, 0.075, 0.18);
+-+    const rate = S.overdriveActive ? rateBase*0.7 : rateBase;
 +    const rateBase = clamp(0.18 - Math.log10(S.units+1)*0.05, 0.075, 0.18);
 +    const rate = S.overdriveActive ? rateBase*0.7 : rateBase;
-     S.shootCd = rate;
- 
-     // consume resources
--    S.energy = Math.max(0, S.energy - 0.020);
+      S.shootCd = rate;
+  
+      // consume resources
+--    S.energy = Math.max(0, S.energy - 0.020);
+-+    S.energy = Math.max(0, S.energy - 0.022);
 +    S.energy = Math.max(0, S.energy - 0.022);
-     S.heat = Math.min(1, S.heat + 0.030);
- 
-     // bullet damage scales but not insane
--    const dmg = clamp(1 + Math.floor(Math.log2(S.units+1)/2), 1, 12);
+      S.heat = Math.min(1, S.heat + 0.030);
+  
+      // bullet damage scales but not insane
+--    const dmg = clamp(1 + Math.floor(Math.log2(S.units+1)/2), 1, 12);
+-+    const bonus = S.overdriveActive ? 2 : 0;
+-+    const dmg = clamp(1 + Math.floor(Math.log2(S.units+1)/2) + bonus, 1, 12);
 +    const bonus = S.overdriveActive ? 2 : 0;
 +    const dmg = clamp(1 + Math.floor(Math.log2(S.units+1)/2) + bonus, 1, 12);
- 
-     // bullets travel forward in lane (z decreasing)
-     S.bullets.push({
-       lane: S.laneBlend,
-       z: 420,          // start distance ahead from player
-       speed: 1900,
-       dmg
-     });
-   }
- 
-   // --- Update
-   let last=performance.now();
-   function loop(now){
-     const dt=Math.min(0.033, (now-last)/1000);
-     last=now;
-     if (!S.gameOver) S.t += dt;
+  
+      // bullets travel forward in lane (z decreasing)
+      S.bullets.push({
+        lane: S.laneBlend,
+        z: 420,          // start distance ahead from player
+        speed: 1900,
+        dmg
+      });
+    }
+  
+    // --- Update
+    let last=performance.now();
+    function loop(now){
+      const dt=Math.min(0.033, (now-last)/1000);
+      last=now;
+      if (!S.gameOver) S.t += dt;
+-+    if (!S.gameOver && !S.finished) S.levelTime += dt;
 +    if (!S.gameOver && !S.finished) S.levelTime += dt;
- 
-     // difficulty ramps
--    S.difficulty = clamp(S.t/180, 0, 1);
+  
+      // difficulty ramps
+--    S.difficulty = clamp(S.t/180, 0, 1);
+-+    S.difficulty = clamp(S.levelTime/170, 0, 1);
 +    S.difficulty = clamp(S.levelTime/170, 0, 1);
-     S.speedZ = lerp(820, 1120, S.difficulty);
- 
-     // smooth lane change
-     S.lane = S.laneTarget;
-     S.laneBlend = lerp(S.laneBlend, S.lane, 1 - Math.exp(-16*dt));
- 
-     // regen resources
-     // energy regens faster when not shooting; heat cools when not shooting
-     const shooting = S.shootHeld && canShoot();
--    S.energy = clamp(S.energy + dt*(shooting?0.14:0.32), 0, 1);
--    S.heat   = clamp(S.heat   - dt*(shooting?0.08:0.22), 0, 1);
+      S.speedZ = lerp(820, 1120, S.difficulty);
+  
+      // smooth lane change
+      S.lane = S.laneTarget;
+      S.laneBlend = lerp(S.laneBlend, S.lane, 1 - Math.exp(-16*dt));
+  
+      // regen resources
+      // energy regens faster when not shooting; heat cools when not shooting
+      const shooting = S.shootHeld && canShoot();
+--    S.energy = clamp(S.energy + dt*(shooting?0.14:0.32), 0, 1);
+--    S.heat   = clamp(S.heat   - dt*(shooting?0.08:0.22), 0, 1);
+-+    const energyRegen = S.overdriveActive ? 0.46 : 0.32;
+-+    const heatCool = S.overdriveActive ? (shooting?0.12:0.30) : (shooting?0.08:0.22);
+-+    if (!shooting) S.energy = clamp(S.energy + dt*energyRegen, 0, 1);
+-+    S.heat   = clamp(S.heat   - dt*heatCool, 0, 1);
+-+
+-+    if (S.overdriveActive){
+-+      S.overdriveTimer -= dt;
+-+      if (S.overdriveTimer <= 0){
+-+        S.overdriveActive = false;
+-+        S.overdrive = 0;
+-+      }
+-+    } else {
+-+      S.overdrive = clamp(S.overdrive - dt*0.03, 0, 1);
+-+    }
 +    const energyRegen = S.overdriveActive ? 0.46 : 0.32;
 +    const heatCool = S.overdriveActive ? (shooting?0.12:0.30) : (shooting?0.08:0.22);
 +    if (!shooting) S.energy = clamp(S.energy + dt*energyRegen, 0, 1);
@@ -438,120 +560,144 @@
 +    } else {
 +      S.overdrive = clamp(S.overdrive - dt*0.03, 0, 1);
 +    }
- 
-     // spawn
-     S.spawnCd -= dt;
--    if (!S.gameOver && S.spawnCd <= 0){
+  
+      // spawn
+      S.spawnCd -= dt;
+--    if (!S.gameOver && S.spawnCd <= 0){
+-+    if (!S.gameOver && !S.finished && S.spawnCd <= 0){
 +    if (!S.gameOver && !S.finished && S.spawnCd <= 0){
-       const base = lerp(0.70, 0.48, S.difficulty);
-       S.spawnCd = base + rand(-0.08, 0.10);
-       spawnWave();
-     }
- 
-     // shooting
--    if (!S.gameOver) shoot(dt);
+        const base = lerp(0.70, 0.48, S.difficulty);
+        S.spawnCd = base + rand(-0.08, 0.10);
+        spawnWave();
+      }
+  
+      // shooting
+--    if (!S.gameOver) shoot(dt);
+-+    if (!S.gameOver && !S.finished) shoot(dt);
 +    if (!S.gameOver && !S.finished) shoot(dt);
- 
-     // move things toward player: z decreases
-     for (const t of S.things) t.z -= S.speedZ*dt;
- 
-     // bullets move forward: z increases towards maxZ (they go to far), but we interact with things by comparing z
-     for (const b of S.bullets) b.z += b.speed*dt;
- 
-     // collisions: bullets with gates/enemies (same lane-ish and z proximity)
-     for (const b of S.bullets){
-       for (const t of S.things){
-         if (t.taken) continue;
-         if (t.type==="obstacle") continue;
-         // lane match: allow tolerance so you can “подстрелить” соседнюю полосу чуть-чуть, но лучше на своей
-         const laneOk = Math.abs(b.lane - t.lane) < 0.28;
-         if (!laneOk) continue;
- 
-         const dz = Math.abs(b.z - t.z);
-         if (dz < 90){
-           // hit
-           if (t.type==="gate" && t.bad && t.shield>0){
-             t.shield -= b.dmg;
-             if (t.shield <= 0){
-               t.bad = false;
-               t.shield = 0;
+  
+      // move things toward player: z decreases
+      for (const t of S.things) t.z -= S.speedZ*dt;
+  
+      // bullets move forward: z increases towards maxZ (they go to far), but we interact with things by comparing z
+      for (const b of S.bullets) b.z += b.speed*dt;
+  
+      // collisions: bullets with gates/enemies (same lane-ish and z proximity)
+      for (const b of S.bullets){
+        for (const t of S.things){
+          if (t.taken) continue;
+          if (t.type==="obstacle") continue;
+          // lane match: allow tolerance so you can “подстрелить” соседнюю полосу чуть-чуть, но лучше на своей
+          const laneOk = Math.abs(b.lane - t.lane) < 0.28;
+          if (!laneOk) continue;
+  
+          const dz = Math.abs(b.z - t.z);
+          if (dz < 90){
+            // hit
+            if (t.type==="gate" && t.bad && t.shield>0){
+              t.shield -= b.dmg;
+              if (t.shield <= 0){
+                t.bad = false;
+                t.shield = 0;
+-+              addOverdrive(0.14);
+-+              const hitPos = worldToScreen(t.lane, t.z);
+-+              spawnParticles(hitPos.x, hitPos.y, "rgba(120,220,255,0.95)", 18);
 +              addOverdrive(0.14);
 +              const hitPos = worldToScreen(t.lane, t.z);
 +              spawnParticles(hitPos.x, hitPos.y, "rgba(120,220,255,0.95)", 18);
-             }
-             b.z = 99999;
-             break;
-           }
-           if (t.type==="enemy"){
-             t.hp -= b.dmg;
-             if (t.hp <= 0){
-               t.taken = true;
--              S.score += 15 + Math.floor(S.difficulty*10);
+              }
+              b.z = 99999;
+              break;
+            }
+            if (t.type==="enemy"){
+              t.hp -= b.dmg;
+              if (t.hp <= 0){
+                t.taken = true;
+--              S.score += 15 + Math.floor(S.difficulty*10);
+-+              addScore(15 + Math.floor(S.difficulty*10));
+-+              addOverdrive(0.22);
+-+              const hitPos = worldToScreen(t.lane, t.z);
+-+              spawnParticles(hitPos.x, hitPos.y, "rgba(255,110,110,0.95)", 26);
 +              addScore(15 + Math.floor(S.difficulty*10));
 +              addOverdrive(0.22);
 +              const hitPos = worldToScreen(t.lane, t.z);
 +              spawnParticles(hitPos.x, hitPos.y, "rgba(255,110,110,0.95)", 26);
-             }
-             b.z = 99999;
-             break;
-           }
-         }
-       }
-     }
-     S.bullets = S.bullets.filter(b => b.z < maxZ*1.25 && b.z < 9999);
- 
-     // player collides with things when they reach near (z < threshold)
-     const hitZ = 140;
-     for (const t of S.things){
-       if (t.taken) continue;
-       if (t.z > hitZ) continue;
-       const laneHit = Math.abs(S.laneBlend - t.lane) < 0.25;
-       if (!laneHit) continue;
- 
-       t.taken = true;
- 
-       if (t.type==="enemy"){
-         S.hp -= 1;
-         subUnits(Math.max(1, Math.floor(S.units*0.04)));
+              }
+              b.z = 99999;
+              break;
+            }
+          }
+        }
+      }
+      S.bullets = S.bullets.filter(b => b.z < maxZ*1.25 && b.z < 9999);
+  
+      // player collides with things when they reach near (z < threshold)
+      const hitZ = 140;
+      for (const t of S.things){
+        if (t.taken) continue;
+        if (t.z > hitZ) continue;
+        const laneHit = Math.abs(S.laneBlend - t.lane) < 0.25;
+        if (!laneHit) continue;
+  
+        t.taken = true;
+  
+        if (t.type==="enemy"){
+          S.hp -= 1;
+          subUnits(Math.max(1, Math.floor(S.units*0.04)));
+-+        S.shake = Math.max(S.shake, 10);
+-+        spendOverdrive(0.18);
 +        S.shake = Math.max(S.shake, 10);
 +        spendOverdrive(0.18);
-       }
-       if (t.type==="obstacle"){
-         // strong punishment to force dodging
-         S.hp -= 2;
-         subUnits(Math.max(2, Math.floor(S.units*0.10)));
-         // also spike heat to prevent “spray & pray”
-         S.heat = Math.min(1, S.heat + 0.25);
-         S.energy = Math.max(0, S.energy - 0.25);
+        }
+        if (t.type==="obstacle"){
+          // strong punishment to force dodging
+          S.hp -= 2;
+          subUnits(Math.max(2, Math.floor(S.units*0.10)));
+          // also spike heat to prevent “spray & pray”
+          S.heat = Math.min(1, S.heat + 0.25);
+          S.energy = Math.max(0, S.energy - 0.25);
+-+        S.shake = Math.max(S.shake, 16);
+-+        spendOverdrive(0.25);
 +        S.shake = Math.max(S.shake, 16);
 +        spendOverdrive(0.25);
-       }
-       if (t.type==="gate"){
-         if (t.bad){
-           // if you didn’t heal it -> negative effect
-           if (t.kind==="add") subUnits(Math.max(6, Math.floor(t.val/2)));
-           else divUnits(t.val);
-           // plus small hp chip to increase stakes
-           if (Math.random() < 0.35) S.hp -= 1;
+        }
+        if (t.type==="gate"){
+          if (t.bad){
+            // if you didn’t heal it -> negative effect
+            if (t.kind==="add") subUnits(Math.max(6, Math.floor(t.val/2)));
+            else divUnits(t.val);
+            // plus small hp chip to increase stakes
+            if (Math.random() < 0.35) S.hp -= 1;
+-+          S.shake = Math.max(S.shake, 12);
+-+          spendOverdrive(0.15);
 +          S.shake = Math.max(S.shake, 12);
 +          spendOverdrive(0.15);
-         } else {
-           // good effect
-           if (t.kind==="add") addUnits(t.val);
-           else mulUnits(t.val);
--          S.score += 5;
+          } else {
+            // good effect
+            if (t.kind==="add") addUnits(t.val);
+            else mulUnits(t.val);
+--          S.score += 5;
+-+          addScore(5);
+-+          addOverdrive(0.10);
 +          addScore(5);
 +          addOverdrive(0.10);
-         }
-       }
- 
-       if (S.hp <= 0) S.gameOver = true;
-     }
- 
-     // cleanup
-     S.things = S.things.filter(t => t.z > -260 && !t.taken);
-     S.bullets = S.bullets.filter(b => b.z < maxZ*1.2);
- 
+          }
+        }
+  
+        if (S.hp <= 0) S.gameOver = true;
+      }
+  
+      // cleanup
+      S.things = S.things.filter(t => t.z > -260 && !t.taken);
+      S.bullets = S.bullets.filter(b => b.z < maxZ*1.2);
+  
+-+    updateParticles(dt);
+-+    updateStars(dt);
+-+    S.shake = Math.max(0, S.shake - dt*28);
+-+
+-+    updateLanePressure(dt);
+-+    updatePhase();
+-+
 +    updateParticles(dt);
 +    updateStars(dt);
 +    S.shake = Math.max(0, S.shake - dt*28);
@@ -559,21 +705,29 @@
 +    updateLanePressure(dt);
 +    updatePhase();
 +
-     render();
-     updateHUD();
- 
-     requestAnimationFrame(loop);
-   }
- 
-   // --- Render
-   function render(){
-     // background
-     const bg = ctx.createLinearGradient(0,0,0,H());
-     bg.addColorStop(0,"#05060a");
-     bg.addColorStop(1,"#070b16");
-     ctx.fillStyle = bg;
-     ctx.fillRect(0,0,W(),H());
- 
+      render();
+      updateHUD();
+  
+      requestAnimationFrame(loop);
+    }
+  
+    // --- Render
+    function render(){
+      // background
+      const bg = ctx.createLinearGradient(0,0,0,H());
+      bg.addColorStop(0,"#05060a");
+      bg.addColorStop(1,"#070b16");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0,0,W(),H());
+  
+-+    drawStars();
+-+
+-+    const shake = S.shake > 0 ? S.shake : 0;
+-+    const shakeX = shake ? rand(-shake, shake) : 0;
+-+    const shakeY = shake ? rand(-shake, shake) : 0;
+-+    ctx.save();
+-+    ctx.translate(shakeX, shakeY);
+-+
 +    drawStars();
 +
 +    const shake = S.shake > 0 ? S.shake : 0;
@@ -582,35 +736,103 @@
 +    ctx.save();
 +    ctx.translate(shakeX, shakeY);
 +
-     // road
-     drawRoad();
- 
-     // draw things sorted far->near (bigger near)
-     const drawList = S.things.slice().sort((a,b)=>b.z-a.z);
-     for (const t of drawList) drawThing(t);
- 
-     // bullets (as streaks)
-     for (const b of S.bullets) drawBullet(b);
- 
+      // road
+      drawRoad();
+  
+      // draw things sorted far->near (bigger near)
+      const drawList = S.things.slice().sort((a,b)=>b.z-a.z);
+      for (const t of drawList) drawThing(t);
+  
+      // bullets (as streaks)
+      for (const b of S.bullets) drawBullet(b);
+  
+-+    drawParticles();
+-+
 +    drawParticles();
 +
-     // player
-     drawPlayer();
- 
+      // player
+      drawPlayer();
+  
+-+    ctx.restore();
+-+
 +    ctx.restore();
 +
-     if (S.gameOver){
-       ctx.fillStyle="rgba(0,0,0,0.58)";
-       ctx.fillRect(0,0,W(),H());
-       ctx.fillStyle="rgba(230,250,255,0.96)";
-       ctx.font="900 36px system-ui";
-       ctx.textAlign="center"; ctx.textBaseline="middle";
-       ctx.fillText("GAME OVER", W()/2, H()*0.44);
-       ctx.font="700 16px system-ui";
-       ctx.globalAlpha=0.88;
-       ctx.fillText("тап / Enter / Space — перезапуск", W()/2, H()*0.52);
-       ctx.globalAlpha=1;
-     }
+      if (S.gameOver){
+        ctx.fillStyle="rgba(0,0,0,0.58)";
+        ctx.fillRect(0,0,W(),H());
+        ctx.fillStyle="rgba(230,250,255,0.96)";
+        ctx.font="900 36px system-ui";
+        ctx.textAlign="center"; ctx.textBaseline="middle";
+        ctx.fillText("GAME OVER", W()/2, H()*0.44);
+        ctx.font="700 16px system-ui";
+        ctx.globalAlpha=0.88;
+        ctx.fillText("тап / Enter / Space — перезапуск", W()/2, H()*0.52);
+        ctx.globalAlpha=1;
+      }
+-+
+-+    if (S.finished){
+-+      ctx.fillStyle="rgba(0,0,0,0.55)";
+-+      ctx.fillRect(0,0,W(),H());
+-+      ctx.fillStyle="rgba(230,250,255,0.96)";
+-+      ctx.font="900 34px system-ui";
+-+      ctx.textAlign="center"; ctx.textBaseline="middle";
+-+      ctx.fillText("FINISH!", W()/2, H()*0.42);
+-+      ctx.font="700 16px system-ui";
+-+      ctx.globalAlpha=0.9;
+-+      ctx.fillText(`множитель финиша x${finishMultiplier().toFixed(1)}`, W()/2, H()*0.50);
+-+      ctx.fillText("тап / Enter / Space — новая попытка", W()/2, H()*0.56);
+-+      ctx.globalAlpha=1;
+-+    }
+-+
+-+    if (S.overdriveActive){
+-+      ctx.globalAlpha = 0.18 + Math.sin(S.t*7)*0.06;
+-+      const glow = ctx.createRadialGradient(W()/2, H()*0.65, 60, W()/2, H()*0.65, W()*0.7);
+-+      glow.addColorStop(0,"rgba(120,220,255,0.45)");
+-+      glow.addColorStop(1,"rgba(120,220,255,0)");
+-+      ctx.fillStyle = glow;
+-+      ctx.fillRect(0,0,W(),H());
+-+      ctx.globalAlpha = 1;
+-+    }
+-+  }
+-+
+-+  function updateLanePressure(dt){
+-+    if (S.gameOver || S.finished) return;
+-+    if (S.laneTarget !== S.lastLane){
+-+      S.lastLane = S.laneTarget;
+-+      S.laneIdle = 0;
+-+      return;
+-+    }
+-+    S.laneIdle += dt;
+-+    if (S.laneIdle > S.laneIdleLimit){
+-+      S.laneIdle = 0;
+-+      S.things.push(makeObstacle(S.laneTarget, maxZ*0.78, S.difficulty));
+-+      S.shake = Math.max(S.shake, 10);
+-+    }
+-+  }
+-+
+-+  function updatePhase(){
+-+    if (S.gameOver || S.finished) return;
+-+    const t = clamp(S.levelTime / S.levelDuration, 0, 1);
+-+    if (t >= 1){
+-+      S.finished = true;
+-+      const mult = finishMultiplier();
+-+      addScore(Math.floor(S.units * 0.8 * mult));
+-+      return;
+-+    }
+-+  }
+-+
+-+  function finishMultiplier(){
+-+    const u = Math.min(S.units, 220);
+-+    return 1 + u / 220;
+-+  }
+-+
+-+  function worldToScreen(lane, z){
+-+    const p = proj(z);
+-+    return {
+-+      x: laneCenterX(lane, z),
+-+      y: p.y,
+-+      scale: clamp(p.p*1.8, 0.2, 1.3)
+-+    };
 +
 +    if (S.finished){
 +      ctx.fillStyle="rgba(0,0,0,0.55)";
@@ -675,68 +897,82 @@
 +      y: p.y,
 +      scale: clamp(p.p*1.8, 0.2, 1.3)
 +    };
-   }
- 
-   function drawRoad(){
-     const top = proj(maxZ).y;
-     const bot = proj(0).y;
-     const halfTop = proj(maxZ).halfRoad;
-     const halfBot = proj(0).halfRoad;
- 
-     // road trapezoid
-     ctx.beginPath();
-     ctx.moveTo(W()/2-halfBot, bot);
-     ctx.lineTo(W()/2-halfTop, top);
-     ctx.lineTo(W()/2+halfTop, top);
-     ctx.lineTo(W()/2+halfBot, bot);
-     ctx.closePath();
-     ctx.fillStyle="rgba(10,16,28,0.92)";
-     ctx.fill();
- 
-     // lane lines
-     ctx.strokeStyle="rgba(135,191,255,0.18)";
-     ctx.lineWidth=2;
-     for (let i=1;i<=2;i++){
-       const k=i/3; // lane split
-       // interpolate edges between top/bot
-       const xBot = lerp(W()/2-halfBot, W()/2+halfBot, k);
-@@ -530,60 +730,73 @@
-       // screen glow
-       ctx.globalAlpha = isBad ? 0.18 : 0.12;
-       ctx.fillStyle = isBad ? "rgba(255,110,130,1)" : "rgba(120,220,255,1)";
-       roundRect(x-w*0.70, p.y-h*1.20, w*1.40, h*2.40, 16*scale);
-       ctx.fill();
-       ctx.globalAlpha = 1;
- 
-       // body
-       ctx.fillStyle = isBad ? "rgba(255,110,130,0.12)" : "rgba(120,220,255,0.10)";
-       ctx.strokeStyle = isBad ? "rgba(255,140,160,0.90)" : "rgba(120,220,255,0.90)";
-       ctx.lineWidth = 2;
-       roundRect(x-w/2, p.y-h/2, w, h, 14*scale);
-       ctx.fill();
-       ctx.stroke();
- 
-       // label
-       ctx.fillStyle = "rgba(230,250,255,0.95)";
-       ctx.font = `${Math.floor(18*scale)+10}px system-ui`;
-       ctx.textAlign="center"; ctx.textBaseline="middle";
-       ctx.fillText(isBad ? t.badLabel : t.goodLabel, x, p.y+1);
- 
-       // shield indicator
-       if (isBad && t.shield>0){
-         const barW = w*0.72;
-         const barH = 6*scale;
--        const maxShield = 42;
+    }
+  
+    function drawRoad(){
+      const top = proj(maxZ).y;
+      const bot = proj(0).y;
+      const halfTop = proj(maxZ).halfRoad;
+      const halfBot = proj(0).halfRoad;
+  
+      // road trapezoid
+      ctx.beginPath();
+      ctx.moveTo(W()/2-halfBot, bot);
+      ctx.lineTo(W()/2-halfTop, top);
+      ctx.lineTo(W()/2+halfTop, top);
+      ctx.lineTo(W()/2+halfBot, bot);
+      ctx.closePath();
+      ctx.fillStyle="rgba(10,16,28,0.92)";
+      ctx.fill();
+  
+      // lane lines
+      ctx.strokeStyle="rgba(135,191,255,0.18)";
+      ctx.lineWidth=2;
+      for (let i=1;i<=2;i++){
+        const k=i/3; // lane split
+        // interpolate edges between top/bot
+        const xBot = lerp(W()/2-halfBot, W()/2+halfBot, k);
+-@@ -530,60 +730,73 @@
+        // screen glow
+        ctx.globalAlpha = isBad ? 0.18 : 0.12;
+        ctx.fillStyle = isBad ? "rgba(255,110,130,1)" : "rgba(120,220,255,1)";
+        roundRect(x-w*0.70, p.y-h*1.20, w*1.40, h*2.40, 16*scale);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+  
+        // body
+        ctx.fillStyle = isBad ? "rgba(255,110,130,0.12)" : "rgba(120,220,255,0.10)";
+        ctx.strokeStyle = isBad ? "rgba(255,140,160,0.90)" : "rgba(120,220,255,0.90)";
+        ctx.lineWidth = 2;
+        roundRect(x-w/2, p.y-h/2, w, h, 14*scale);
+        ctx.fill();
+        ctx.stroke();
+  
+        // label
+        ctx.fillStyle = "rgba(230,250,255,0.95)";
+        ctx.font = `${Math.floor(18*scale)+10}px system-ui`;
+        ctx.textAlign="center"; ctx.textBaseline="middle";
+        ctx.fillText(isBad ? t.badLabel : t.goodLabel, x, p.y+1);
+  
+        // shield indicator
+        if (isBad && t.shield>0){
+          const barW = w*0.72;
+          const barH = 6*scale;
+--        const maxShield = 42;
+-+        const maxShield = 54;
 +        const maxShield = 54;
-         const pr = clamp(t.shield/maxShield, 0, 1);
- 
-         ctx.globalAlpha=0.95;
-         ctx.fillStyle="rgba(255,230,235,0.20)";
-         roundRect(x-barW/2, p.y+h/2-12*scale, barW, barH, 999);
-         ctx.fill();
-         ctx.fillStyle="rgba(255,140,160,0.75)";
-         roundRect(x-barW/2, p.y+h/2-12*scale, barW*pr, barH, 999);
-         ctx.fill();
+          const pr = clamp(t.shield/maxShield, 0, 1);
+  
+          ctx.globalAlpha=0.95;
+          ctx.fillStyle="rgba(255,230,235,0.20)";
+          roundRect(x-barW/2, p.y+h/2-12*scale, barW, barH, 999);
+          ctx.fill();
+          ctx.fillStyle="rgba(255,140,160,0.75)";
+          roundRect(x-barW/2, p.y+h/2-12*scale, barW*pr, barH, 999);
+          ctx.fill();
+-+
+-+        // crack lines as shield gets lower
+-+        const cracks = Math.ceil((1-pr)*4);
+-+        ctx.strokeStyle="rgba(255,220,230,0.7)";
+-+        ctx.lineWidth = 1;
+-+        for (let i=0;i<cracks;i++){
+-+          const cx = x + rand(-w*0.3, w*0.3);
+-+          const cy = p.y + rand(-h*0.2, h*0.2);
+-+          ctx.beginPath();
+-+          ctx.moveTo(cx, cy);
+-+          ctx.lineTo(cx + rand(-12,12)*scale, cy + rand(-18,18)*scale);
+-+          ctx.stroke();
+-+        }
 +
 +        // crack lines as shield gets lower
 +        const cracks = Math.ceil((1-pr)*4);
@@ -750,57 +986,100 @@
 +          ctx.lineTo(cx + rand(-12,12)*scale, cy + rand(-18,18)*scale);
 +          ctx.stroke();
 +        }
-         ctx.globalAlpha=1;
-       }
-       return;
-     }
- 
-     if (t.type==="enemy"){
-       const r = (p.halfRoad*2/3) * 0.13 * (1 + 0.2*scale);
-       // enemy as red orb
-       ctx.globalAlpha=0.18;
-       ctx.beginPath(); ctx.fillStyle="rgba(255,90,90,1)";
-       ctx.arc(x, p.y, r*2.4, 0, Math.PI*2); ctx.fill();
-       ctx.globalAlpha=1;
-       ctx.beginPath(); ctx.fillStyle="rgba(255,90,90,0.95)";
-       ctx.arc(x, p.y, r, 0, Math.PI*2); ctx.fill();
- 
-       // hp ring
-       ctx.globalAlpha=0.55;
-       ctx.strokeStyle="rgba(255,230,230,0.92)";
-       ctx.lineWidth=2;
-       const pr = clamp(t.hp/26,0,1);
-       ctx.beginPath();
-       ctx.arc(x,p.y,r+6*scale,-Math.PI/2,-Math.PI/2+Math.PI*2*pr);
-       ctx.stroke();
-       ctx.globalAlpha=1;
-       return;
-@@ -608,82 +821,141 @@
-       ctx.textAlign="center"; ctx.textBaseline="middle";
-       ctx.fillText("X", x, p.y+1);
-     }
-   }
- 
-   function drawBullet(b){
-     // bullets as neon streak
-     const z = b.z;
-     const p = proj(clamp(maxZ - z, 0, maxZ)); // map bullet forward to visual depth
-     // We want bullets to appear moving away; easiest: render them in the lane, along the road
-     const lane = b.lane;
-     const zVis = clamp(maxZ - z, 0, maxZ);
-     const pv = proj(zVis);
-     const x = laneCenterX(lane, zVis);
- 
-     ctx.globalAlpha = 0.85;
-     ctx.strokeStyle = "rgba(200,240,255,0.95)";
-     ctx.lineWidth = 2;
-     ctx.beginPath();
-     ctx.moveTo(x, pv.y+8);
-     ctx.lineTo(x, pv.y-18);
-     ctx.stroke();
-     ctx.globalAlpha = 1;
-   }
- 
+          ctx.globalAlpha=1;
+        }
+        return;
+      }
+  
+      if (t.type==="enemy"){
+        const r = (p.halfRoad*2/3) * 0.13 * (1 + 0.2*scale);
+        // enemy as red orb
+        ctx.globalAlpha=0.18;
+        ctx.beginPath(); ctx.fillStyle="rgba(255,90,90,1)";
+        ctx.arc(x, p.y, r*2.4, 0, Math.PI*2); ctx.fill();
+        ctx.globalAlpha=1;
+        ctx.beginPath(); ctx.fillStyle="rgba(255,90,90,0.95)";
+        ctx.arc(x, p.y, r, 0, Math.PI*2); ctx.fill();
+  
+        // hp ring
+        ctx.globalAlpha=0.55;
+        ctx.strokeStyle="rgba(255,230,230,0.92)";
+        ctx.lineWidth=2;
+        const pr = clamp(t.hp/26,0,1);
+        ctx.beginPath();
+        ctx.arc(x,p.y,r+6*scale,-Math.PI/2,-Math.PI/2+Math.PI*2*pr);
+        ctx.stroke();
+        ctx.globalAlpha=1;
+        return;
+-@@ -608,82 +821,141 @@
+        ctx.textAlign="center"; ctx.textBaseline="middle";
+        ctx.fillText("X", x, p.y+1);
+      }
+    }
+  
+    function drawBullet(b){
+      // bullets as neon streak
+      const z = b.z;
+      const p = proj(clamp(maxZ - z, 0, maxZ)); // map bullet forward to visual depth
+      // We want bullets to appear moving away; easiest: render them in the lane, along the road
+      const lane = b.lane;
+      const zVis = clamp(maxZ - z, 0, maxZ);
+      const pv = proj(zVis);
+      const x = laneCenterX(lane, zVis);
+  
+      ctx.globalAlpha = 0.85;
+      ctx.strokeStyle = "rgba(200,240,255,0.95)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, pv.y+8);
+      ctx.lineTo(x, pv.y-18);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  
+-+  function drawStars(){
+-+    ctx.globalAlpha = 0.65;
+-+    for (const s of S.stars){
+-+      ctx.fillStyle = "rgba(200,240,255,0.7)";
+-+      ctx.fillRect(s.x, s.y, s.r, s.r);
+-+    }
+-+    ctx.globalAlpha = 1;
+-+  }
+-+
+-+  function updateStars(dt){
+-+    const drift = S.speedZ * 0.012;
+-+    for (const s of S.stars){
+-+      s.y += dt * (s.speed + drift);
+-+      if (s.y > H()+10){
+-+        s.y = -10;
+-+        s.x = rand(0, W());
+-+        s.r = rand(0.6, 1.6);
+-+        s.speed = rand(8, 30);
+-+      }
+-+    }
+-+  }
+-+
+-+  function updateParticles(dt){
+-+    for (const p of S.particles){
+-+      p.life -= dt;
+-+      p.x += p.vx*dt;
+-+      p.y += p.vy*dt;
+-+      p.vy += 40*dt;
+-+    }
+-+    S.particles = S.particles.filter(p => p.life > 0);
+-+  }
+-+
+-+  function drawParticles(){
+-+    for (const p of S.particles){
+-+      ctx.globalAlpha = clamp(p.life, 0, 1);
+-+      ctx.fillStyle = p.color;
+-+      ctx.beginPath();
+-+      ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+-+      ctx.fill();
+-+    }
+-+    ctx.globalAlpha = 1;
+-+  }
+-+
 +  function drawStars(){
 +    ctx.globalAlpha = 0.65;
 +    for (const s of S.stars){
@@ -844,45 +1123,53 @@
 +    ctx.globalAlpha = 1;
 +  }
 +
-   function drawPlayer(){
-     const y = roadBottomY() - 18;
-     const z=0;
-     const x = laneCenterX(S.laneBlend, z);
- 
-     // aura
-     const aura = 18 + Math.log(S.units+1)*3.2;
-     ctx.globalAlpha=0.18;
-     ctx.beginPath(); ctx.fillStyle="rgba(120,220,255,1)";
-     ctx.arc(x, y, aura, 0, Math.PI*2); ctx.fill();
-     ctx.globalAlpha=1;
- 
-     ctx.beginPath(); ctx.fillStyle="rgba(120,220,255,0.95)";
-     ctx.arc(x, y, 18, 0, Math.PI*2); ctx.fill();
- 
-     // label
-     ctx.fillStyle="rgba(10,15,22,0.92)";
-     ctx.font="900 12px system-ui";
-     ctx.textAlign="center"; ctx.textBaseline="middle";
-     ctx.fillText(String(S.units), x, y+1);
-   }
- 
-   function roundRect(x,y,w,h,r){
-     const rr=Math.min(r,w/2,h/2);
-     ctx.beginPath();
-     ctx.moveTo(x+rr,y);
-     ctx.arcTo(x+w,y,x+w,y+h,rr);
-     ctx.arcTo(x+w,y+h,x,y+h,rr);
-     ctx.arcTo(x,y+h,x,y,rr);
-     ctx.arcTo(x,y,x+w,y,rr);
-     ctx.closePath();
-   }
- 
-   function updateHUD(){
-     hudUnits.textContent = S.units;
-     hudHP.textContent = S.hp;
-     hudScore.textContent = S.score;
-     energyBar.style.width = (S.energy*100).toFixed(0)+"%";
-     heatBar.style.width = (S.heat*100).toFixed(0)+"%";
+    function drawPlayer(){
+      const y = roadBottomY() - 18;
+      const z=0;
+      const x = laneCenterX(S.laneBlend, z);
+  
+      // aura
+      const aura = 18 + Math.log(S.units+1)*3.2;
+      ctx.globalAlpha=0.18;
+      ctx.beginPath(); ctx.fillStyle="rgba(120,220,255,1)";
+      ctx.arc(x, y, aura, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha=1;
+  
+      ctx.beginPath(); ctx.fillStyle="rgba(120,220,255,0.95)";
+      ctx.arc(x, y, 18, 0, Math.PI*2); ctx.fill();
+  
+      // label
+      ctx.fillStyle="rgba(10,15,22,0.92)";
+      ctx.font="900 12px system-ui";
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      ctx.fillText(String(S.units), x, y+1);
+    }
+  
+    function roundRect(x,y,w,h,r){
+      const rr=Math.min(r,w/2,h/2);
+      ctx.beginPath();
+      ctx.moveTo(x+rr,y);
+      ctx.arcTo(x+w,y,x+w,y+h,rr);
+      ctx.arcTo(x+w,y+h,x,y+h,rr);
+      ctx.arcTo(x,y+h,x,y,rr);
+      ctx.arcTo(x,y,x+w,y,rr);
+      ctx.closePath();
+    }
+  
+    function updateHUD(){
+      hudUnits.textContent = S.units;
+      hudHP.textContent = S.hp;
+      hudScore.textContent = S.score;
+      energyBar.style.width = (S.energy*100).toFixed(0)+"%";
+      heatBar.style.width = (S.heat*100).toFixed(0)+"%";
+-+    overdriveBar.style.width = (S.overdrive*100).toFixed(0)+"%";
+-+    overdriveState.textContent = S.overdriveActive ? "овердрайв" : (S.overdrive >= 0.95 ? "заряжен" : "готов");
+-+    overdriveState.classList.toggle("hot", S.overdriveActive);
+-+    multEl.textContent = S.overdriveActive ? "x1.6" : "x1";
+-+    progressBar.style.width = (clamp(S.levelTime / S.levelDuration, 0, 1) * 100).toFixed(0)+"%";
+-+    const phase = S.levelTime < S.levelDuration*0.33 ? "старт" : S.levelTime < S.levelDuration*0.75 ? "эскалация" : "финал";
+-+    phaseEl.textContent = S.finished ? "финиш" : phase;
+-+    phaseEl.classList.toggle("done", S.finished);
 +    overdriveBar.style.width = (S.overdrive*100).toFixed(0)+"%";
 +    overdriveState.textContent = S.overdriveActive ? "овердрайв" : (S.overdrive >= 0.95 ? "заряжен" : "готов");
 +    overdriveState.classList.toggle("hot", S.overdriveActive);
@@ -891,31 +1178,43 @@
 +    const phase = S.levelTime < S.levelDuration*0.33 ? "старт" : S.levelTime < S.levelDuration*0.75 ? "эскалация" : "финал";
 +    phaseEl.textContent = S.finished ? "финиш" : phase;
 +    phaseEl.classList.toggle("done", S.finished);
-   }
- 
-   function restart(){
-     S.t=0; S.score=0; S.hp=10; S.units=8;
-     S.lane=0; S.laneTarget=0; S.laneBlend=0;
-     S.energy=1; S.heat=0;
+    }
+  
+    function restart(){
+      S.t=0; S.score=0; S.hp=10; S.units=8;
+      S.lane=0; S.laneTarget=0; S.laneBlend=0;
+      S.energy=1; S.heat=0;
+-+    S.overdrive=0; S.overdriveActive=false; S.overdriveTimer=0;
 +    S.overdrive=0; S.overdriveActive=false; S.overdriveTimer=0;
-     S.shootHeld=false; S.shootCd=0;
-     S.bullets.length=0; S.things.length=0;
+      S.shootHeld=false; S.shootCd=0;
+      S.bullets.length=0; S.things.length=0;
+-+    S.particles.length=0;
 +    S.particles.length=0;
-     S.spawnCd=0.2;
-     S.gameOver=false;
+      S.spawnCd=0.2;
+      S.gameOver=false;
+-+    S.finished=false;
+-+    S.shake=0;
+-+    S.levelTime=0;
+-+    S.laneIdle=0;
+-+    S.lastLane=0;
 +    S.finished=false;
 +    S.shake=0;
 +    S.levelTime=0;
 +    S.laneIdle=0;
 +    S.lastLane=0;
-   }
- 
-   // start
+    }
+  
+    // start
+-+  initStars();
 +  initStars();
-   requestAnimationFrame(loop);
- })();
- </script>
- </body>
--</html>
-\ No newline at end of file
+    requestAnimationFrame(loop);
+  })();
+  </script>
+  </body>
+--</html>
+-\ No newline at end of file
+-+</html>
 +</html>
+ 
+EOF
+)
